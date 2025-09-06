@@ -1,13 +1,23 @@
-import express from 'express';
+import express, { json } from 'express';
 import 'dotenv/config'; // This works with ES modules
-
+import { authRouter } from './routes/authRoutes.js';
 const app = express();
 const PORT = process.env.PORT ?? 3000;
+
+app.use(express.urlencoded());
+app.use(json());
 
 app.get('/', (req, res) => {
   res.json({ message: 'Hello World!' });
 });
 
-app.listen(PORT, () => {
-  console.log(`Server runnxing on port ${PORT.toString()}`);
+// Authentication
+app.use('/', authRouter);
+
+app.listen(PORT, err => {
+  if (err) {
+    throw err;
+  }
+
+  console.log(`Server running on port ${PORT.toString()}`);
 });
