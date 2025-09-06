@@ -1,0 +1,39 @@
+{
+  "name": "fundxpert-capstone-project",
+  "version": "1.0.0",
+  "main": "index.js",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev -w backend\" \"npm run dev -w frontend\"",
+    "dev:backend": "npm run dev -w backend",
+    "dev:frontend": "npm run dev -w frontend",
+    "build": "npm run build -w backend && npm run build -w frontend",
+    "start": "npm run start -w backend",
+    "test": "npm run test -w backend && npm run test -w frontend",
+    "type-check": "npm run type-check -w backend && npm run type-check -w frontend",
+    "lint": "npm run lint -w backend && npm run lint -w frontend",
+    "clean": "npm run clean -w backend && npm run clean -w frontend",
+    "db:seed": "npm run db:seed -w backend",
+    "db:reset": "npm run db:reset -w backend"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lawrence-ruscia/fundxpert-capstone-project.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/lawrence-ruscia/fundxpert-capstone-project/issues"
+  },
+  "homepage": "https://github.com/lawrence-ruscia/fundxpert-capstone-project#readme",
+  "description": "",
+  "type": "module",
+  "devDependencies": {
+    "concurrently": "^9.2.1"
+  }
+}
