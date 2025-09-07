@@ -1,10 +1,22 @@
 import { z } from 'zod';
 
-// TODO: Add stricter constraint in the future
 export const registerSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
-  email: z.email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
+  email: z
+    .email('Invalid email address')
+    .refine(val => val.endsWith('@metrobank.com.ph'), {
+      message: 'Email must use the @metrobank.com.ph domain',
+    }),
+  password: z
+    .string()
+    .min(8, 'Password must be at least 8 characters') // baseline
+    .regex(/[A-Z]/, 'Password must contain at least one uppercase letter')
+    .regex(/[a-z]/, 'Password must contain at least one lowercase letter')
+    .regex(/[0-9]/, 'Password must contain at least one digit')
+    .regex(
+      /[^A-Za-z0-9]/,
+      'Password must contain at least one special character'
+    ),
   role: z.enum(['Employee', 'HR', 'Admin']),
   date_hired: z.string().optional(), // "YYYY-MM-DD"
 });
