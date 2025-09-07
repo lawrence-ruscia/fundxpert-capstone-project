@@ -1,7 +1,11 @@
 import { Router } from 'express';
 import * as authController from '../controllers/authController.js';
 import { validateRequest } from '../middleware/validateRequest.js';
-import { registerSchema, loginSchema } from '../validation/authValidation.js';
+import {
+  registerSchema,
+  loginSchema,
+  resetPassSchema,
+} from '../validation/authValidation.js';
 import { authMiddleware } from '../middleware/authMiddleware.js';
 import type { Role } from '../types/user.js';
 export const authRouter = Router();
@@ -11,6 +15,7 @@ authRouter.post(
   validateRequest(registerSchema),
   authController.register
 );
+
 authRouter.post('/login', validateRequest(loginSchema), authController.login);
 
 const emp: Role = 'Employee';
@@ -27,3 +32,9 @@ const admin: Role = 'Admin';
 authRouter.get('/hr', authMiddleware(admin), (req, res) => {
   res.send(`Welcome back! System Admin`);
 });
+
+authRouter.post(
+  '/reset-password',
+  validateRequest(resetPassSchema),
+  authController.resetPassword
+);

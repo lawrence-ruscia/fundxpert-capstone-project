@@ -1,6 +1,8 @@
 import type { Request, Response, NextFunction } from 'express';
 import type { Role } from '../types/user.js';
 import jwt from 'jsonwebtoken';
+import { pool } from '../config/db.config.js';
+import { PASSWORD_EXPIRY_DAYS } from '../config/security.config.js';
 
 export type JWTPayload = {
   id: number;
@@ -9,12 +11,13 @@ export type JWTPayload = {
 };
 
 export function authMiddleware(requiredRole?: string) {
-  return (req: Request, res: Response, next: NextFunction) => {
+  return async (req: Request, res: Response, next: NextFunction) => {
     const authHeader = req.headers['authorization'];
     const token = authHeader && authHeader.split(' ')[1]; // extract from `Bearer <token>`
 
     if (!token) return res.status(401).json({ error: 'No token provided' });
 
+    // TODO: Refactor and move to separate functions
     try {
       const decoded = jwt.verify(
         token,
@@ -24,6 +27,28 @@ export function authMiddleware(requiredRole?: string) {
       req.user = decoded;
       console.log(decoded);
 
+      // Fetch password info from DB
+      const { rows } = await pool.query(
+        'SELECT password_last_changed, password_expired FROM users WHERE id = $1',
+        [decoded.id]
+      );
+
+      const user = rows[0];
+      if (!user) return res.status(401).json({ error: 'User not found' });
+
+      // Check expiration
+      const passwordAge = Math.floor(
+        (Date.now() - new Date(user.password_last_changed).getTime()) /
+          (1000 * 60 * 60 * 24)
+      );
+
+      if (passwordAge > PASSWORD_EXPIRY_DAYS || user.password_expired) {
+        return res
+          .status(403)
+          .json({ error: 'Password expired. Please reset your password.' });
+      }
+
+      // Check required role
       if (requiredRole && decoded.role !== requiredRole) {
         return res.status(403).json({ error: 'Forbidden' });
       }

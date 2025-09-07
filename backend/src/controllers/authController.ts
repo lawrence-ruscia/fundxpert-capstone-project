@@ -33,3 +33,14 @@ export async function login(req: Request, res: Response) {
     }
   }
 }
+
+export async function resetPassword(req: Request, res: Response) {
+  try {
+    console.log(req.body);
+    const { userId, newPassword } = req.body;
+    const result = await authService.resetPassword(userId, newPassword);
+    res.json(result);
+  } catch (err) {
+    res.status(400).json({ error: (err as Error).message });
+  }
+}

@@ -5,6 +5,8 @@ import type { User } from '../types/user.js';
 import {
   LOCKOUT_DURATION_MINUTES,
   MAX_FAILED_ATTEMPTS,
+  PASSWORD_EXPIRY_DAYS,
+  PASSWORD_HISTORY_LIMIT,
 } from '../config/security.config.js';
 
 export type LoginResponse = {
@@ -48,6 +50,7 @@ export async function loginUser(
     throw new Error('Invalid email or password');
   }
 
+  // TODO: Move separate responsibilities to another function for readability
   // 1. Check if account is locked
   if (user.locked_until && new Date(user.locked_until) > new Date()) {
     const minutesRemaining = Math.ceil(
@@ -92,7 +95,17 @@ export async function loginUser(
     }
   }
 
-  // 3. Reset failed attempts on successful login
+  // 3. Check password expiry
+  const passwordAge = Math.floor(
+    (Date.now() - new Date(user.password_last_changed).getTime()) /
+      (1000 * 60 * 60 * 24)
+  );
+
+  if (passwordAge > PASSWORD_EXPIRY_DAYS || user.password_expired) {
+    throw new Error('Password expired. Please reset your password.');
+  }
+
+  // 4. Reset failed attemptCs on successful login
   await pool.query(
     `UPDATE users SET failed_attempts = 0, locked_until = NULL WHERE id = $1`,
     [user.id]
@@ -105,4 +118,53 @@ export async function loginUser(
   );
 
   return { token, user: { id: user.id, name: user.name, role: user.role } };
+}
+
+export async function resetPassword(userId: number, newPassword: string) {
+  // 1. Fetch last N password hashes from history
+  const historyResult = await pool.query(
+    `
+    SELECT password_hash 
+    FROM password_history
+    WHERE user_id = $1
+    ORDER BY changed_at DESC
+    LIMIT $2
+    `,
+    [userId, PASSWORD_HISTORY_LIMIT]
+  );
+
+  console.log(historyResult.rows);
+
+  const oldHashes = historyResult.rows.map(row => row.password_hash);
+
+  // 2. Check if new password matches any old password
+  for (const oldHash of oldHashes) {
+    if (await bcrypt.compare(newPassword, oldHash)) {
+      throw new Error('New password must not match last used passwords.');
+    }
+  }
+
+  // 3. Hash new password
+  const hash = await bcrypt.hash(newPassword, 10);
+
+  // 4. Update user's password + reset expiration
+  await pool.query(
+    `
+    UPDATE users
+    SET password_hash = $1, password_last_changed = NOW(), password_expired = false
+    WHERE id = $2
+    `,
+    [hash, userId]
+  );
+
+  // 5. Insert into password history
+  await pool.query(
+    `
+    INSERT INTO password_history (user_id, password_hash)
+    VALUES ($1, $2)
+    `,
+    [userId, hash]
+  );
+
+  return { message: 'Password updated successfully' };
 }
