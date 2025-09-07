@@ -10,6 +10,8 @@ export interface User {
   locked_until?: Date | null;
   password_last_changed?: Date | null;
   password_expired: boolean;
+  temp_password: boolean;
+  temp_password_expires?: Date | null;
 }
 
 export type Role = User['role'];

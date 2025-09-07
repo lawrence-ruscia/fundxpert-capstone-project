@@ -7,6 +7,7 @@ import {
   MAX_FAILED_ATTEMPTS,
   PASSWORD_EXPIRY_DAYS,
   PASSWORD_HISTORY_LIMIT,
+  TEMP_PASSWORD_EXPIRY_DAYS,
 } from '../config/security.config.js';
 
 export type LoginResponse = {
@@ -59,6 +60,18 @@ export async function loginUser(
     await handleFailedLoginAttempt(user);
   }
 
+  if (user.temp_password) {
+    const now = new Date();
+    if (
+      user.temp_password_expires &&
+      new Date(user.temp_password_expires) < now
+    ) {
+      throw new Error(
+        'Temporary password expired. Please reset your password.'
+      );
+    }
+  }
+
   // 4. Password expiry check
   checkPasswordExpiry(user);
 
@@ -102,11 +115,15 @@ export async function resetPassword(userId: number, newPassword: string) {
   // 3. Hash new password
   const hash = await bcrypt.hash(newPassword, 10);
 
-  // 4. Update user's password + reset expiration
+  // 4. Update user's password + reset expiration and temp password
   await pool.query(
     `
     UPDATE users
-    SET password_hash = $1, password_last_changed = NOW(), password_expired = false
+    SET password_hash = $1, 
+      password_last_changed = NOW(), 
+      password_expired = false,
+      temp_password = false,
+      temp_password_expires = NULL
     WHERE id = $2
     `,
     [hash, userId]

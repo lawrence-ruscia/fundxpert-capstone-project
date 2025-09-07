@@ -18,7 +18,8 @@
     "lint": "npm run lint -w backend && npm run lint -w frontend",
     "clean": "npm run clean -w backend && npm run clean -w frontend",
     "db:seed": "npm run db:seed -w backend",
-    "db:reset": "npm run db:reset -w backend"
+    "db:reset": "npm run db:reset -w backend",
+    "seed:users": "tsx database/seeds/seedUsers.ts"
   },
   "repository": {
     "type": "git",
@@ -36,9 +37,12 @@
   "devDependencies": {
     "concurrently": "^9.2.1",
     "prettier": "3.6.2",
-    "prettier-plugin-tailwindcss": "^0.6.14"
+    "prettier-plugin-tailwindcss": "^0.6.14",
+    "tsx": "^4.20.5"
   },
   "dependencies": {
-    "crypto": "^1.0.1"
+    "bcryptjs": "^3.0.2",
+    "crypto": "^1.0.1",
+    "pg": "^8.16.3"
   }
 }
