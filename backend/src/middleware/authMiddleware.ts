@@ -1,10 +1,11 @@
 import type { Request, Response, NextFunction } from 'express';
-import type { User } from '../types/user.js';
+import type { Role } from '../types/user.js';
 import jwt from 'jsonwebtoken';
 
-export type DecodedToken = {
-  token: string;
-  user: User;
+export type JWTPayload = {
+  id: number;
+  name: string;
+  role: Role;
 };
 
 export function authMiddleware(requiredRole?: string) {
@@ -18,12 +19,12 @@ export function authMiddleware(requiredRole?: string) {
       const decoded = jwt.verify(
         token,
         process.env.JWT_SECRET as string
-      ) as DecodedToken;
+      ) as JWTPayload;
 
-      req.user = decoded.user;
+      req.user = decoded;
       console.log(decoded);
 
-      if (requiredRole && decoded.user.role !== requiredRole) {
+      if (requiredRole && decoded.role !== requiredRole) {
         return res.status(403).json({ error: 'Forbidden' });
       }
 
