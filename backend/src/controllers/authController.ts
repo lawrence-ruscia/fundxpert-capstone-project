@@ -44,3 +44,5 @@ export async function resetPassword(req: Request, res: Response) {
     res.status(400).json({ error: (err as Error).message });
   }
 }
+
+

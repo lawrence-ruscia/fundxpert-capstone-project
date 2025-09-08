@@ -18,8 +18,7 @@
     "lint": "npm run lint -w backend && npm run lint -w frontend",
     "clean": "npm run clean -w backend && npm run clean -w frontend",
     "db:seed": "npm run db:seed -w backend",
-    "db:reset": "npm run db:reset -w backend",
-    "seed:users": "tsx database/seeds/seedUsers.ts"
+    "db:reset": "npm run db:reset -w backend"
   },
   "repository": {
     "type": "git",

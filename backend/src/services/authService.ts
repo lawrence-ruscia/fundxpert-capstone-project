@@ -1,13 +1,13 @@
+import type { User } from '../types/user.js';
+import type { UserResponse } from '../types/userResponse.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { pool } from '../config/db.config.js';
-import type { User } from '../types/user.js';
 import {
   LOCKOUT_DURATION_MINUTES,
   MAX_FAILED_ATTEMPTS,
   PASSWORD_EXPIRY_DAYS,
   PASSWORD_HISTORY_LIMIT,
-  TEMP_PASSWORD_EXPIRY_DAYS,
 } from '../config/security.config.js';
 
 export type LoginResponse = {
@@ -24,14 +24,23 @@ export async function registerUser(
   email: string,
   password: string,
   role: string,
-  date_hired: string | undefined
-): Promise<User> {
+  date_hired?: string
+): Promise<UserResponse> {
   const hash = await bcrypt.hash(password, 10);
 
   const result = await pool.query(
-    `INSERT INTO users (name, email, password_hash, role, date_hired) 
-     VALUES ($1, $2, $3, $4, $5) RETURNING id, name, email, role, date_hired`,
-    [name, email, hash, role, date_hired]
+    `INSERT INTO users (name, email, password_hash, role, date_hired, salary, employment_status)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)
+     RETURNING id, name, email, role, salary, employment_status, date_hired, created_at`,
+    [
+      name,
+      email,
+      hash,
+      role,
+      date_hired || new Date(),
+      0, // default salary (can be updated later)
+      'Active', // default status
+    ]
   );
 
   return result.rows[0];
