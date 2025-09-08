@@ -54,15 +54,16 @@ async function seedUsers() {
     const hrPassword = await bcrypt.hash('HR_Str0ngP@ss!', 10);
     await pool.query(
       `INSERT INTO users 
-       (name, email, password_hash, role, date_hired, temp_password, temp_password_expires,
+       (name, email, password_hash, role, date_hired, employee_id, temp_password, temp_password_expires,
         salary, employment_status, department_id, position_id)
-       VALUES ($1, $2, $3, $4, $5, false, NULL, $6, $7, $8, $9)`,
+       VALUES ($1, $2, $3, $4, $5, $6, false, NULL, $7, $8, $9, $10)`,
       [
         'HR Admin',
         'hr@metrobank.com.ph',
         hrPassword,
         'HR',
         '2020-01-15',
+        '10-12345',
         80000, // HR salary
         'Active', // Employment status
         hrDeptId, // Department
@@ -77,16 +78,17 @@ async function seedUsers() {
 
     const { rows } = await pool.query(
       `INSERT INTO users 
-       (name, email, password_hash, role, date_hired, temp_password, temp_password_expires,
+       (name, email, password_hash, role, date_hired, employee_id, temp_password, temp_password_expires,
         salary, employment_status, department_id, position_id)
-       VALUES ($1, $2, $3, $4, $5, true, $6, $7, $8, $9, $10)
-       RETURNING id, name, email, role, temp_password_expires, salary, employment_status, department_id, position_id`,
+       VALUES ($1, $2, $3, $4, $5, $6, true, $7, $8, $9, $10, $11)
+       RETURNING id, name, email, role, employee_id, temp_password_expires, salary, employment_status, department_id, position_id`,
       [
         'Juan Dela Cruz',
         'juan@metrobank.com.ph',
         employeePassword,
         'Employee',
         '2023-06-01',
+        '11-12345',
         expiresAt,
         40000, // Employee salary
         'Active',

@@ -20,25 +20,29 @@ export type LoginResponse = {
 };
 
 export async function registerUser(
+  employee_id: string,
   name: string,
   email: string,
   password: string,
   role: string,
-  date_hired?: string
+  date_hired?: string,
+  salary: number = 0
 ): Promise<UserResponse> {
   const hash = await bcrypt.hash(password, 10);
 
   const result = await pool.query(
-    `INSERT INTO users (name, email, password_hash, role, date_hired, salary, employment_status)
-     VALUES ($1, $2, $3, $4, $5, $6, $7)
-     RETURNING id, name, email, role, salary, employment_status, date_hired, created_at`,
+    `INSERT INTO users 
+     (employee_id, name, email, password_hash, role, date_hired, department_id, position_id, salary, employment_status)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+     RETURNING id, employee_id, name, email, role, salary, employment_status, date_hired, department_id, position_id, created_at`,
     [
+      employee_id,
       name,
       email,
       hash,
       role,
       date_hired || new Date(),
-      0, // default salary (can be updated later)
+      salary, // default salary 0 (can be updated later)
       'Active', // default status
     ]
   );

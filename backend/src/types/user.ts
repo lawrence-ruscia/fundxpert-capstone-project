@@ -1,6 +1,8 @@
 // Backend types, NOTE: never send this to the frontend, use type `UserResponse` instead
 export interface User {
   id: number;
+  // employee fields
+  employee_id: string;
   name: string;
   email: string;
   password_hash: string;

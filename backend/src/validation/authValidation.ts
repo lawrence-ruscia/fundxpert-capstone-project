@@ -1,6 +1,9 @@
 import { z } from 'zod';
 
 export const registerSchema = z.object({
+  employee_id: z
+    .string()
+    .regex(/^\d{2}-\d{5}$/, 'Employee ID must follow the format NN-NNNNN'),
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z
     .email('Invalid email address')

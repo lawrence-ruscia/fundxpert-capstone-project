@@ -3,10 +3,10 @@ import type { Department, Position } from './user.js';
 // Frontend types
 export interface UserResponse {
   id: number;
+  employee_id: string;
   name: string;
   email: string;
   role: 'Employee' | 'HR' | 'Admin';
-
   department?: Department | null;
   position?: Position | null;
   salary: number;
