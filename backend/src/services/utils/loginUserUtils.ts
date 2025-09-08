@@ -1,0 +1,95 @@
+import type { User } from '../../types/user.js';
+import { pool } from '../../config/db.config.js';
+import bcrypt from 'bcryptjs';
+import {
+  LOCKOUT_DURATION_MINUTES,
+  MAX_FAILED_ATTEMPTS,
+  PASSWORD_EXPIRY_DAYS,
+} from '../../config/security.config.js';
+
+export const findUserByEmail = async (email: string): Promise<User | null> => {
+  const result = await pool.query(`SELECT * FROM users WHERE email = $1`, [
+    email,
+  ]);
+  return result.rows[0] || null;
+};
+
+export const checkAccountLockout = (user: User): void => {
+  if (!user.locked_until) return;
+
+  const lockedUntil = new Date(user.locked_until);
+  const now = new Date();
+
+  if (lockedUntil > now) {
+    const minutesRemaining = Math.ceil(
+      (lockedUntil.getTime() - now.getTime()) / 60000
+    );
+    throw new Error(
+      `Account locked. Try again in ${minutesRemaining} minute(s).`
+    );
+  }
+};
+
+export const validateUserPassword = async (
+  password: string,
+  hashedPassword: string
+): Promise<boolean> => {
+  return await bcrypt.compare(password, hashedPassword);
+};
+
+export const validateTemporaryPassword = (user: User) => {
+  const now = new Date();
+
+  if (
+    user.temp_password_expires &&
+    new Date(user.temp_password_expires) < now
+  ) {
+    throw new Error('Temporary password expired. Please reset your password.');
+  }
+};
+
+export const handleFailedLoginAttempt = async (user: User): Promise<never> => {
+  const failedAttempts = user.failed_attempts + 1;
+
+  if (failedAttempts >= MAX_FAILED_ATTEMPTS) {
+    const lockedUntil = new Date(Date.now() + LOCKOUT_DURATION_MINUTES * 60000);
+
+    await pool.query(
+      `UPDATE users SET failed_attempts = $1, locked_until = $2 WHERE id = $3`,
+      [failedAttempts, lockedUntil, user.id]
+    );
+
+    throw new Error(
+      `Account locked due to too many failed attempts. Try again after ${LOCKOUT_DURATION_MINUTES} minutes.`
+    );
+  }
+
+  await pool.query(`UPDATE users SET failed_attempts = $1 WHERE id = $2`, [
+    failedAttempts,
+    user.id,
+  ]);
+
+  throw new Error(
+    `Invalid email or password. ${MAX_FAILED_ATTEMPTS - failedAttempts} attempts left.`
+  );
+};
+
+export const checkPasswordExpiry = (user: User): void => {
+  if (!user.password_last_changed) return;
+
+  const passwordAge = Math.floor(
+    (Date.now() - new Date(user.password_last_changed).getTime()) /
+      (1000 * 60 * 60 * 24)
+  );
+
+  if (passwordAge > PASSWORD_EXPIRY_DAYS || user.password_expired) {
+    throw new Error('Password expired. Please reset your password.');
+  }
+};
+
+export const resetFailedAttempts = async (userId: number): Promise<void> => {
+  await pool.query(
+    `UPDATE users SET failed_attempts = 0, locked_until = NULL WHERE id = $1`,
+    [userId]
+  );
+};
