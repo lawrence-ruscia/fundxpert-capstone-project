@@ -19,6 +19,8 @@ export interface User {
   password_expired: boolean;
   temp_password: boolean;
   temp_password_expires?: Date | null;
+  is_twofa_enabled: boolean;
+  twofa_secret?: string | null;
 
   // foreign keys
   department_id?: number | null; // reference to departments

@@ -38,3 +38,12 @@ authRouter.post(
   validateRequest(resetPassSchema),
   authController.resetPassword
 );
+
+// Requires login (JWT) to enable 2FA
+authRouter.post('/2fa/setup', authMiddleware(), authController.setup2FA);
+authRouter.post(
+  '/2fa/verify-setup',
+  authMiddleware(),
+  authController.verify2FASetup
+);
+authRouter.post('/2fa/login', authMiddleware(), authController.loginWith2FA);

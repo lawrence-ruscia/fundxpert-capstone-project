@@ -13,7 +13,7 @@ import {
   validateTemporaryPassword,
 } from './utils/loginUserUtils.js';
 
-export type LoginResponse = {
+export type JWTLoginResponse = {
   token: string;
   user: {
     id: number;
@@ -21,6 +21,13 @@ export type LoginResponse = {
     role: string;
   };
 };
+
+export type TwoFALoginResponse = {
+  twofaRequired: boolean;
+  userId: number;
+};
+
+export type LoginResponse = JWTLoginResponse | TwoFALoginResponse;
 
 export async function registerUser(
   employee_id: string,
@@ -85,6 +92,11 @@ export async function loginUser(
 
   // 5. Successful login cleanup
   await resetFailedAttempts(user.id);
+
+  // If 2FA is enabled, don’t issue JWT yet
+  if (user.is_twofa_enabled) {
+    return { twofaRequired: true, userId: user.id };
+  }
 
   // 6. Generate token and response
   const token = jwt.sign(

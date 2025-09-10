@@ -12,7 +12,7 @@ app.get('/', (req, res) => {
 });
 
 // Authentication
-app.use('/', authRouter);
+app.use('/auth', authRouter);
 
 app.listen(PORT, err => {
   if (err) {
