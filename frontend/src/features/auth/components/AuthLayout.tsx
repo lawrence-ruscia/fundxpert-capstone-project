@@ -3,11 +3,7 @@ import background from '@/assets/login-background.png';
 import backgroundSmall from '@/assets/login-background-small.png';
 import Logo from '@/components/ui/logo';
 
-export const AuthLayout = ({
-  children,
-}: {
-  children: React.ReactElement | React.ReactElement[];
-}) => {
+export const AuthLayout = ({ children }: { children: React.ReactNode }) => {
   const isTablet = useBreakpoint('(min-width: 768px)');
 
   return (
@@ -17,9 +13,13 @@ export const AuthLayout = ({
         backgroundImage: `url(${isTablet ? background : backgroundSmall})`,
       }}
     >
-      <div className='w-full max-w-sm'>
-        <Logo className='mb-4' />
-        {children}
+      <div className='container grid h-svh max-w-none items-center justify-center'>
+        <div className='mx-auto flex w-full flex-col justify-center space-y-2 py-8 sm:w-[480px] sm:p-8'>
+          <div className='mb-4 flex items-center justify-center'>
+            <Logo className='mb-2' />
+          </div>
+          {children}
+        </div>
       </div>
     </div>
   );
