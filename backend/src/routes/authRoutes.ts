@@ -46,4 +46,4 @@ authRouter.post(
   authMiddleware(),
   authController.verify2FASetup
 );
-authRouter.post('/2fa/login', authMiddleware(), authController.loginWith2FA);
+authRouter.post('/2fa/login', authController.loginWith2FA);

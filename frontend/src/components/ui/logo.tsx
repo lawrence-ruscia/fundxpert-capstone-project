@@ -1,0 +1,33 @@
+type PropTypes = {
+  size?: string;
+  fontSize?: string;
+  className?: string;
+};
+
+export default function Logo({
+  size = '40',
+  fontSize = 'text-2xl',
+  className,
+}: PropTypes) {
+  return (
+    <div className={`flex items-center justify-center gap-1.5 ${className}`}>
+      <svg
+        width={size}
+        height={size}
+        viewBox='0 0 96 97'
+        fill='none'
+        xmlns='http://www.w3.org/2000/svg'
+      >
+        <path
+          d='M30.5062 18.7778H72L41.4938 57.7778H0L30.5062 18.7778Z'
+          fill='#059ED8'
+        />
+        <path
+          d='M32.9806 60.6721L21 75.7778H65.0682L96 36.7778H63.4749L44.5237 60.6721H32.9806Z'
+          fill='#001C89'
+        />
+      </svg>
+      <h1 className={`text-primary font-semibold ${fontSize}`}>FundXpert</h1>
+    </div>
+  );
+}

@@ -1,15 +1,20 @@
 import express, { json } from 'express';
 import 'dotenv/config'; // This works with ES modules
-import { authRouter } from './routes/authRoutes.js';
+import cors from 'cors';
+
 const app = express();
 const PORT = process.env.PORT ?? 3000;
 
 app.use(express.urlencoded());
 app.use(json());
+app.use(
+  cors({
+    origin: 'http://localhost:5173',
+    credentials: true, // Allow cookies/auth headers
+  })
+);
 
-app.get('/', (req, res) => {
-  res.json({ message: 'Hello World!' });
-});
+import { authRouter } from './routes/authRoutes.js';
 
 // Authentication
 app.use('/auth', authRouter);
