@@ -1,5 +1,6 @@
 import type { LoginSchema } from '../schemas/loginSchema';
 import type { LoginResponse } from '../pages/LoginPage';
+import { logout } from '@/utils/auth';
 
 // TODO: Move these to global shared/types folder
 export type UserResponse = {
@@ -51,7 +52,14 @@ export const authService = {
       method: 'GET',
       credentials: 'include', // include cookies
     });
+
     const responseData = await res.json();
+
+    if (res.status === 401) {
+      //  auto logout if unauthorized
+      await logout();
+      throw new Error('Session expired. Please log in again.');
+    }
 
     if (!res.ok) {
       throw new Error(responseData.error || 'Not Authenticated');

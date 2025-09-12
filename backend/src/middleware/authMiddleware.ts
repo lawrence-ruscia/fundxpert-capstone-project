@@ -14,8 +14,6 @@ export function authMiddleware(requiredRole?: string) {
   return async (req: Request, res: Response, next: NextFunction) => {
     const token = req.cookies.token; // read from cookie
 
-    console.log(`RETRIEVED TOKEN: ${token}`);
-
     if (!token) return res.status(401).json({ error: 'No token provided' });
 
     // TODO: Refactor and move to separate functions
@@ -26,7 +24,6 @@ export function authMiddleware(requiredRole?: string) {
       ) as JWTPayload;
 
       req.user = decoded;
-      console.log(`DECODED: ${decoded}`);
 
       // Fetch password info from DB
       const { rows } = await pool.query(
@@ -56,7 +53,7 @@ export function authMiddleware(requiredRole?: string) {
 
       next();
     } catch {
-      res.status(401).json({ error: 'Invalid token' });
+      res.status(401).json({ error: 'Unauthorized or expired token' });
     }
   };
 }

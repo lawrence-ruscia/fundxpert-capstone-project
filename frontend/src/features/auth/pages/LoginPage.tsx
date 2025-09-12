@@ -1,7 +1,7 @@
 import { LoginForm } from '../components/LoginForm';
 import type { LoginSchema } from '../schemas/loginSchema';
 import { authService } from '../services/authService';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Card,
   CardContent,
@@ -23,6 +23,8 @@ export type LoginResponse =
 
 export const LoginPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  const state = location.state as { message?: string } | null;
 
   const onSubmit = async (
     data: LoginSchema,
@@ -53,6 +55,9 @@ export const LoginPage = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
+        {state?.message && (
+          <p className='text-sm font-medium text-red-500'>{state.message}</p>
+        )}
         <LoginForm onSubmit={onSubmit} />
       </CardContent>
       <CardFooter>

@@ -13,7 +13,7 @@ export default function ProtectedRoute({
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState<UserResponse | null>(null);
   const [error, setError] = useState<Error | null>(null);
-
+  const location = useLocation();
   useEffect(() => {
     let mounted = true;
 
@@ -36,7 +36,17 @@ export default function ProtectedRoute({
 
   if (loading) return <p> Checking authentication...</p>;
 
-  if (error || !user) return <Navigate to='/auth/login' replace />;
+  if (error || !user)
+    return (
+      <Navigate
+        to='/auth/login'
+        replace
+        state={{
+          from: location,
+          message: 'Your session has expired. Please log in again.',
+        }}
+      />
+    );
 
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     switch (user.role) {
