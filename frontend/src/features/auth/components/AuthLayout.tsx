@@ -2,8 +2,8 @@ import { useBreakpoint } from '@/hooks/useBreakpoint';
 import background from '@/assets/login-background.png';
 import backgroundSmall from '@/assets/login-background-small.png';
 import Logo from '@/components/ui/logo';
-
-export const AuthLayout = ({ children }: { children: React.ReactNode }) => {
+import { Outlet } from 'react-router-dom';
+export const AuthLayout = () => {
   const isTablet = useBreakpoint('(min-width: 768px)');
 
   return (
@@ -18,7 +18,7 @@ export const AuthLayout = ({ children }: { children: React.ReactNode }) => {
           <div className='mb-4 flex items-center justify-center'>
             <Logo className='mb-2' />
           </div>
-          {children}
+          <Outlet />
         </div>
       </div>
     </div>
