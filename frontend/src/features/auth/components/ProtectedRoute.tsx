@@ -35,6 +35,7 @@ export default function ProtectedRoute({
 
   if (error || !user) return <Navigate to='/auth/login' replace />;
 
+  // TODO: Fix bug where users are able to go back to login page after successfully logging in
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     switch (user.role) {
       case 'HR':

@@ -25,11 +25,14 @@ export const OTPPage = () => {
   }
 
   const handle2FALogin = async (
-    otp: string,
+    data: OTPSchema,
     setError: UseFormSetError<OTPSchema>
   ) => {
     try {
-      const response: LoginResponse = await authService.verify2FA(userId, otp);
+      const response: LoginResponse = await authService.verify2FA(
+        userId,
+        data.otp
+      );
       console.log(response);
       if ('user' in response) {
         // Clear temporary userId
@@ -58,17 +61,6 @@ export const OTPPage = () => {
       <CardContent>
         <OTPForm onVerify={handle2FALogin} />
       </CardContent>
-      <CardFooter>
-        <p className='text-muted-foreground px-8 text-center text-sm'>
-          Haven't received it?{' '}
-          <a
-            href='/sign-in'
-            className='hover:text-primary underline underline-offset-4'
-          >
-            Resend a new code.
-          </a>
-        </p>
-      </CardFooter>
     </Card>
   );
 };
