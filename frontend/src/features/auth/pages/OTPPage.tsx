@@ -28,11 +28,11 @@ export const OTPPage = () => {
     console.log(response);
 
     if ('token' in response && response.token !== null) {
-      alert('✅ Logged in with 2FA!');
-
-      // Store token and redirect to dashboard page
       setToken(response.token);
       localStorage.setItem('token', response.token);
+      localStorage.setItem('role', response.user.role); //  store role
+
+      // let ProtectedRoute handle the redirect
       navigate('/dashboard');
     } else {
       alert('❌ Invalid 2FA code');
@@ -46,7 +46,7 @@ export const OTPPage = () => {
           Two-factor Authentication
         </CardTitle>
         <CardDescription>
-          Please enter the authentication code send to your authenticator app.{' '}
+          Please enter the authentication code sent to your authenticator app.{' '}
           <br />
         </CardDescription>
       </CardHeader>

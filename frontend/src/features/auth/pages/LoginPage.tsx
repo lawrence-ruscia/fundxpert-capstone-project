@@ -34,6 +34,9 @@ export const LoginPage = () => {
       navigate('/auth/verify-2fa');
     } else if ('token' in response) {
       localStorage.setItem('token', response.token);
+      localStorage.setItem('role', response.user.role); //  store role
+
+      // let ProtectedRoute handle the redirect
       navigate('/dashboard');
     } else {
       alert('❌ Login failed');
