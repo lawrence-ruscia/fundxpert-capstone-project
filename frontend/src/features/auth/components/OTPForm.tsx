@@ -15,11 +15,11 @@ import {
   InputOTPSeparator,
 } from '@/components/ui/input-otp';
 import { cn } from '@/lib/utils';
-import { useForm } from 'react-hook-form';
+import { useForm, type UseFormSetError } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { otpSchema, type OTPSchema } from '../schemas/otpSchema';
 type OTPFormProps = {
-  onVerify: (otp: string) => void;
+  onVerify: (data: OTPSchema, setError: UseFormSetError<OTPSchema>) => void;
 };
 
 export const OTPForm = ({ onVerify }: OTPFormProps) => {
@@ -30,13 +30,12 @@ export const OTPForm = ({ onVerify }: OTPFormProps) => {
 
   const otp = form.watch('otp');
 
-  const onSubmit = async () => {
-    await onVerify(otp);  
-  };
-
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className={cn('grid gap-2')}>
+      <form
+        onSubmit={form.handleSubmit(data => onVerify(data, form.setError))}
+        className={cn('grid gap-2')}
+      >
         <FormField
           control={form.control}
           name='otp'

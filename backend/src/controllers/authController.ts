@@ -140,7 +140,6 @@ export async function verify2FASetup(req: Request, res: Response) {
 export async function loginWith2FA(req: Request, res: Response) {
   try {
     const { userId, token } = req.body;
-    console.log(`USER_ID: ${userId} TOKEN: ${token}`);
     // Fetch secret from DB
     const { rows } = await pool.query(
       'SELECT id, name, role, twofa_secret FROM users WHERE id = $1',
@@ -160,7 +159,7 @@ export async function loginWith2FA(req: Request, res: Response) {
     });
 
     if (!isValid) {
-      return res.status(400).json({ error: 'Invalid 2FA token' });
+      return res.status(400).json({ error: 'Invalid 2FA token.' });
     }
 
     const jwtToken = jwt.sign(

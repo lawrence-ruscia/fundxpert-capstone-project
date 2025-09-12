@@ -17,7 +17,13 @@ export const authService = {
       credentials: 'include',
     });
 
-    return res.json();
+    const responseData = await res.json();
+
+    if (!res.ok) {
+      throw new Error(responseData.error || 'Login failed');
+    }
+
+    return responseData;
   },
 
   verify2FA: async (
@@ -31,7 +37,13 @@ export const authService = {
       credentials: 'include',
     });
 
-    return res.json();
+    const responseData = await res.json();
+
+    if (!res.ok) {
+      throw new Error(responseData.error || '2FA failed');
+    }
+
+    return responseData;
   },
 
   fetchCurrentUser: async (): Promise<UserResponse> => {
@@ -39,13 +51,12 @@ export const authService = {
       method: 'GET',
       credentials: 'include', // include cookies
     });
+    const responseData = await res.json();
 
     if (!res.ok) {
-      throw new Error('Not authenticated');
+      throw new Error(responseData.error || 'Not Authenticated');
     }
 
-    const data = await res.json();
-    console.log(`USER ROLE: ${data.user.role}`);
-    return data.user;
+    return responseData.user;
   },
 };

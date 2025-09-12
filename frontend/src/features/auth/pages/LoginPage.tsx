@@ -10,6 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import type { UseFormSetError } from 'react-hook-form';
 
 export type LoginResponse =
   | {
@@ -23,19 +24,23 @@ export type LoginResponse =
 export const LoginPage = () => {
   const navigate = useNavigate();
 
-  const onSubmit = async (data: LoginSchema) => {
-    const response: LoginResponse = await authService.login(data);
+  const onSubmit = async (
+    data: LoginSchema,
+    setError: UseFormSetError<LoginSchema>
+  ) => {
+    try {
+      const response: LoginResponse = await authService.login(data);
+      if ('twofaRequired' in response) {
+        // Store userId in sessionStorage so it's available after refresh
+        sessionStorage.setItem('twofa_userId', String(response.userId));
 
-    if ('twofaRequired' in response) {
-      // Store userId in sessionStorage so it's available after refresh
-      sessionStorage.setItem('twofa_userId', String(response.userId));
-
-      navigate('/auth/verify-2fa');
-    } else if ('user' in response) {
-      // let ProtectedRoute handle the redirect
-      navigate('/dashboard');
-    } else {
-      alert('❌ Login failed');
+        navigate('/auth/verify-2fa');
+      } else if ('user' in response) {
+        // let ProtectedRoute handle the redirect
+        navigate('/dashboard');
+      }
+    } catch (err) {
+      setError('root', { message: (err as Error).message || 'Login failed' });
     }
   };
 
