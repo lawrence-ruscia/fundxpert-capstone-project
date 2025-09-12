@@ -48,3 +48,4 @@ authRouter.post(
 );
 authRouter.post('/2fa/login', authController.loginWith2FA);
 authRouter.get('/me', authMiddleware(), authController.getCurrentUser);
+authRouter.post('/logout', authController.logout);

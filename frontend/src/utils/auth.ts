@@ -1,4 +1,4 @@
-// TODO: switch to httpOnly cookies later
+import { authService } from '@/features/auth/services/authService';
 export function getToken() {
   return localStorage.getItem('token');
 }
@@ -11,9 +11,15 @@ export function isAuthenticated() {
   return !!getToken();
 }
 
-export function logout() {
-  localStorage.removeItem('token');
-  localStorage.removeItem('user');
+export async function logout() {
+  try {
+    await authService.logoutUser();
+  } catch (err) {
+    console.error('Error logging out:', err);
+  } finally {
+    // Clear client-only data
+    sessionStorage.removeItem('twofa_userId');
 
-  sessionStorage.removeItem('twofa_userId');
+    localStorage.removeItem('role');
+  }
 }

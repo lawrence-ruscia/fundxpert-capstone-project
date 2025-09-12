@@ -1,4 +1,4 @@
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { authService, type UserResponse } from '../services/authService';
 interface ProtectedRouteProps {
@@ -15,27 +15,29 @@ export default function ProtectedRoute({
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
+    let mounted = true;
+
     async function checkAuth() {
       try {
         const userData = await authService.fetchCurrentUser();
-        setUser(userData);
+        if (mounted) setUser(userData);
       } catch (err) {
-        if (err instanceof Error) {
-          console.error(`Error Fetch Current User: ${err}`);
-          setError(err);
-        }
+        if (mounted) setError(err as Error);
       } finally {
-        setLoading(false);
+        if (mounted) setLoading(false);
       }
     }
     checkAuth();
+
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   if (loading) return <p> Checking authentication...</p>;
 
   if (error || !user) return <Navigate to='/auth/login' replace />;
 
-  // TODO: Fix bug where users are able to go back to login page after successfully logging in
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     switch (user.role) {
       case 'HR':

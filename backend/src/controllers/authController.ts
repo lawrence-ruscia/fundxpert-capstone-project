@@ -198,3 +198,14 @@ export async function getCurrentUser(req: Request, res: Response) {
     res.status(401).json({ error: 'Unauthorized' });
   }
 }
+
+export async function logout(req: Request, res: Response) {
+  // Clear the JWT cookie
+  res.clearCookie('token', {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'strict',
+  });
+
+  res.json({ message: 'Logged out successfully' });
+}
