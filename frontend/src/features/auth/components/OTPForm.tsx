@@ -31,7 +31,7 @@ export const OTPForm = ({ onVerify }: OTPFormProps) => {
   const otp = form.watch('otp');
 
   const onSubmit = async () => {
-    await onVerify(otp);
+    await onVerify(otp);  
   };
 
   return (

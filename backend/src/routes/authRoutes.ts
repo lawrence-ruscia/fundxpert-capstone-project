@@ -47,3 +47,4 @@ authRouter.post(
   authController.verify2FASetup
 );
 authRouter.post('/2fa/login', authController.loginWith2FA);
+authRouter.get('/me', authMiddleware(), authController.getCurrentUser);

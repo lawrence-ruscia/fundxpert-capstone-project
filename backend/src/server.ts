@@ -1,6 +1,7 @@
 import express, { json } from 'express';
 import 'dotenv/config'; // This works with ES modules
 import cors from 'cors';
+import cookieParser from 'cookie-parser';
 
 const app = express();
 const PORT = process.env.PORT ?? 3000;
@@ -13,6 +14,7 @@ app.use(
     credentials: true, // Allow cookies/auth headers
   })
 );
+app.use(cookieParser());
 
 import { authRouter } from './routes/authRoutes.js';
 

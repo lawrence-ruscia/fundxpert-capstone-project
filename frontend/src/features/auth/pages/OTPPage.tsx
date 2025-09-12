@@ -1,5 +1,5 @@
 import { OTPForm } from '../components/OTPForm';
-import { useLocation, useNavigate, Navigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { authService } from '../services/authService';
 import type { LoginResponse } from './LoginPage';
 import { useState } from 'react';
@@ -14,7 +14,6 @@ import {
 
 export const OTPPage = () => {
   const navigate = useNavigate();
-  const [token, setToken] = useState<string | null>(null);
   const storedUserId = sessionStorage.getItem('twofa_userId');
   const userId = storedUserId ? parseInt(storedUserId, 10) : null;
 
@@ -27,11 +26,9 @@ export const OTPPage = () => {
     const response: LoginResponse = await authService.verify2FA(userId, otp);
     console.log(response);
 
-    if ('token' in response && response.token !== null) {
-      setToken(response.token);
-      localStorage.setItem('token', response.token);
-      localStorage.setItem('role', response.user.role); //  store role
-
+    if ('user' in response) {
+      // Clear temporary userId
+      sessionStorage.removeItem('twofa_userId');
       // let ProtectedRoute handle the redirect
       navigate('/dashboard');
     } else {

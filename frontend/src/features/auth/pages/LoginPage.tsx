@@ -13,7 +13,6 @@ import {
 
 export type LoginResponse =
   | {
-      token: string;
       user: { id: number; name: string; role: string };
     }
   | {
@@ -32,10 +31,7 @@ export const LoginPage = () => {
       sessionStorage.setItem('twofa_userId', String(response.userId));
 
       navigate('/auth/verify-2fa');
-    } else if ('token' in response) {
-      localStorage.setItem('token', response.token);
-      localStorage.setItem('role', response.user.role); //  store role
-
+    } else if ('user' in response) {
       // let ProtectedRoute handle the redirect
       navigate('/dashboard');
     } else {

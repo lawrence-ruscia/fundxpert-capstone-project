@@ -30,12 +30,23 @@ export async function login(req: Request, res: Response) {
     const result = await authService.loginUser(email, password);
 
     if ('twofaRequired' in result && result.twofaRequired) {
-      res.json({ twofaRequired: result.twofaRequired, userId: result.userId });
-      return;
+      return res.json({
+        twofaRequired: result.twofaRequired,
+        userId: result.userId,
+      });
     }
 
     if ('token' in result && result.token) {
-      res.json({ token: result.token, user: result.user });
+      // Set it as httpOnly cookie, instead of diretly setting token in body
+      res.cookie('token', result.token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production', // only over HTTPS in prod
+        sameSite: 'strict', // CSRF protection
+        maxAge: 60 * 60 * 1000, // 1h
+      });
+
+      // Send only non-sensitive user info back
+      return res.json({ user: result.user });
     }
   } catch (err) {
     if (err instanceof Error) {
@@ -80,7 +91,6 @@ export async function setup2FA(req: Request, res: Response) {
     res.json({
       message: 'Scan this QR code with Google Authenticator',
       qrCode: qrCodeDataURL, // Frontend shows this image
-      secret: secret.base32, // ⚠️ for debugging only; normally not sent
     });
   } catch (err) {
     console.error('2FA setup error: ', err);
@@ -98,7 +108,7 @@ export async function verify2FASetup(req: Request, res: Response) {
       [userId]
     );
     const user = rows[0];
-    console.log(user);
+
     if (!user || !user.twofa_secret) {
       return res.status(400).json({ error: '2FA not initiated' });
     }
@@ -130,7 +140,7 @@ export async function verify2FASetup(req: Request, res: Response) {
 export async function loginWith2FA(req: Request, res: Response) {
   try {
     const { userId, token } = req.body;
-
+    console.log(`USER_ID: ${userId} TOKEN: ${token}`);
     // Fetch secret from DB
     const { rows } = await pool.query(
       'SELECT id, name, role, twofa_secret FROM users WHERE id = $1',
@@ -138,7 +148,7 @@ export async function loginWith2FA(req: Request, res: Response) {
     );
     const user = rows[0];
     if (!user || !user.twofa_secret) {
-      return res.status(400).json({ error: '2FA nto enabled' });
+      return res.status(400).json({ error: '2FA not enabled' });
     }
 
     // Verify OTP
@@ -153,15 +163,20 @@ export async function loginWith2FA(req: Request, res: Response) {
       return res.status(400).json({ error: 'Invalid 2FA token' });
     }
 
-    // Generate JWT
     const jwtToken = jwt.sign(
       { id: user.id, role: user.role },
       process.env.JWT_SECRET as string,
       { expiresIn: '1h' }
     );
 
-    res.json({
-      token: jwtToken,
+    res.cookie('token', jwtToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 60 * 60 * 1000,
+    });
+
+    return res.json({
       user: {
         id: user.id,
         name: user.name,
@@ -171,5 +186,16 @@ export async function loginWith2FA(req: Request, res: Response) {
   } catch (err) {
     console.error('2fa login error: ', err);
     res.status(500).json({ error: 'Login with 2FA failed' });
+  }
+}
+
+export async function getCurrentUser(req: Request, res: Response) {
+  try {
+    const user = req.user;
+    console.log(`USER: ${req.user}`);
+
+    res.json({ user });
+  } catch {
+    res.status(401).json({ error: 'Unauthorized' });
   }
 }
