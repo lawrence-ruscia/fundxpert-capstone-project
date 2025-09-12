@@ -9,4 +9,5 @@ export function isAuthenticated() {
 
 export function logout() {
   localStorage.removeItem('token');
+  sessionStorage.removeItem('twofa_userId');
 }

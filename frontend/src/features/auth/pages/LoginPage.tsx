@@ -28,8 +28,10 @@ export const LoginPage = () => {
     const response: LoginResponse = await authService.login(data);
 
     if ('twofaRequired' in response) {
-      // ✅ redirect to OTP page and pass userId via state
-      navigate('/auth/verify-2fa', { state: { userId: response.userId } });
+      // Store userId in sessionStorage so it's available after refresh
+      sessionStorage.setItem('twofa_userId', String(response.userId));
+
+      navigate('/auth/verify-2fa');
     } else if ('token' in response) {
       localStorage.setItem('token', response.token);
       navigate('/dashboard');

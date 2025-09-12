@@ -14,16 +14,14 @@ import {
 
 export const OTPPage = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const [token, setToken] = useState<string | null>(null);
-  const state = location.state as { userId: number } | undefined;
+  const storedUserId = sessionStorage.getItem('twofa_userId');
+  const userId = storedUserId ? parseInt(storedUserId, 10) : null;
 
-  if (!state?.userId) {
+  if (!userId) {
     //  No userId means user skipped login
     return <Navigate to='/auth/login' replace />;
   }
-
-  const { userId } = state;
 
   const handle2FALogin = async (otp: string) => {
     const response: LoginResponse = await authService.verify2FA(userId, otp);

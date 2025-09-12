@@ -6,6 +6,7 @@ import ProtectedRoute from '@/features/auth/components/ProtectedRoute';
 import { Navigate } from 'react-router-dom';
 import { AuthLayout } from '@/features/auth/components/AuthLayout';
 import { OTPPage } from '@/features/auth/pages/OTPPage';
+import AuthRedirect from '@/features/auth/components/AuthRedirect';
 
 export const router = createBrowserRouter([
   {
@@ -16,8 +17,22 @@ export const router = createBrowserRouter([
     path: '/auth',
     element: <AuthLayout />,
     children: [
-      { path: 'login', element: <LoginPage /> },
-      { path: 'verify-2fa', element: <OTPPage /> },
+      {
+        path: 'login',
+        element: (
+          <AuthRedirect>
+            <LoginPage />
+          </AuthRedirect>
+        ),
+      },
+      {
+        path: 'verify-2fa',
+        element: (
+          <AuthRedirect>
+            <OTPPage />
+          </AuthRedirect>
+        ),
+      },
       { index: true, element: <Navigate to='/auth/login' replace /> },
     ],
   },
@@ -31,6 +46,6 @@ export const router = createBrowserRouter([
   },
   {
     path: '*',
-    element: <NotFoundPage />,
+    element: <Navigate to='/auth/login' replace />,
   },
 ]);
