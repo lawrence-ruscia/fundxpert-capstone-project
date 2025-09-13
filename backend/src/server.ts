@@ -17,9 +17,11 @@ app.use(
 app.use(cookieParser());
 
 import { authRouter } from './routes/authRoutes.js';
+import { employeeRouter } from './routes/employeeRoutes.js';
 
-// Authentication
+// Routes
 app.use('/auth', authRouter);
+app.use('/employee', employeeRouter);
 
 app.listen(PORT, err => {
   if (err) {

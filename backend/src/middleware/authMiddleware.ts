@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import { pool } from '../config/db.config.js';
 import { PASSWORD_EXPIRY_DAYS } from '../config/security.config.js';
 
-export type JWTPayload = {
+export type UserRequest = {
   id: number;
   name: string;
   role: Role;
@@ -21,7 +21,7 @@ export function authMiddleware(requiredRole?: string) {
       const decoded = jwt.verify(
         token,
         process.env.JWT_SECRET as string
-      ) as JWTPayload;
+      ) as UserRequest;
 
       req.user = decoded;
 

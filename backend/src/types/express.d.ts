@@ -1,9 +1,9 @@
-import type { JWTPayload } from '../middleware/authMiddleware.ts';
+import type { UserRequest } from '../middleware/authMiddleware.ts';
 
 declare global {
   namespace Express {
     interface Request {
-      user?: JWTPayload;
+      user?: UserRequest;
     }
   }
 }
