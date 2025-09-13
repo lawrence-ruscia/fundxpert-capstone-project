@@ -1,5 +1,5 @@
 import type { Request, Response, NextFunction } from 'express';
-import type { Role } from '../types/user.js';
+import type { Role, User } from '../types/user.js';
 import jwt from 'jsonwebtoken';
 import { pool } from '../config/db.config.js';
 import { PASSWORD_EXPIRY_DAYS } from '../config/security.config.js';
@@ -35,12 +35,7 @@ export function authMiddleware(requiredRole?: string) {
       if (!user) return res.status(401).json({ error: 'User not found' });
 
       // Check expiration
-      const passwordAge = Math.floor(
-        (Date.now() - new Date(user.password_last_changed).getTime()) /
-          (1000 * 60 * 60 * 24)
-      );
-
-      if (passwordAge > PASSWORD_EXPIRY_DAYS || user.password_expired) {
+      if (isPasswordExpired(user)) {
         return res
           .status(403)
           .json({ error: 'Password expired. Please reset your password.' });
@@ -57,3 +52,14 @@ export function authMiddleware(requiredRole?: string) {
     }
   };
 }
+
+const isPasswordExpired = (user: User) => {
+  if (user.password_last_changed) {
+    const passwordAge = Math.floor(
+      (Date.now() - new Date(user.password_last_changed).getTime()) /
+        (1000 * 60 * 60 * 24)
+    );
+
+    return passwordAge > PASSWORD_EXPIRY_DAYS || user.password_expired;
+  }
+};
