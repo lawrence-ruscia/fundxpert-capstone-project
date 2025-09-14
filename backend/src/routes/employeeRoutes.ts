@@ -9,3 +9,9 @@ employeeRouter.get(
   authMiddleware(),
   employeeController.getOverview
 );
+
+employeeRouter.get(
+  '/contributions',
+  authMiddleware(),
+  employeeController.getContributions
+);

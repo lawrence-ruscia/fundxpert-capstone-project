@@ -1,7 +1,10 @@
 import { pool } from '../config/db.config.js';
+import type { EmployeeOverview } from '../types/employeeOverview.js';
 import { calculateVesting } from './utils/getEmployeeOverviewUtil.js';
 
-export async function getEmployeeOverview(userId: number) {
+export async function getEmployeeOverview(
+  userId: number
+): Promise<EmployeeOverview> {
   const query = `
     WITH contribution_summary AS (
       SELECT
@@ -90,4 +93,53 @@ export async function getEmployeeOverview(userId: number) {
       max_loan_amount: maxLoanAmount,
     },
   };
+}
+
+export async function getEmployeeContributions(userId: number, year: number) {
+  const query = `
+    WITH monthly AS (
+      SELECT
+        DATE_TRUNC('month', contribution_date) AS month,
+        SUM(employee_amount) AS employee_total,
+        SUM(employer_amount) AS employer_total
+      FROM contributions
+      WHERE user_id = $1
+        AND EXTRACT(YEAR FROM contribution_date) = $2
+      GROUP BY DATE_TRUNC('month', contribution_date)
+      ORDER BY month
+    ),
+    running AS (
+      SELECT
+        month,
+        employee_total,
+        employer_total,
+        (employee_total + employer_total) AS total,
+        SUM(employee_total + employer_total) OVER (ORDER BY month) AS cumulative
+      FROM monthly
+    )
+    SELECT * FROM running;
+  `;
+
+  const { rows } = await pool.query(query, [userId, year]);
+
+  const contributions = rows.map(r => ({
+    month: new Date(r.month).toLocaleString('default', { month: 'long' }),
+    employee: Number(r.employee_total),
+    employer: Number(r.employer_total),
+    total: Number(r.total),
+    cumulative: Number(r.cumulative),
+  }));
+
+  // Compute totals
+  const totals = contributions.reduce(
+    (acc, c) => {
+      acc.employee += c.employee;
+      acc.employer += c.employer;
+      acc.grand_total += c.total;
+      return acc;
+    },
+    { employee: 0, employer: 0, grand_total: 0 }
+  );
+
+  return { year, contributions, totals };
 }
