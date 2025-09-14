@@ -9,6 +9,8 @@ import { Navigate } from 'react-router-dom';
 import { AuthLayout } from '@/shared/layout/AuthLayout';
 import { OTPPage } from '@/features/auth/pages/OTPPage';
 import AuthRedirect from '@/features/auth/components/AuthRedirect';
+import EmployeeLayout from '@/shared/layout/EmployeeLayout';
+import ContributionHistoryPage from '@/features/contributions/employee/pages/ContributionHistoryPage';
 
 export const router = createBrowserRouter([
   {
@@ -42,9 +44,13 @@ export const router = createBrowserRouter([
     path: '/dashboard',
     element: (
       <ProtectedRoute allowedRoles={['Employee']}>
-        <EmployeeDashboard />
+        <EmployeeLayout />
       </ProtectedRoute>
     ),
+    children: [
+      { index: true, element: <EmployeeDashboard /> },
+      { path: 'contributions', element: <ContributionHistoryPage /> },
+    ],
   },
   {
     path: '/hr-dashboard',
