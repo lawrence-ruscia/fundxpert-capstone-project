@@ -54,7 +54,7 @@ export async function getEmployeeOverview(
   // Calculate vesting (2 years)
   const { vestedAmount, unvestedAmount } = calculateVesting(
     row.date_hired,
-    row.employee_total
+    row.employer_total
   );
 
   // Loan eligibility (50% of vested)

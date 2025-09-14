@@ -1,72 +1,74 @@
-import { useNavigate } from 'react-router-dom';
-import { logout } from '@/utils/auth';
 import { useEmployeeOverview } from '../hooks/useEmployeeOverview';
-
-import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  Tooltip,
-  CartesianGrid,
-  Legend,
-} from 'recharts';
-import { useEmployeeContributions } from '@/features/contributions/employee/hooks/useEmployeeContributions';
+import { Header } from '@/shared/layout/Header';
+import { Main } from '@/shared/layout/Main';
+import { EmployeeContributions } from '../components/EmployeeContributions';
+import { EmployerContributions } from '../components/EmployerContributions';
+import { ThemeSwitch } from '@/shared/components/theme-switch';
+import { ProfileDropdown } from '@/shared/components/profile-dropdown';
+import { VestedAmount } from '../components/VestedAmount';
+import { UnvestedAmount } from '../components/UnvestedAmount';
+import { TotalBalance } from '../components/TotalBalance';
 
 export default function EmployeeDashboard() {
-  const navigate = useNavigate();
   const { data: overview, loading, error } = useEmployeeOverview();
-  const { data: empContribution } = useEmployeeContributions();
 
   if (loading) return <p>Loading dashboard...</p>;
   if (error) return <p style={{ color: 'red' }}>❌ {error.message}</p>;
   if (!overview) return <p>No data available</p>;
 
-  // TODO: Build proper frontend
   return (
-    <div style={{ padding: '1rem' }}>
-      <button
-        className='border-2 border-red-600'
-        onClick={() => {
-          logout();
-          navigate('/');
-        }}
-      >
-        Logout
-      </button>
-      <h1>🏦 Employee Dashboard</h1>
-      <h2>Welcome, {overview.employee.name}</h2>
-      <p>Employee ID: {overview.employee.employee_id}</p>
+    <>
+      {/* ===== Top Heading ===== */}
+      <Header>
+        <div className='ms-auto flex items-center space-x-4'>
+          <ThemeSwitch />
+          <ProfileDropdown />
+        </div>
+      </Header>
 
-      <h3>💰 Balances</h3>
-      <p>Total Balance: ₱{overview.balances.total_balance}</p>
-
-      <h3>📈 Fund Growth</h3>
-      <LineChart width={600} height={300} data={empContribution?.contributions}>
-        <CartesianGrid strokeDasharray='3 3' />
-        <XAxis dataKey='month' />
-        <YAxis />
-        <Tooltip />
-        <Legend />
-        <Line
-          type='monotone'
-          dataKey='employee'
-          stroke='#8884d8'
-          name='Employee'
-        />
-        <Line
-          type='monotone'
-          dataKey='employer'
-          stroke='#82ca9d'
-          name='Employer'
-        />
-        <Line
-          type='monotone'
-          dataKey='cumulative'
-          stroke='#ffc658'
-          name='Cumulative'
-        />
-      </LineChart>
-    </div>
+      {/* ===== Main ===== */}
+      <Main>
+        <div className='mb-2 flex items-center justify-between space-y-2'>
+          <h1 className='text-2xl font-bold tracking-tight'>Dashboard</h1>
+          <div className='flex items-center space-x-2'></div>
+        </div>
+        <div className='space-y-4'>
+          <div className='space-y-4'>
+            <div className='grid gap-4 sm:grid-cols-2 lg:grid-cols-4'>
+              <EmployeeContributions
+                value={overview.balances.employee_contribution_total ?? 0}
+              />
+              <EmployerContributions
+                value={overview.balances.employer_contribution_total ?? 0}
+              />
+              <VestedAmount value={overview.balances.vested_amount ?? 0} />
+              <UnvestedAmount value={overview.balances.unvested_amount ?? 0} />
+              <TotalBalance value={overview.balances.total_balance ?? 0} />
+            </div>
+            {/* <div className='grid grid-cols-1 gap-4 lg:grid-cols-7'>
+              <Card className='col-span-1 lg:col-span-4'>
+                <CardHeader>
+                  <CardTitle>Overview</CardTitle>
+                </CardHeader>
+                <CardContent className='ps-2'>
+                  <Overview />
+                </CardContent>
+              </Card>
+              <Card className='col-span-1 lg:col-span-3'>
+                <CardHeader>
+                  <CardTitle>Recent Sales</CardTitle>
+                  <CardDescription>
+                    You made 265 sales this month.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <RecentSales />
+                </CardContent>
+              </Card>
+            </div> */}
+          </div>
+        </div>
+      </Main>
+    </>
   );
 }

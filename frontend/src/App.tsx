@@ -1,9 +1,12 @@
-import { LoginPage } from './features/auth/pages/LoginPage';
 import { RouterProvider } from 'react-router-dom';
 import { router } from './router/routes';
-
+import { ThemeProvider } from './shared/context/useTheme';
 function App() {
-  return <RouterProvider router={router} />;
+  return (
+    <ThemeProvider>
+      <RouterProvider router={router} />;
+    </ThemeProvider>
+  );
 }
 
 export default App;
