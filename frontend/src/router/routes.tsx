@@ -6,7 +6,7 @@ import AdminDashboard from '@/features/dashboard/admin/pages/AdminDashboard';
 import NotFoundPage from '@/features/NotFoundError';
 import ProtectedRoute from '@/features/auth/components/ProtectedRoute';
 import { Navigate } from 'react-router-dom';
-import { AuthLayout } from '@/features/auth/components/AuthLayout';
+import { AuthLayout } from '@/shared/layout/AuthLayout';
 import { OTPPage } from '@/features/auth/pages/OTPPage';
 import AuthRedirect from '@/features/auth/components/AuthRedirect';
 
