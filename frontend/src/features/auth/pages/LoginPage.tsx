@@ -1,6 +1,6 @@
 import { LoginForm } from '../components/LoginForm';
 import type { LoginSchema } from '../schemas/loginSchema';
-import { authService } from '../services/authService';
+import { authService, type UserResponse } from '../services/authService';
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Card,
@@ -11,17 +11,17 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import type { UseFormSetError } from 'react-hook-form';
+import { useAuth } from '../context/AuthContext';
 
 export type LoginResponse =
-  | {
-      user: { id: number; name: string; role: string };
-    }
+  | UserResponse
   | {
       twofaRequired: true;
       userId: number;
     };
 
 export const LoginPage = () => {
+  const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const state = location.state as { message?: string } | null;
@@ -39,6 +39,7 @@ export const LoginPage = () => {
         navigate('/auth/verify-2fa');
       } else if ('user' in response) {
         // let ProtectedRoute handle the redirect
+        login(response.user);
         navigate('/dashboard');
       }
     } catch (err) {

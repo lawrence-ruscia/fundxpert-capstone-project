@@ -1,12 +1,13 @@
 import { useNavigate, useLocation } from 'react-router-dom';
 import { ConfirmDialog } from './confirm-dialog';
-import { logout } from '@/utils/auth';
+import { useAuth } from '@/features/auth/context/AuthContext';
 interface SignOutDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }
 
 export function SignOutDialog({ open, onOpenChange }: SignOutDialogProps) {
+  const { logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
