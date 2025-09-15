@@ -20,6 +20,7 @@ import {
   CardDescription,
 } from '@/components/ui/card';
 import { FundGrowthChart } from '../components/FundGrowthChart';
+import { QuickActions } from '../components/QuickActions';
 
 export default function EmployeeDashboard() {
   const { data: overview, loading, error } = useEmployeeOverview();
@@ -113,22 +114,13 @@ export default function EmployeeDashboard() {
               />
             </div>
             <div className='grid grid-cols-1 gap-4 lg:grid-cols-7'>
-              <div className='col-span-1 lg:col-span-4'>
+              <div className='col-span-1 lg:col-span-5'>
                 <div>
                   <FundGrowthChart />
                 </div>
               </div>
-              {/* <Card className='col-span-1 lg:col-span-3'>
-                <CardHeader>
-                  <CardTitle>Recent Sales</CardTitle>
-                  <CardDescription>
-                    You made 265 sales this month.
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <RecentSales />
-                </CardContent>
-              </Card> */}
+
+              <QuickActions className='col-span-1 lg:col-span-2' />
             </div>
           </div>
         </div>
