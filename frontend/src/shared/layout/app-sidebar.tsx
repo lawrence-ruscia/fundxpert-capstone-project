@@ -14,6 +14,7 @@ import { useLayout } from '../context/layout-provider';
 
 export function AppSidebar() {
   const { collapsible, variant } = useLayout();
+
   return (
     <Sidebar collapsible={collapsible} variant={variant}>
       <SidebarHeader>

@@ -31,3 +31,6 @@ export type EmployeeOverview = {
     max_loan_amount: number;
   };
 };
+
+export type EmploymentStatus =
+  EmployeeOverview['employee']['employment_status'];

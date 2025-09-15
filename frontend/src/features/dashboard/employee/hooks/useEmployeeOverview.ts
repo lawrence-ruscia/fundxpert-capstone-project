@@ -1,8 +1,5 @@
-
-import {
-  fetchEmployeeOverview,
-  type EmployeeOverview,
-} from '../services/employeeService.js';
+import { fetchEmployeeOverview } from '../services/employeeService.js';
+import type { EmployeeOverview } from '../types/employeeOverview.js';
 import { useApi } from '@/hooks/useApi';
 
 export const useEmployeeOverview = () => {

@@ -40,14 +40,11 @@ export async function getContributions(req: Request, res: Response) {
     }
 
     const userId = req.user.id;
-    const year = parseInt(
-      (req.query.year as string) ?? new Date().getFullYear().toString(),
-      10
-    ); // Default to current year if no year is provided
+    const period = (req.query.period as string) || 'year';
 
-    const data = await getEmployeeContributions(userId, year);
+    const contributions = await getEmployeeContributions(userId, period);
 
-    res.json(data);
+    res.json(contributions);
   } catch (err) {
     console.error('Error fetching contributions:', err);
     res.status(500).json({ error: 'Failed to fetch contributions' });
