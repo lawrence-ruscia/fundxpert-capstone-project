@@ -128,13 +128,13 @@ export function FundGrowthChart() {
       case 'year':
         return 'Current Year';
       case '1y':
-        return '1 Year';
+        return 'Last Year';
       case '6m':
-        return '6 Months';
+        return 'Last 6 Months';
       case '3m':
-        return '3 Months';
+        return 'Last 3 Months';
       default:
-        return '3 Months';
+        return 'Last 3 Months';
     }
   };
 
@@ -211,9 +211,9 @@ export function FundGrowthChart() {
           >
             <ToggleGroupItem value='all'>All Time</ToggleGroupItem>
             <ToggleGroupItem value='year'>Current Year</ToggleGroupItem>
-            <ToggleGroupItem value='1y'>1 Year</ToggleGroupItem>
-            <ToggleGroupItem value='6m'>6 Months</ToggleGroupItem>
-            <ToggleGroupItem value='3m'>3 Months</ToggleGroupItem>
+            <ToggleGroupItem value='1y'>Last Year</ToggleGroupItem>
+            <ToggleGroupItem value='6m'>Last 6 Months</ToggleGroupItem>
+            <ToggleGroupItem value='3m'>Last 3 Months</ToggleGroupItem>
           </ToggleGroup>
           <Select
             value={timeRange}
@@ -236,13 +236,13 @@ export function FundGrowthChart() {
                 Current Year
               </SelectItem>
               <SelectItem value='1y' className='rounded-lg'>
-                1 Year
+                Last Year
               </SelectItem>
               <SelectItem value='6m' className='rounded-lg'>
-                6 Months
+                Last 6 Months
               </SelectItem>
               <SelectItem value='3m' className='rounded-lg'>
-                3 Months
+                Last 3 Months
               </SelectItem>
             </SelectContent>
           </Select>
