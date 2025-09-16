@@ -1,6 +1,6 @@
 import { OTPForm } from '../components/OTPForm';
 import { useNavigate, Navigate } from 'react-router-dom';
-import { authService } from '../services/authService';
+import { authService, type UserResponse } from '../services/authService';
 import type { LoginResponse } from './LoginPage';
 import { useState } from 'react';
 import {
@@ -13,8 +13,10 @@ import {
 } from '@/components/ui/card';
 import type { UseFormSetError } from 'react-hook-form';
 import type { OTPSchema } from '../schemas/otpSchema';
+import { useAuth } from '../context/AuthContext';
 
 export const OTPPage = () => {
+  const { login } = useAuth();
   const navigate = useNavigate();
   const storedUserId = sessionStorage.getItem('twofa_userId');
   const userId = storedUserId ? parseInt(storedUserId, 10) : null;
@@ -33,12 +35,13 @@ export const OTPPage = () => {
         userId,
         data.otp
       );
-      console.log(response);
       if ('user' in response) {
         // Clear temporary userId
         sessionStorage.removeItem('twofa_userId');
-        // let ProtectedRoute handle the redirect
-        navigate('/dashboard');
+
+        login(response.user as UserResponse);
+        // Redirect to dashboard
+        navigate('/dashboard', { replace: true });
       }
     } catch (err) {
       setError('otp', {

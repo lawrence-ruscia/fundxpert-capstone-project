@@ -11,9 +11,11 @@ import { sidebarData } from '../data/sidebarData';
 import { NavGroup } from '../components/nav-group';
 import { AppTitle } from '../components/app-title';
 import { useLayout } from '../context/layout-provider';
+import { useAuth } from '@/features/auth/context/AuthContext';
 
 export function AppSidebar() {
   const { collapsible, variant } = useLayout();
+  const { user } = useAuth();
 
   return (
     <Sidebar collapsible={collapsible} variant={variant}>
@@ -26,7 +28,9 @@ export function AppSidebar() {
         ))}
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={sidebarData.user} />
+        <NavUser
+          user={user ?? { id: 99, name: 'John Doe', role: 'Employee' }}
+        />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

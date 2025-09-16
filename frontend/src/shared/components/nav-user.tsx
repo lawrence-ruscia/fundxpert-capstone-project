@@ -25,13 +25,11 @@ import {
   useSidebar,
 } from '@/components/ui/sidebar';
 import { SignOutDialog } from './sign-out-dialog';
+import { getInitials } from '@/utils/getInitials';
+import type { UserResponse } from '@/features/auth/services/authService';
 
 type NavUserProps = {
-  user: {
-    name: string;
-    email: string;
-    avatar: string;
-  };
+  user: UserResponse;
 };
 
 export function NavUser({ user }: NavUserProps) {
@@ -49,12 +47,15 @@ export function NavUser({ user }: NavUserProps) {
                 className='data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground'
               >
                 <Avatar className='h-8 w-8 rounded-lg'>
-                  <AvatarImage src={user.avatar} alt={user.name} />
-                  <AvatarFallback className='rounded-lg'>SN</AvatarFallback>
+                  {/*  // TODO: Add avatar image persistence */}
+                  {/* <AvatarImage src={user.avatar} alt={user.name} /> */}
+                  <AvatarFallback className='rounded-lg'>
+                    {getInitials(user?.name ?? '')}
+                  </AvatarFallback>
                 </Avatar>
                 <div className='grid flex-1 text-start text-sm leading-tight'>
                   <span className='truncate font-semibold'>{user.name}</span>
-                  <span className='truncate text-xs'>{user.email}</span>
+                  <span className='truncate text-xs'>{user.role}</span>
                 </div>
                 <ChevronsUpDown className='ms-auto size-4' />
               </SidebarMenuButton>
@@ -68,12 +69,14 @@ export function NavUser({ user }: NavUserProps) {
               <DropdownMenuLabel className='p-0 font-normal'>
                 <div className='flex items-center gap-2 px-1 py-1.5 text-start text-sm'>
                   <Avatar className='h-8 w-8 rounded-lg'>
-                    <AvatarImage src={user.avatar} alt={user.name} />
-                    <AvatarFallback className='rounded-lg'>SN</AvatarFallback>
+                    {/* <AvatarImage src={user.avatar} alt={user.name} /> */}
+                    <AvatarFallback className='rounded-lg'>
+                      {getInitials(user?.name ?? '')}
+                    </AvatarFallback>
                   </Avatar>
                   <div className='grid flex-1 text-start text-sm leading-tight'>
                     <span className='truncate font-semibold'>{user.name}</span>
-                    <span className='truncate text-xs'>{user.email}</span>
+                    <span className='truncate text-xs'>{user.role}</span>
                   </div>
                 </div>
               </DropdownMenuLabel>

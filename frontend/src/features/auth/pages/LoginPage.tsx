@@ -32,15 +32,17 @@ export const LoginPage = () => {
   ) => {
     try {
       const response: LoginResponse = await authService.login(data);
+
+      console.log('Response: ', response);
+      // Navigate to OTP page if 2fa is required
       if ('twofaRequired' in response) {
         // Store userId in sessionStorage so it's available after refresh
         sessionStorage.setItem('twofa_userId', String(response.userId));
-
         navigate('/auth/verify-2fa');
       } else if ('user' in response) {
-        // let ProtectedRoute handle the redirect
-        login(response.user);
-        navigate('/dashboard');
+        login(response);
+        // redirect after
+        navigate('/dashboard', { replace: true });
       }
     } catch (err) {
       setError('root', { message: (err as Error).message || 'Login failed' });
