@@ -11,6 +11,11 @@ import {
   UserCog,
   CircleQuestionMark,
   Wallet,
+  Shield,
+  ArrowDownCircle,
+  BanknoteArrowDown,
+  FileText,
+  BookOpen,
 } from 'lucide-react';
 import { type SidebarData } from '@/shared/types/navTypes';
 
@@ -31,8 +36,8 @@ export const sidebarData: SidebarData = {
           icon: LayoutDashboard,
         },
         {
-          title: 'My Contributions',
-          url: '/contributions',
+          title: 'Contributions History',
+          url: '/dashboard/contributions',
           icon: PiggyBank,
         },
         {
@@ -46,9 +51,19 @@ export const sidebarData: SidebarData = {
           icon: Wallet,
         },
         {
-          title: 'Help & Resources',
-          url: '/help',
-          icon: CircleQuestionMark,
+          title: 'Withdrawals',
+          url: '/withdrawals',
+          icon: BanknoteArrowDown,
+        },
+        {
+          title: 'Reports / Statements',
+          url: '/reports',
+          icon: FileText,
+        },
+        {
+          title: 'Knowledge Base  ',
+          url: '/reports',
+          icon: BookOpen,
         },
       ],
     },

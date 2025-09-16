@@ -51,7 +51,7 @@ export const router = createBrowserRouter([
       { index: true, element: <EmployeeDashboard /> },
       { path: 'contributions', element: <ContributionHistoryPage /> },
     ],
-  },
+  }, 
   {
     path: '/hr-dashboard',
     element: (

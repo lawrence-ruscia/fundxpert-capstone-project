@@ -63,7 +63,7 @@ export default function ContributionHistoryPage() {
             <td>₱{data.totals.employee}</td>
             <td>₱{data.totals.employer}</td>
             <td>₱{data.totals.grand_total}</td>
-          </tr>
+          </tr>9
         </tfoot>
       </table>
     </div>

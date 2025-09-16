@@ -4,6 +4,10 @@ import { AppSidebar } from './app-sidebar';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import { cn } from '@/lib/utils';
 import { getCookie } from '@/lib/cookies';
+import { Header } from './Header';
+import { ThemeSwitch } from '../components/theme-switch';
+import { ProfileDropdown } from '../components/profile-dropdown';
+import { Main } from './Main';
 export default function EmployeeLayout() {
   const defaultOpen = getCookie('sidebar_state') !== 'false';
   return (
@@ -24,7 +28,17 @@ export default function EmployeeLayout() {
             'peer-data-[variant=inset]:has-[[data-layout=fixed]]:h-[calc(100svh-(var(--spacing)*4))]'
           )}
         >
-          <Outlet />
+          {/* ===== Top Heading ===== */}
+          <Header>
+            <div className='ms-auto flex items-center space-x-4'>
+              <ThemeSwitch />
+              <ProfileDropdown />
+            </div>
+          </Header>
+          {/* ===== Main ===== */}
+          <Main>
+            <Outlet />
+          </Main>
         </SidebarInset>
       </SidebarProvider>
     </LayoutProvider>
