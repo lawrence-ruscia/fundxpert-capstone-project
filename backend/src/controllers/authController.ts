@@ -191,7 +191,7 @@ export async function loginWith2FA(req: Request, res: Response) {
 export async function getCurrentUser(req: Request, res: Response) {
   try {
     const user = req.user;
-    console.log(`USER: ${req.user}`);
+    console.log(`USER: ${req.user?.name}`);
 
     res.json({ user });
   } catch {

@@ -17,7 +17,7 @@ import { useAuth } from '@/features/auth/context/AuthContext';
 import { getInitials } from '@/utils/getInitials';
 
 export function ProfileDropdown() {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
 
   const [open, setOpen] = useDialogState();
 
@@ -28,18 +28,20 @@ export function ProfileDropdown() {
           <Button variant='ghost' className='relative h-8 w-8 rounded-full'>
             <Avatar className='h-8 w-8'>
               <AvatarImage src='/avatars/01.png' alt='@shadcn' />
-              <AvatarFallback>{getInitials(user?.name ?? '')}</AvatarFallback>
+              <AvatarFallback>{getInitials(user?.name ?? '??')}</AvatarFallback>
             </Avatar>
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent className='w-56' align='end' forceMount>
           <DropdownMenuLabel className='font-normal'>
-            <div className='flex flex-col gap-1.5'>
-              <p className='text-sm leading-none font-medium'>{user?.name}</p>
-              <p className='text-muted-foreground text-xs leading-none'>
-                {user?.role}
-              </p>
-            </div>
+            {user && !loading && (
+              <div className='flex flex-col gap-1.5'>
+                <p className='text-sm leading-none font-medium'>{user?.name}</p>
+                <p className='text-muted-foreground text-xs leading-none'>
+                  {user?.role}
+                </p>
+              </div>
+            )}
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>

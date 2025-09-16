@@ -11,7 +11,14 @@ import {
   formatVesting,
   formatVestingDate,
 } from '../utils/formatters';
-import { Building2, Clock, PiggyBank, ShieldCheck, User } from 'lucide-react';
+import {
+  Banknote,
+  Building2,
+  Clock,
+  PiggyBank,
+  ShieldCheck,
+  User,
+} from 'lucide-react';
 import {
   Card,
   CardHeader,
@@ -21,6 +28,8 @@ import {
 } from '@/components/ui/card';
 import { FundGrowthChart } from '../components/FundGrowthChart';
 import { QuickActions } from '../components/QuickActions';
+import { LoanStatus } from '../components/LoanStatus';
+import { EligibilityStatus } from '../components/EligibilityStatus';
 
 export default function EmployeeDashboard() {
   const { data: overview, loading, error } = useEmployeeOverview();
@@ -113,15 +122,20 @@ export default function EmployeeDashboard() {
                 )}
               />
             </div>
-            <div className='grid grid-cols-1 gap-4 lg:grid-cols-7'>
+            <div className='grid grid-cols-1 gap-4 lg:grid-cols-8'>
               <div className='col-span-1 lg:col-span-5'>
                 <div>
                   <FundGrowthChart />
                 </div>
               </div>
 
-              <QuickActions className='col-span-1 lg:col-span-2' />
+              <QuickActions className='col-span-1 lg:col-span-3' />
             </div>
+          </div>
+
+          <div className='grid gap-4 lg:grid-cols-2'>
+            <LoanStatus overview={overview} />
+            <EligibilityStatus overview={overview} />
           </div>
         </div>
       </Main>

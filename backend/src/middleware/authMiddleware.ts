@@ -18,16 +18,16 @@ export function authMiddleware(requiredRole?: string) {
 
     // TODO: Refactor and move to separate functions
     try {
-      const decoded = jwt.verify(
-        token,
-        process.env.JWT_SECRET as string
-      ) as UserRequest;
+      const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as {
+        id: number;
+        role: Role;
+      };
 
-      req.user = decoded;
-
-      // Fetch password info from DB
+      // Fetch user from DB (enrich context)
       const { rows } = await pool.query(
-        'SELECT password_last_changed, password_expired FROM users WHERE id = $1',
+        `SELECT id, name, email, role, password_last_changed, password_expired
+         FROM users
+         WHERE id = $1`,
         [decoded.id]
       );
 
@@ -45,6 +45,13 @@ export function authMiddleware(requiredRole?: string) {
       if (requiredRole && decoded.role !== requiredRole) {
         return res.status(403).json({ error: 'Forbidden' });
       }
+
+      //  Attach clean UserRequest object
+      req.user = {
+        id: user.id,
+        name: user.name,
+        role: user.role,
+      };
 
       next();
     } catch {

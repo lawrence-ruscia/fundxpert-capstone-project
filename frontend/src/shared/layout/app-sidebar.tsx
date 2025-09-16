@@ -15,7 +15,7 @@ import { useAuth } from '@/features/auth/context/AuthContext';
 
 export function AppSidebar() {
   const { collapsible, variant } = useLayout();
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
 
   return (
     <Sidebar collapsible={collapsible} variant={variant}>
@@ -28,9 +28,7 @@ export function AppSidebar() {
         ))}
       </SidebarContent>
       <SidebarFooter>
-        <NavUser
-          user={user ?? { id: 99, name: 'John Doe', role: 'Employee' }}
-        />
+        {user && !loading && <NavUser user={user} />}
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
