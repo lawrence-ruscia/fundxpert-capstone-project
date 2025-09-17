@@ -25,7 +25,7 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 
-import { ContributionHistoryTable } from '../components/ContirbutionHistoryTable';
+import { ContributionHistoryTable } from '../components/ContributionHistoryTable';
 import { useEmployeeContributions } from '../hooks/useEmployeeContributions';
 import type {
   ContributionPeriod,
@@ -37,19 +37,9 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 const periodOptions = [
   {
-    value: '3m',
-    label: 'Last 3 Months',
-    description: 'Recent contributions from the past 90 days',
-  },
-  {
-    value: '6m',
-    label: 'Last 6 Months',
-    description: 'Semi-annual view of your contributions',
-  },
-  {
-    value: '1y',
-    label: 'Last Year',
-    description: 'Previous 12 months of contribution data',
+    value: 'all',
+    label: 'All Time',
+    description: 'Complete contribution history since enrollment',
   },
   {
     value: 'year',
@@ -57,9 +47,19 @@ const periodOptions = [
     description: `Year-to-date contributions for ${new Date(Date.now()).getFullYear()}`,
   },
   {
-    value: 'all',
-    label: 'All Time',
-    description: 'Complete contribution history since enrollment',
+    value: '1y',
+    label: 'Last Year',
+    description: 'Previous 12 months of contribution data',
+  },
+  {
+    value: '6m',
+    label: 'Last 6 Months',
+    description: 'Semi-annual view of your contributions',
+  },
+  {
+    value: '3m',
+    label: 'Last 3 Months',
+    description: 'Recent contributions from the past 90 days',
   },
 ] as const;
 
@@ -224,7 +224,7 @@ export default function ContributionHistoryPage() {
             Monthly breakdown of your contributions for the selected period
           </CardDescription>
         </CardHeader>
-        <CardContent className='p-0'>
+        <CardContent>
           <ContributionHistoryTable data={data} />
         </CardContent>
       </Card>
