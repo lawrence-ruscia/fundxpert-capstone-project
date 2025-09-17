@@ -38,8 +38,8 @@ export async function getEmployeeOverview(
       u.id,
       u.employee_id,
       u.name,
-      u.department_id,
-      u.position_id,
+      d.name AS department,
+      p.title AS position,
       u.employment_status,
       u.date_hired,
       cs.employee_total,
@@ -54,6 +54,8 @@ export async function getEmployeeOverview(
     LEFT JOIN contribution_summary cs ON cs.user_id = u.id
     LEFT JOIN last_year_summary lys ON lys.user_id = u.id
     LEFT JOIN active_loan al ON al.id IS NOT NULL
+    LEFT JOIN departments d ON d.id = u.department_id
+    LEFT JOIN positions p ON p.id = u.position_id
     WHERE u.id = $1;
   `;
 
@@ -93,8 +95,8 @@ export async function getEmployeeOverview(
       id: row.id,
       name: row.name,
       employee_id: row.employee_id,
-      department_id: row.department_id,
-      position_id: row.position_id,
+      department: row.department,
+      position: row.position,
       employment_status: row.employment_status,
       date_hired: row.date_hired,
     },

@@ -3,8 +3,8 @@ export type EmployeeOverview = {
     id: number;
     name: string;
     employee_id: string;
-    department_id: number | null;
-    position_id: number | null;
+    department: string;
+    position: string;
     employment_status: string;
     date_hired: string;
   };
