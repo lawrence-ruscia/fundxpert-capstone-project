@@ -6,12 +6,12 @@ export const employeeRouter = Router();
 
 employeeRouter.get(
   '/overview',
-  authMiddleware(),
+  authMiddleware('Employee'),
   employeeController.getOverview
 );
 
 employeeRouter.get(
   '/contributions',
-  authMiddleware(),
+  authMiddleware('Employee'),
   employeeController.getContributions
 );
