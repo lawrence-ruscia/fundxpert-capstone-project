@@ -1,20 +1,10 @@
-import {
-  flexRender,
-  getCoreRowModel,
-  getSortedRowModel,
-  type SortingState,
-  useReactTable,
-  getFilteredRowModel,
-  type ColumnFiltersState,
-  getPaginationRowModel,
-} from '@tanstack/react-table';
+import { flexRender } from '@tanstack/react-table';
 import {
   ChevronLeftIcon,
   ChevronRightIcon,
   ChevronsLeftIcon,
   ChevronsRightIcon,
 } from 'lucide-react';
-import { z } from 'zod';
 
 import { Button } from '@/components/ui/button';
 
@@ -27,8 +17,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { useMemo, useState } from 'react';
-import type { EmployeeContributionsResponse } from '../types/employeeContributions';
+
+import type { Table as TableType, RowData } from '@tanstack/react-table';
 import {
   Select,
   SelectContent,
@@ -38,102 +28,18 @@ import {
 } from '@/components/ui/select';
 import { Tabs, TabsContent } from '@radix-ui/react-tabs';
 import { Label } from '@/components/ui/label';
-import { columns } from './Data-Columns';
-
-// Zod schemas for type validation
-const ContributionPeriodSchema = z.enum(['3m', '6m', '1y', 'all', 'year']);
-
-const ContributionRecordSchema = z.object({
-  month: z.string(),
-  year: z.string(),
-  employee: z.number(),
-  employer: z.number(),
-  vested: z.number(),
-  total: z.number(),
-});
-
-const ContributionTotalsSchema = z.object({
-  employee: z.number(),
-  employer: z.number(),
-  vested: z.number(),
-  grand_total: z.number(),
-});
-
-const EmployeeContributionsResponseSchema = z.object({
-  period: ContributionPeriodSchema.optional(),
-  contributions: z.array(ContributionRecordSchema),
-  totals: ContributionTotalsSchema,
-});
+import { columns } from './data-columns';
+import type { EmployeeContributionsResponse } from '../types/employeeContributions';
 
 // Extended type for table rows with cumulative calculation
 
-interface ContributionHistoryTableProps {
+type ContributionHistoryTableProps = {
   data: EmployeeContributionsResponse;
-}
-
+};
 export const ContributionHistoryTable = ({
   data,
-}: ContributionHistoryTableProps) => {
-  // Validate data with Zod
-  const validatedData = useMemo(() => {
-    try {
-      return EmployeeContributionsResponseSchema.parse(data);
-    } catch (error) {
-      console.error('Invalid contribution data:', error);
-      return {
-        contributions: [],
-        totals: { employee: 0, employer: 0, vested: 0, grand_total: 0 },
-      };
-    }
-  }, [data]);
-
-  // Transform data with cumulative calculation
-  const tableData = useMemo(() => {
-    let cumulative = 0;
-    return validatedData.contributions.map(record => {
-      cumulative += record.total;
-      return {
-        ...record,
-        cumulative,
-        monthYear: `${record.month} ${record.year}`,
-        sortDate: new Date(`${record.month} 1, ${record.year}`),
-      };
-    });
-  }, [validatedData.contributions]);
-
-  // Table states
-  const [sorting, setSorting] = useState<SortingState>([
-    {
-      id: 'monthYear',
-      desc: false,
-    },
-  ]);
-  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
-  const [columnVisibility, setColumnVisibility] = useState({});
-  const [pagination, setPagination] = useState({
-    pageIndex: 0,
-    pageSize: 10,
-  });
-
-  const table = useReactTable({
-    data: tableData,
-    columns,
-    onSortingChange: setSorting,
-    onColumnFiltersChange: setColumnFilters,
-    getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getFilteredRowModel: getFilteredRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
-    onPaginationChange: setPagination,
-    state: {
-      sorting,
-      columnVisibility,
-      columnFilters,
-      pagination,
-    },
-  });
-
+  table,
+}: ContributionHistoryTableProps & { table: TableType<RowData> }) => {
   return (
     <Tabs
       defaultValue='outline'

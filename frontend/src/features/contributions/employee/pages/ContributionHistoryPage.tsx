@@ -1,12 +1,5 @@
-import { useState } from 'react';
-import {
-  Calendar,
-  Loader2,
-  User,
-  Building2,
-  ShieldCheck,
-  PiggyBank,
-} from 'lucide-react';
+import { useMemo, useState } from 'react';
+import { Calendar, Loader2, Download } from 'lucide-react';
 
 import {
   Card,
@@ -27,79 +20,153 @@ import { Badge } from '@/components/ui/badge';
 
 import { ContributionHistoryTable } from '../components/ContributionHistoryTable';
 import { useEmployeeContributions } from '../hooks/useEmployeeContributions';
-import type {
-  ContributionPeriod,
-  EmployeeContributionsResponse,
-} from '../types/employeeContributions';
-import { BalanceCard } from '@/features/dashboard/employee/components/BalanceCard';
-import { formatCurrency } from '@/features/dashboard/employee/utils/formatters';
+import type { ContributionPeriod } from '../types/employeeContributions';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { useEmployeeOverview } from '@/features/dashboard/employee/hooks/useEmployeeOverview';
+import { Button } from '@/components/ui/button';
+import { useCSVExport } from '../hooks/useCSVExport';
+import { EmployeeContributionsResponseSchema } from '../schema/table-schema';
+import {
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+  type ColumnFiltersState,
+  type RowData,
+  type SortingState,
+  type Table,
+} from '@tanstack/react-table';
+import { columns } from '../components/data-columns';
+import type { EmploymentStatus } from '@/features/dashboard/employee/types/employeeOverview';
+import { periodOptions } from '../data/periodOptions';
+import { ContributionStats } from '../components/ContributionStats';
 
-const periodOptions = [
-  {
-    value: 'all',
-    label: 'All Time',
-    description: 'Complete contribution history since enrollment',
-  },
-  {
-    value: 'year',
-    label: 'Current Year',
-    description: `Year-to-date contributions for ${new Date(Date.now()).getFullYear()}`,
-  },
-  {
-    value: '1y',
-    label: 'Last Year',
-    description: 'Previous 12 months of contribution data',
-  },
-  {
-    value: '6m',
-    label: 'Last 6 Months',
-    description: 'Semi-annual view of your contributions',
-  },
-  {
-    value: '3m',
-    label: 'Last 3 Months',
-    description: 'Recent contributions from the past 90 days',
-  },
-] as const;
-
-function ContributionStats({
-  contributionData,
-}: {
-  contributionData: EmployeeContributionsResponse;
-}) {
-  return (
-    <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-4'>
-      <BalanceCard
-        label='Employee Contributions'
-        value={formatCurrency(contributionData.totals.employee)}
-        icon={User}
-      />
-      <BalanceCard
-        label='Employer Contributions'
-        value={formatCurrency(contributionData.totals.employee)}
-        icon={Building2}
-      />
-      <BalanceCard
-        label='Vested Amount'
-        value={formatCurrency(contributionData.totals.vested)}
-        icon={ShieldCheck}
-      />
-      <BalanceCard
-        label='Total Balance'
-        value={formatCurrency(contributionData.totals.grand_total)}
-        icon={PiggyBank}
-      />
-    </div>
-  );
+export interface EmployeeMetadata {
+  name: string;
+  employeeId: string;
+  employment_status: EmploymentStatus;
+  date_hired: string;
 }
 
 export default function ContributionHistoryPage() {
   const [period, setPeriod] = useState<ContributionPeriod>('year');
-  const { data, loading, error } = useEmployeeContributions(period);
+  const {
+    data,
+    loading: contributionsLoading,
+    error: contributionsError,
+  } = useEmployeeContributions(period);
+  const {
+    data: overview,
+    loading: overviewLoading,
+    error: overviewError,
+  } = useEmployeeOverview();
 
   const selectedPeriodOption = periodOptions.find(
     option => option.value === period
+  );
+
+  // Combined loading state
+  const loading = contributionsLoading || overviewLoading;
+
+  // Combined error state
+  const error = contributionsError || overviewError;
+
+  // Only create metadata when overview is available
+  const employeeMetadata: EmployeeMetadata | null = useMemo(() => {
+    if (!overview?.employee) return null;
+    // TODO: add deparment and position
+    return {
+      name: overview.employee.name,
+      employeeId: overview.employee.employee_id,
+      employment_status: overview.employee.employment_status,
+      date_hired: overview.employee.date_hired,
+    };
+  }, [overview]);
+
+  // TODO: TABLE
+  // Validate data with Zod
+  const validatedData = useMemo(() => {
+    try {
+      return EmployeeContributionsResponseSchema.parse(data);
+    } catch (error) {
+      console.error('Invalid contribution data:', error);
+      return {
+        contributions: [],
+        totals: { employee: 0, employer: 0, vested: 0, grand_total: 0 },
+      };
+    }
+  }, [data]);
+
+  // Transform data with cumulative calculation
+  const tableData = useMemo(() => {
+    let cumulative = 0;
+    return validatedData.contributions.map(record => {
+      cumulative += record.total;
+      return {
+        ...record,
+        cumulative,
+        monthYear: `${record.month} ${record.year}`,
+        sortDate: new Date(`${record.month} 1, ${record.year}`),
+      };
+    });
+  }, [validatedData.contributions]);
+
+  // Table states
+  const [sorting, setSorting] = useState<SortingState>([
+    {
+      id: 'monthYear',
+      desc: false,
+    },
+  ]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = useState({});
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: 10,
+  });
+
+  const table = useReactTable({
+    data: tableData,
+    columns,
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    onColumnVisibilityChange: setColumnVisibility,
+    onPaginationChange: setPagination,
+    state: {
+      sorting,
+      columnVisibility,
+      columnFilters,
+      pagination,
+    },
+  });
+
+  // Get the sorted data from the table for CSV export
+  const sortedRows = table.getSortedRowModel().rows;
+  const sortedTableData = useMemo(() => {
+    return sortedRows.map(row => row.original);
+  }, [sortedRows]);
+
+  // CSV Export hook - now using sorted data
+  const exportCSV = useCSVExport(
+    sortedTableData, // Pass the sorted data instead of original tableData
+    data?.totals ?? {
+      employee: 0,
+      employer: 0,
+      vested: 0,
+      grand_total: 0,
+    },
+    employeeMetadata ?? {
+      name: 'John Doe',
+      employeeId: 'EMP001',
+      employment_status: 'Active',
+      date_hired: '2025-01-01',
+    },
+    period
   );
 
   if (loading) {
@@ -119,7 +186,11 @@ export default function ContributionHistoryPage() {
     return (
       <div className='container mx-auto p-6'>
         <Alert variant='destructive'>
-          <AlertDescription>{error.message}</AlertDescription>
+          <AlertDescription>
+            {contributionsError?.message ||
+              overviewError?.message ||
+              'Failed to load data'}
+          </AlertDescription>
         </Alert>
       </div>
     );
@@ -155,6 +226,15 @@ export default function ContributionHistoryPage() {
               <p>{selectedPeriodOption?.label}</p>
             </div>
           </Badge>
+          <Button
+            onClick={exportCSV}
+            variant='outline'
+            size='lg'
+            className='gap-2'
+          >
+            <Download className='h-4 w-4' />
+            Export CSV
+          </Button>
         </div>
       </div>
 
@@ -225,7 +305,10 @@ export default function ContributionHistoryPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <ContributionHistoryTable data={data} />
+          <ContributionHistoryTable
+            data={data}
+            table={table as Table<RowData>}
+          />
         </CardContent>
       </Card>
     </div>
