@@ -1,7 +1,7 @@
 import { useMemo } from 'react';
-import type { EmployeeMetadata } from '../components/ContributionHistoryTable';
 import type { ContributionTotals } from '../types/employeeContributions';
 import { getPeriodLabel } from '@/utils/getPeriodLabel';
+import type { EmployeeMetadata } from '../pages/ContributionHistoryPage';
 
 type TableDataType = {
   monthYear: string;
@@ -28,8 +28,10 @@ export const useCSVExport = (
 
         // Employee info
         rows.push(['Employee Name', metadata.name]);
-        rows.push(['Employee ID', metadata.employeeId]);
+        rows.push(['Employee ID', metadata.employee_id]);
         rows.push(['Employment Status', metadata.employment_status]);
+        rows.push(['Department', metadata.department]);
+        rows.push(['Position', metadata.position]);
         rows.push([
           'Date Hired',
           new Date(metadata.date_hired).toLocaleDateString('en-PH', {

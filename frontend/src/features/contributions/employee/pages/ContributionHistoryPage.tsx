@@ -38,16 +38,11 @@ import {
   type Table,
 } from '@tanstack/react-table';
 import { columns } from '../components/data-columns';
-import type { EmploymentStatus } from '@/features/dashboard/employee/types/employeeOverview';
+import type { EmployeeOverview } from '@/features/dashboard/employee/types/employeeOverview';
 import { periodOptions } from '../data/periodOptions';
 import { ContributionStats } from '../components/ContributionStats';
 
-export interface EmployeeMetadata {
-  name: string;
-  employeeId: string;
-  employment_status: EmploymentStatus;
-  date_hired: string;
-}
+export type EmployeeMetadata = Omit<EmployeeOverview['employee'], 'id'>;
 
 export default function ContributionHistoryPage() {
   const [period, setPeriod] = useState<ContributionPeriod>('year');
@@ -75,10 +70,12 @@ export default function ContributionHistoryPage() {
   // Only create metadata when overview is available
   const employeeMetadata: EmployeeMetadata | null = useMemo(() => {
     if (!overview?.employee) return null;
-    // TODO: add deparment and position
+
     return {
       name: overview.employee.name,
-      employeeId: overview.employee.employee_id,
+      employee_id: overview.employee.employee_id,
+      department: overview.employee.department,
+      position: overview.employee.position,
       employment_status: overview.employee.employment_status,
       date_hired: overview.employee.date_hired,
     };
@@ -162,8 +159,10 @@ export default function ContributionHistoryPage() {
     },
     employeeMetadata ?? {
       name: 'John Doe',
-      employeeId: 'EMP001',
+      employee_id: 'EMP001',
       employment_status: 'Active',
+      department: 'IT',
+      position: 'Software Engineer',
       date_hired: '2025-01-01',
     },
     period

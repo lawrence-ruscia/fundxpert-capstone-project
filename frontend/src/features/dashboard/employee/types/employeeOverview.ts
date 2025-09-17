@@ -3,9 +3,9 @@ export type EmployeeOverview = {
     id: number;
     name: string;
     employee_id: string;
-    department_id: number | null;
-    position_id: number | null;
-    employment_status: string;
+    department: string;
+    position: string;
+    employment_status: EmploymentStatus;
     date_hired: string;
   };
   balances: {
@@ -32,5 +32,4 @@ export type EmployeeOverview = {
   };
 };
 
-export type EmploymentStatus =
-  EmployeeOverview['employee']['employment_status'];
+export type EmploymentStatus = 'Active' | 'Resigned' | 'Retired' | 'Terminated';
