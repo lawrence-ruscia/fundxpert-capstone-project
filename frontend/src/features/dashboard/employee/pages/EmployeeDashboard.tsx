@@ -22,7 +22,7 @@ export default function EmployeeDashboard() {
 
   return (
     <>
-      <div className='mb-2 flex items-center justify-between space-y-2'>
+      <div className='mb-2 flex flex-wrap items-center justify-between space-y-2'>
         <div>
           <h1 className='text-2xl font-bold tracking-tight'>
             Welcome back, {overview.employee.name} !
