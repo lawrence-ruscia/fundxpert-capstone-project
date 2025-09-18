@@ -53,7 +53,6 @@ export const ProjectionParameters = ({
   error,
 }: ParamsProps) => {
   const {
-    register,
     handleSubmit,
     formState: { errors },
     watch,
@@ -153,18 +152,34 @@ export const ProjectionParameters = ({
               Expected Annual Growth
             </Label>
             <div className='relative'>
-              <PercentInput
-                step={0.01}
-                {...register('growthRate', {
-                  min: 0,
-                  max: 0.2,
-                  valueAsNumber: true,
-                })}
-                max={0.2}
-                min={0}
-                className='pr-8'
-                placeholder='0.03'
-                disabled={loading}
+              <Controller
+                name='growthRate'
+                control={control}
+                rules={{
+                  max: {
+                    value: 0.2,
+                    message: 'Growth rate expected number to be <= 0.2',
+                  },
+                  min: {
+                    value: 0,
+                    message: 'Growth rate must be a positive number',
+                  },
+                }}
+                render={({ field: { onChange, value, name, ref } }) => (
+                  <PercentInput
+                    ref={ref}
+                    name={name}
+                    value={value ?? ''}
+                    onValueChange={newValue => {
+                      onChange(newValue);
+                    }}
+                    placeholder='50000'
+                    disabled={loading || initializing}
+                    min={0}
+                    max={0.2}
+                    step={0.01}
+                  />
+                )}
               />
             </div>
             {errors.growthRate && (

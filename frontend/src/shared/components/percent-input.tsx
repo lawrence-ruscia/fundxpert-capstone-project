@@ -1,38 +1,44 @@
-import * as React from 'react';
+import React from 'react';
 import { NumberInput } from './number-input';
 import { cn } from '@/lib/utils';
 
 interface PercentInputProps extends React.ComponentProps<typeof NumberInput> {
-  percentage?: string;
-  percentagePosition?: 'left' | 'right';
+  symbol?: string;
+  symbolPosition?: 'left' | 'right';
 }
 
-const PercentInput = React.forwardRef<HTMLInputElement, PercentInputProps>(
+export const PercentInput = React.forwardRef<
+  HTMLInputElement,
+  PercentInputProps
+>(
   (
-    { className, percentage = '%', percentagePosition = 'left', ...props },
+    {
+      className,
+      symbol = '%',
+      symbolPosition: symbolPosition = 'left',
+      ...props
+    },
     ref
   ) => {
     return (
       <div className='relative'>
-        {percentagePosition === 'left' && (
-          <div className='pointer-events-none absolute  inset-y-0 left-0 z-10 flex items-center pl-3'>
-            <span className='text-muted-foreground text-sm'>{percentage}</span>
+        {symbolPosition === 'left' && (
+          <div className='pointer-events-none absolute inset-y-0 left-0 z-10 flex items-center pl-3'>
+            <span className='text-muted-foreground text-sm'>{symbol}</span>
           </div>
         )}
-
         <NumberInput
           ref={ref}
           className={cn(
-            percentagePosition === 'left' && 'pl-8',
-            percentagePosition === 'right' && 'pr-12',
+            symbolPosition === 'left' && 'pl-8',
+            symbolPosition === 'right' && 'pr-12',
             className
           )}
           {...props}
         />
-
-        {percentagePosition === 'right' && (
+        {symbolPosition === 'right' && (
           <div className='pointer-events-none absolute inset-y-0 right-8 flex items-center pr-3'>
-            <span className='text-muted-foreground text-sm'>{percentage}</span>
+            <span className='text-muted-foreground text-sm'>{symbol}</span>
           </div>
         )}
       </div>
@@ -41,5 +47,3 @@ const PercentInput = React.forwardRef<HTMLInputElement, PercentInputProps>(
 );
 
 PercentInput.displayName = 'PercentInput';
-
-export { PercentInput as PercentInput };
