@@ -32,14 +32,7 @@ const projectionSchema = z.object({
   years: z.number().min(1).max(30),
   growthRate: z.number().min(0).max(0.2), // up to 20% for safety
   salaryOverride: z
-    .union([z.string(), z.number()])
-    .transform(val => {
-      if (typeof val === 'string') {
-        const parsed = parseFloat(val);
-        return isNaN(parsed) ? undefined : parsed;
-      }
-      return val;
-    })
+    .number()
     .refine(val => val === undefined || (typeof val === 'number' && val >= 0), {
       message: 'Salary Override must be a positive number',
     })
@@ -82,7 +75,7 @@ export const ProjectionParameters = ({
       try {
         const overview = await fetchEmployeeOverview();
         if (overview?.employee?.salary) {
-          setValue('salaryOverride', overview.employee.salary); // pre-fill
+          setValue('salaryOverride', Number(overview.employee.salary)); // pre-fill
         }
       } catch (err) {
         console.error('Failed to fetch employee overview:', err);
@@ -218,9 +211,7 @@ export const ProjectionParameters = ({
                     }}
                     placeholder='50000'
                     disabled={loading || initializing}
-                    step={1000}
                     min={0}
-                    max={Infinity}
                   />
                 )}
               />
