@@ -1,13 +1,13 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { Slider } from '@/components/ui/slider';
 import {
   Tooltip,
   TooltipProvider,
   TooltipTrigger,
   TooltipContent,
-} from '@radix-ui/react-tooltip';
+} from '@/components/ui/tooltip';
+
 import {
   Target,
   Calendar,
@@ -17,16 +17,22 @@ import {
   Calculator,
   AlertCircle,
 } from 'lucide-react';
-import { Label } from 'recharts';
+import { Label } from '@/components/ui/label';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { CurrencyInput } from '@/shared/components/currency-input';
+import { PercentInput } from '@/shared/components/percent-input';
 
 const projectionSchema = z.object({
   years: z.number().min(1).max(30),
   growthRate: z.number().min(0).max(0.2), // up to 20% for safety
-  salaryOverride: z.number().optional(),
+  salaryOverride: z
+    .number({
+      error: 'Salary Override must be a number',
+    })
+    .optional(),
 });
 
 export type ProjectionSchema = z.infer<typeof projectionSchema>;
@@ -49,13 +55,13 @@ export const ProjectionParameters = ({
     setValue,
   } = useForm<ProjectionSchema>({
     resolver: zodResolver(projectionSchema),
-    defaultValues: { years: 10, growthRate: 0.03 },
+    defaultValues: { years: 10, growthRate: 0.03, salaryOverride: 0 },
   });
 
   const watchedYears = watch('years');
 
   return (
-    <Card className='from-card to-card/80 border-0 bg-gradient-to-br shadow-xl lg:sticky lg:top-8'>
+    <Card className='lg:sticky lg:top-8'>
       <CardHeader>
         <CardTitle className='flex items-center gap-2'>
           <Target className='text-primary h-5 w-5' />
@@ -106,19 +112,19 @@ export const ProjectionParameters = ({
               Expected Annual Growth
             </Label>
             <div className='relative'>
-              <Input
-                type='number'
-                step='0.001'
-                min='0'
-                max='0.2'
-                {...register('growthRate', { valueAsNumber: true })}
+              <PercentInput
+                step={0.01}
+                {...register('growthRate', {
+                  min: 0,
+                  max: 0.2,
+                  valueAsNumber: true,
+                })}
+                max={0.2}
+                min={0}
                 className='pr-8'
                 placeholder='0.03'
                 disabled={loading}
               />
-              <div className='absolute inset-y-0 right-0 flex items-center pr-3'>
-                <span className='text-muted-foreground text-sm'>%</span>
-              </div>
             </div>
             {errors.growthRate && (
               <p className='text-destructive mt-1 text-sm'>
@@ -147,15 +153,13 @@ export const ProjectionParameters = ({
               </TooltipProvider>
             </Label>
             <div className='relative'>
-              <div className='absolute inset-y-0 left-0 flex items-center pl-3'>
-                <span className='text-muted-foreground text-sm'>₱</span>
-              </div>
-              <Input
-                type='number'
+              <CurrencyInput
                 {...register('salaryOverride', { valueAsNumber: true })}
-                className='pl-8'
                 placeholder='50000'
                 disabled={loading}
+                step={1000}
+                min={0}
+                max={Infinity}
               />
             </div>
             {errors.salaryOverride && (
