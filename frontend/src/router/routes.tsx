@@ -11,6 +11,7 @@ import { OTPPage } from '@/features/auth/pages/OTPPage';
 import AuthRedirect from '@/features/auth/components/AuthRedirect';
 import EmployeeLayout from '@/shared/layout/EmployeeLayout';
 import ContributionHistoryPage from '@/features/contributions/employee/pages/ContributionHistoryPage';
+import FundProjectionPage from '@/features/fundProjection/pages/FundProjectionPage';
 
 export const router = createBrowserRouter([
   {
@@ -50,8 +51,9 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <EmployeeDashboard /> },
       { path: 'contributions', element: <ContributionHistoryPage /> },
+      { path: 'projection', element: <FundProjectionPage /> },
     ],
-  }, 
+  },
   {
     path: '/hr-dashboard',
     element: (

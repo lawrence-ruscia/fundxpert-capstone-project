@@ -42,7 +42,7 @@ export const sidebarData: SidebarData = {
         },
         {
           title: 'Fund Projection',
-          url: '/fund-projection',
+          url: '/dashboard/projection',
           icon: ChartLine,
         },
         {
