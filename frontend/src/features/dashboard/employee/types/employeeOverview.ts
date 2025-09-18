@@ -7,6 +7,7 @@ export type EmployeeOverview = {
     position: string;
     employment_status: EmploymentStatus;
     date_hired: string;
+    salary: number;
   };
   balances: {
     employee_contribution_total: number;

@@ -38,6 +38,7 @@ export async function getEmployeeOverview(
       u.id,
       u.employee_id,
       u.name,
+      u.salary,
       d.name AS department,
       p.title AS position,
       u.employment_status,
@@ -99,6 +100,7 @@ export async function getEmployeeOverview(
       position: row.position,
       employment_status: row.employment_status,
       date_hired: row.date_hired,
+      salary: row.salary,
     },
     balances: {
       employee_contribution_total: row.employee_total,

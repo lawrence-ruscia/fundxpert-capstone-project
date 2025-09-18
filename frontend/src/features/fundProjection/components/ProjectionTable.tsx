@@ -51,14 +51,14 @@ export default function ProjectionTable({
         <div className='flex items-center justify-between'>
           <div className='space-y-1'>
             <CardTitle className='text-foreground flex items-center gap-2 text-xl font-semibold'>
-              <FileSpreadsheet className='text-primary h-5 w-5' />
+              <FileSpreadsheet className='text-primary min-h-5 min-w-5' />
               Detailed Projection Breakdown
             </CardTitle>
             <p className='text-muted-foreground text-sm'>
               Year-by-year contribution and growth analysis
             </p>
           </div>
-          <Badge variant='secondary' className='flex items-center gap-1'>
+          <Badge variant='secondary' className='flex items-center gap-1 px-2'>
             <Calculator className='h-3 w-3' />
             {data.length} Years
           </Badge>
@@ -113,10 +113,10 @@ export default function ProjectionTable({
                   <TableCell className='text-card-foreground'>
                     {formatCurrency(row.unvested_amount)}
                   </TableCell>
-                  <TableCell className='text-foreground font-semibold'>
+                  <TableCell className='font-semibold'>
                     {formatCurrency(row.total_balance)}
                   </TableCell>
-                  <TableCell className='text-secondary font-semibold'>
+                  <TableCell className='font-semibold'>
                     {formatCurrency(row.with_growth)}
                   </TableCell>
                 </TableRow>
@@ -126,39 +126,36 @@ export default function ProjectionTable({
         </div>
 
         {/* Summary Cards */}
-        <div className='mt-6 grid grid-cols-2 gap-4 md:grid-cols-4'>
-          <div className='from-primary/10 to-primary/5 border-primary/20 rounded-lg border bg-gradient-to-br p-4'>
-            <div className='text-primary text-xs font-medium tracking-wide uppercase'>
+        <div className='mt-6 grid gap-4 md:grid-cols-2'>
+          <div className='rounded-lg border border-blue-500/20 bg-blue-500/10 p-4'>
+            <div className='text-xs font-medium tracking-wide text-blue-500 uppercase'>
               Total Employee
             </div>
-            <div className='text-foreground mt-1 text-lg font-bold'>
+            <div className='text-foreground mt-1 text-lg font-semibold'>
               {formatCurrency(totals.employee)}
             </div>
           </div>
-
-          <div className='from-secondary/10 to-secondary/5 border-secondary/20 rounded-lg border bg-gradient-to-br p-4'>
-            <div className='text-secondary text-xs font-medium tracking-wide uppercase'>
+          <div className='rounded-lg border border-sky-500/20 bg-sky-500/10 p-4'>
+            <div className='text-xs font-medium tracking-wide text-sky-500 uppercase'>
               Total Employer
             </div>
-            <div className='text-foreground mt-1 text-lg font-bold'>
+            <div className='text-foreground font-semibent mt-1 text-lg'>
               {formatCurrency(totals.employer)}
             </div>
           </div>
-
-          <div className='from-chart-3/10 to-chart-3/5 border-chart-3/20 rounded-lg border bg-gradient-to-br p-4'>
-            <div className='text-chart-3 text-xs font-medium tracking-wide uppercase'>
-              Final Balance
+          <div className='rounded-lg border border-orange-500/20 bg-orange-500/10 p-4'>
+            <div className='text-xs font-medium tracking-wide text-orange-500 uppercase'>
+              Total Balance
             </div>
-            <div className='text-foreground mt-1 text-lg font-bold'>
+            <div className='text-foreground mt-1 text-lg font-semibold'>
               {formatCurrency(totals.final_balance)}
             </div>
           </div>
-
-          <div className='from-chart-4/10 to-chart-4/5 border-chart-4/20 rounded-lg border bg-gradient-to-br p-4'>
-            <div className='text-chart-4 text-xs font-medium tracking-wide uppercase'>
+          <div className='rounded-lg border border-violet-500/20 bg-violet-500/10 p-4'>
+            <div className='text-xs font-medium tracking-wide text-violet-500 uppercase'>
               With Growth
             </div>
-            <div className='text-foreground mt-1 text-lg font-bold'>
+            <div className='text-foreground mt-1 text-lg font-semibold'>
               {formatCurrency(totals.final_with_growth)}
             </div>
           </div>

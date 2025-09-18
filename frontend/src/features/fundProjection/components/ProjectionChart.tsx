@@ -27,11 +27,11 @@ interface ProjectionRecord {
 const chartConfig = {
   total_balance: {
     label: 'Total Balance',
-    color: 'hsl(var(--chart-1))',
+    color: 'hsl(var(--chart-4))',
   },
   with_growth: {
     label: 'With Growth',
-    color: 'hsl(var(--chart-2))',
+    color: 'hsl(var(--chart-3))',
   },
 };
 
@@ -39,7 +39,7 @@ export const ProjectionChart = ({ data }: { data: ProjectionRecord[] }) => {
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('en-PH', {
       style: 'currency',
-      currency: 'PHP', 
+      currency: 'PHP',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(value);
@@ -58,7 +58,7 @@ export const ProjectionChart = ({ data }: { data: ProjectionRecord[] }) => {
         <div className='flex items-center justify-between'>
           <div className='space-y-1'>
             <CardTitle className='text-foreground flex items-center gap-2 text-xl font-semibold'>
-              <TrendingUp className='text-primary h-5 w-5' />
+              <TrendingUp className='text-primary min-h-5 min-w-5' />
               Fund Growth Projection
             </CardTitle>
             <p className='text-muted-foreground text-sm'>
@@ -67,10 +67,10 @@ export const ProjectionChart = ({ data }: { data: ProjectionRecord[] }) => {
           </div>
           <div className='text-right'>
             <div className='text-muted-foreground flex items-center gap-1 text-sm'>
-              <DollarSign className='h-4 w-4' />
+              <DollarSign className='min-h-4 min-w-4' />
               Potential Growth
             </div>
-            <div className='text-secondary text-lg font-semibold'>
+            <div className='text-lg font-semibold text-green-400'>
               +{growthPercentage}%
             </div>
           </div>
@@ -102,6 +102,7 @@ export const ProjectionChart = ({ data }: { data: ProjectionRecord[] }) => {
                   <ChartTooltipContent
                     formatter={(value, name) => [
                       formatCurrency(Number(value)),
+                      ' ',
                       chartConfig[name as keyof typeof chartConfig]?.label ||
                         name,
                     ]}
@@ -111,24 +112,24 @@ export const ProjectionChart = ({ data }: { data: ProjectionRecord[] }) => {
               <Line
                 type='monotone'
                 dataKey='total_balance'
-                stroke='var(--color-chart-1)'
+                stroke='var(--color-chart-4)'
                 strokeWidth={3}
-                dot={{ fill: 'var(--color-chart-1)', strokeWidth: 2, r: 4 }}
+                dot={{ fill: 'var(--color-chart-4)', strokeWidth: 2, r: 4 }}
                 activeDot={{
                   r: 6,
-                  stroke: 'var(--color-chart-1)',
+                  stroke: 'var(--color-chart-4)',
                   strokeWidth: 2,
                 }}
               />
               <Line
                 type='monotone'
                 dataKey='with_growth'
-                stroke='var(--color-chart-2)'
+                stroke='var(--color-chart-3)'
                 strokeWidth={3}
-                dot={{ fill: 'var(--color-chart-2)', strokeWidth: 2, r: 4 }}
+                dot={{ fill: 'var(--color-chart-3)', strokeWidth: 2, r: 4 }}
                 activeDot={{
                   r: 6,
-                  stroke: 'var(--color-chart-2)',
+                  stroke: 'var(--color-chart-3)',
                   strokeWidth: 2,
                 }}
               />
@@ -136,16 +137,20 @@ export const ProjectionChart = ({ data }: { data: ProjectionRecord[] }) => {
           </ResponsiveContainer>
         </ChartContainer>
 
-        <div className='mt-6 grid grid-cols-2 gap-4'>
-          <div className='bg-muted/50 rounded-lg p-4'>
-            <div className='text-muted-foreground text-sm'>Final Balance</div>
-            <div className='text-foreground text-lg font-semibold'>
+        <div className='mt-6 grid grid-cols-1 gap-4 md:grid-cols-2'>
+          <div className='rounded-lg border border-orange-500/20 bg-orange-500/10 p-4'>
+            <div className='text-xs font-medium tracking-wide text-orange-500 uppercase'>
+              Total Balance
+            </div>
+            <div className='text-foreground mt-1 text-lg font-semibold'>
               {formatCurrency(finalProjection?.total_balance || 0)}
             </div>
           </div>
-          <div className='bg-secondary/10 rounded-lg p-4'>
-            <div className='text-muted-foreground text-sm'>With Growth</div>
-            <div className='text-secondary text-lg font-semibold'>
+          <div className='rounded-lg border border-violet-500/20 bg-violet-500/10 p-4'>
+            <div className='text-xs font-medium tracking-wide text-violet-500 uppercase'>
+              With Growth
+            </div>
+            <div className='text-foreground mt-1 text-lg font-semibold'>
               {formatCurrency(finalProjection?.with_growth || 0)}
             </div>
           </div>

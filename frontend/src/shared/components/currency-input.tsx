@@ -1,7 +1,8 @@
-import * as React from 'react';
+import React from 'react';
 import { NumberInput } from './number-input';
 import { cn } from '@/lib/utils';
 
+// Simplified version for use with Controller
 interface CurrencyInputProps extends React.ComponentProps<typeof NumberInput> {
   currency?: string;
   currencyPosition?: 'left' | 'right';
@@ -16,7 +17,6 @@ const CurrencyInput = React.forwardRef<HTMLInputElement, CurrencyInputProps>(
             <span className='text-muted-foreground text-sm'>{currency}</span>
           </div>
         )}
-
         <NumberInput
           ref={ref}
           className={cn(
@@ -26,7 +26,6 @@ const CurrencyInput = React.forwardRef<HTMLInputElement, CurrencyInputProps>(
           )}
           {...props}
         />
-
         {currencyPosition === 'right' && (
           <div className='pointer-events-none absolute inset-y-0 right-8 flex items-center pr-3'>
             <span className='text-muted-foreground text-sm'>{currency}</span>

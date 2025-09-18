@@ -4,13 +4,23 @@ import type { ProjectionResponse } from '../types/projectionTypes';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
-import { Calculator } from 'lucide-react';
+import {
+  Building2,
+  Calculator,
+  ChartBarIncreasing,
+  Loader2,
+  PiggyBank,
+  TrendingUp,
+  User,
+} from 'lucide-react';
 import ProjectionTable from '../components/ProjectionTable';
 import { ProjectionChart } from '../components/ProjectionChart';
 import {
   ProjectionParameters,
   type ProjectionSchema,
 } from '../components/ProjectionParameters';
+import { BalanceCard } from '@/features/dashboard/employee/components/BalanceCard';
+import { formatCurrency } from '@/features/dashboard/employee/utils/formatters';
 
 export default function FundProjectionPage() {
   const [data, setData] = useState<ProjectionResponse | null>(null);
@@ -33,18 +43,15 @@ export default function FundProjectionPage() {
   };
 
   return (
-    <div className='from-background via-muted/20 to-background min-h-screen bg-gradient-to-br'>
-      <div className='mx-auto max-w-7xl px-4 py-8'>
+    <div>
+      <div className='mx-auto max-w-7xl'>
         <div className='mb-8'>
           <div className='mb-4 flex items-center gap-3'>
-            <div className='bg-primary rounded-xl p-3 shadow-lg'>
-              <Calculator className='text-primary-foreground h-8 w-8' />
-            </div>
-            <div>
-              <h1 className='text-foreground text-3xl font-bold'>
-                Fund Projection Calculator
+            <div className='space-y-1'>
+              <h1 className='text-2xl font-bold tracking-tight'>
+                Fund Projection Tool
               </h1>
-              <p className='text-muted-foreground mt-1'>
+              <p className='text-muted-foreground'>
                 Plan your retirement with confidence
               </p>
             </div>
@@ -78,47 +85,27 @@ export default function FundProjectionPage() {
               </Card>
             ) : data ? (
               <div className='space-y-6'>
-                <div className='grid grid-cols-2 gap-4 lg:grid-cols-4'>
-                  <Card>
-                    <CardContent className='p-4'>
-                      <div className='text-muted-foreground mb-1 text-sm'>
-                        Final Balance
-                      </div>
-                      <div className='text-foreground text-lg font-bold'>
-                        ₱{data.totals.final_balance}
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className='p-4'>
-                      <div className='text-muted-foreground mb-1 text-sm'>
-                        With Growth
-                      </div>
-                      <div className='text-lg font-bold text-green-600'>
-                        ₱{data.totals.final_with_growth}
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className='p-4'>
-                      <div className='text-muted-foreground mb-1 text-sm'>
-                        Employee Total
-                      </div>
-                      <div className='text-lg font-bold text-blue-600'>
-                        ₱{data.totals.employee}
-                      </div>
-                    </CardContent>
-                  </Card>
-                  <Card>
-                    <CardContent className='p-4'>
-                      <div className='text-muted-foreground mb-1 text-sm'>
-                        Employer Total
-                      </div>
-                      <div className='text-lg font-bold text-purple-600'>
-                        ₱{data.totals.employer}
-                      </div>
-                    </CardContent>
-                  </Card>
+                <div className='grid grid-cols-1 gap-4 md:grid-cols-2'>
+                  <BalanceCard
+                    label='Employee Total'
+                    value={formatCurrency(data.totals.employee)}
+                    icon={User}
+                  />
+                  <BalanceCard
+                    label='Employer Total'
+                    value={formatCurrency(data.totals.employer)}
+                    icon={Building2}
+                  />
+                  <BalanceCard
+                    label='Final Balance'
+                    value={formatCurrency(data.totals.final_balance)}
+                    icon={PiggyBank}
+                  />
+                  <BalanceCard
+                    label='With Growth'
+                    value={formatCurrency(data.totals.final_with_growth)}
+                    icon={TrendingUp}
+                  />
                 </div>
 
                 <Card className='border-0 shadow-lg'>
