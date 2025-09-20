@@ -12,6 +12,8 @@ import AuthRedirect from '@/features/auth/components/AuthRedirect';
 import EmployeeLayout from '@/shared/layout/EmployeeLayout';
 import ContributionHistoryPage from '@/features/contributions/employee/pages/ContributionHistoryPage';
 import FundProjectionPage from '@/features/fundProjection/pages/FundProjectionPage';
+import LoanDetailPage from '@/features/loans/employee/pages/LoanDetailPage';
+import LoanListPage from '@/features/loans/employee/pages/LoanListPage';
 
 export const router = createBrowserRouter([
   {
@@ -52,6 +54,8 @@ export const router = createBrowserRouter([
       { index: true, element: <EmployeeDashboard /> },
       { path: 'contributions', element: <ContributionHistoryPage /> },
       { path: 'projection', element: <FundProjectionPage /> },
+      { path: 'loans', element: <LoanListPage /> },
+      { path: 'loans/:loanId', element: <LoanDetailPage /> },
     ],
   },
   {

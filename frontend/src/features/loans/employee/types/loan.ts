@@ -5,7 +5,7 @@ export type LoanStatus =
   | 'Settled'
   | 'Rejected'
   | 'Cancelled';
- 
+
 export interface Loan {
   id: number;
   user_id: number;
@@ -43,3 +43,5 @@ export interface LoanDocument {
   file_url: string;
   uploaded_at: Date;
 }
+
+export type LoanResponse = Loan & { documents: LoanDocument[] };

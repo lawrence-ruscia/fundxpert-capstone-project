@@ -47,7 +47,7 @@ export const sidebarData: SidebarData = {
         },
         {
           title: 'Loans',
-          url: '/loans',
+          url: '/dashboard/loans',
           icon: Wallet,
         },
         {

@@ -1,9 +1,14 @@
 import type { Request, Response } from 'express';
 import * as loanService from '../services/loanService.js';
+import { isAuthenticatedRequest } from './employeeControllers.js';
 
 export async function getLoanEligibility(req: Request, res: Response) {
+  if (!isAuthenticatedRequest(req)) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
   try {
-    const userId = req.body.user.id; // populated by authMiddleware
+    const userId = req.user.id; // populated by authMiddleware
     const eligibility = await loanService.checkLoanEligibility(userId);
     res.json(eligibility);
   } catch (err) {
@@ -14,7 +19,12 @@ export async function getLoanEligibility(req: Request, res: Response) {
 
 export async function applyLoan(req: Request, res: Response) {
   try {
-    const userId = req.body.user.id;
+    if (!isAuthenticatedRequest(req)) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const userId = req.user.id;
+
+    console.log(`Request body: ${req.body}`);
     const {
       amount,
       repayment_term_months,
@@ -43,7 +53,10 @@ export async function applyLoan(req: Request, res: Response) {
 
 export async function getLoanStatus(req: Request, res: Response) {
   try {
-    const userId = req.body.user.id;
+    if (!isAuthenticatedRequest(req)) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const userId = req.user.id;
     const loan = await loanService.getActiveLoan(userId);
 
     if (!loan) {
@@ -62,12 +75,36 @@ export async function getLoanStatus(req: Request, res: Response) {
 
 export async function getLoanHistory(req: Request, res: Response) {
   try {
-    const userId = req.body.user.id;
+    if (!isAuthenticatedRequest(req)) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const userId = req.user.id;
     const loans = await loanService.getLoanHistory(userId);
 
     res.json({ loans });
   } catch (err) {
     console.error('❌ Error fetching loan history:', err);
     res.status(500).json({ error: 'Failed to fetch loan history' });
+  }
+}
+
+export async function getLoanById(req: Request, res: Response) {
+  try {
+    if (!isAuthenticatedRequest(req)) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const userId = req.user.id;
+    const loanId = parseInt(req.params.id ?? '', 10);
+
+    const loan = await loanService.getLoanDetails(userId, loanId);
+    if (!loan) {
+      return res.status(404).json({ error: 'Loan not found' });
+    }
+
+    res.json(loan);
+  } catch (err) {
+    console.error('❌ Error fetching loan details:', err);
+    res.status(500).json({ error: 'Failed to fetch loan details' });
   }
 }

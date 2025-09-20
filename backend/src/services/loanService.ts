@@ -151,3 +151,29 @@ export async function getLoanHistory(userId: number): Promise<Loan[]> {
   );
   return rows;
 }
+
+export async function getLoanDetails(userId: number, loanId: number) {
+  const query = `
+    SELECT id, amount, status, created_at, purpose, 
+            repayment_term_months
+    FROM loans 
+    WHERE id = $1 AND user_id = $2;
+  `;
+  const { rows } = await pool.query(query, [loanId, userId]);
+  if (rows.length === 0) return null;
+
+  const loan = rows[0];
+
+  // fetch documents
+  const docsQuery = `
+    SELECT file_url, uploaded_at
+    FROM loan_documents
+    WHERE loan_id = $1;
+  `;
+  const { rows: docs } = await pool.query(docsQuery, [loanId]);
+
+  return {
+    ...loan,
+    documents: docs ?? [],
+  };
+}

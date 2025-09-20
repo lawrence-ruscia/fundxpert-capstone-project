@@ -1,13 +1,18 @@
 import type { Request, Response } from 'express';
 import * as loanDocumentService from '../services/loanDocumentService.js';
 import { pool } from '../config/db.config.js';
+import { isAuthenticatedRequest } from './employeeControllers.js';
 
 /**
  * POST /employee/loan/:loanId/documents
  */
 export async function uploadLoanDocument(req: Request, res: Response) {
   try {
-    const userId = req.body.user.id;
+    if (!isAuthenticatedRequest(req)) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const userId = req.user.id;
     const { loanId } = req.params;
     const { fileUrl } = req.body;
 
@@ -47,7 +52,11 @@ export async function uploadLoanDocument(req: Request, res: Response) {
  */
 export async function getLoanDocuments(req: Request, res: Response) {
   try {
-    const userId = req.body.user.id;
+    if (!isAuthenticatedRequest(req)) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const userId = req.user.id;
     const { loanId } = req.params;
 
     // Verify ownership
