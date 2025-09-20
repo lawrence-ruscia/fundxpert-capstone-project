@@ -5,6 +5,11 @@ import {
   MIN_LOAN_AMOUNT,
 } from '../config/policy.config.js';
 import type { Loan, LoanEligibility } from '../types/loan.js';
+import { validateLoanRequest } from './utils/applyForLoanUtils.js';
+import {
+  getLoanReason,
+  getVestedBalance,
+} from './utils/checkLoanEligibilityUtils.js';
 
 export async function checkLoanEligibility(
   userId: number
@@ -25,44 +30,20 @@ export async function checkLoanEligibility(
   if (!row) throw new Error('User not found');
 
   // Apply vesting cliff (2 years for employer share)
-  const hireDate = new Date(row.date_hired);
-  const twoYearsAgo = new Date();
-  twoYearsAgo.setFullYear(twoYearsAgo.getFullYear() - 2);
-
-  let vestedBalance = Number(row.total);
-  if (hireDate > twoYearsAgo) {
-    // Not vested in employer contributions
-    const empQuery = `
-      SELECT COALESCE(SUM(employee_amount), 0) AS employee_only
-      FROM contributions
-      WHERE user_id = $1
-    `;
-    const { rows: empRows } = await pool.query(empQuery, [userId]);
-    vestedBalance = Number(empRows[0].employee_only);
-  }
+  const vestedBalance = await getVestedBalance(row, userId);
 
   // Check active loan
   const activeLoanRes = await pool.query(
     `SELECT 1 FROM loans WHERE user_id = $1 AND status IN ('Pending','Approved','Active') LIMIT 1`,
     [userId]
   );
+
   const hasActiveLoan = activeLoanRes.rows.length > 0;
 
   // Business rules
   const maxLoanAmount = Math.floor(vestedBalance * LOAN_CAP);
-  let eligible = true;
-  let reason: string | null = null;
 
-  if (row.employment_status !== 'Active') {
-    eligible = false;
-    reason = 'Employment status not Active';
-  } else if (vestedBalance <= 0) {
-    eligible = false;
-    reason = 'No vested balance';
-  } else if (hasActiveLoan) {
-    eligible = false;
-    reason = 'Existing active loan';
-  }
+  const { eligible, reason } = getLoanReason(row, hasActiveLoan);
 
   return {
     eligible,
@@ -94,16 +75,13 @@ export async function applyForLoan(
   }
 
   // 2. Validate request
-  if (!consent) throw new Error('Consent must be acknowledged');
-  if (amount < eligibility.minLoanAmount)
-    throw new Error(`Minimum loan is ${eligibility.minLoanAmount}`);
-  if (amount > eligibility.maxLoanAmount)
-    throw new Error(`Maximum loan allowed is ${eligibility.maxLoanAmount}`);
-  if (repaymentTerm <= 0 || repaymentTerm > MAX_REPAYMENT_MONTHS) {
-    throw new Error(
-      `Repayment term must be between 1 and ${MAX_REPAYMENT_MONTHS} months`
-    );
-  }
+  validateLoanRequest(
+    consent,
+    amount,
+    eligibility.minLoanAmount,
+    eligibility.maxLoanAmount,
+    repaymentTerm
+  );
 
   // 3. Calculate amortization
   const monthlyAmortization = Math.ceil(amount / repaymentTerm);
