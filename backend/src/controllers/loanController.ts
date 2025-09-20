@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import * as loanService from '../services/loanService';
+import * as loanService from '../services/loanService.js';
 
 export async function getLoanEligibility(req: Request, res: Response) {
   try {
