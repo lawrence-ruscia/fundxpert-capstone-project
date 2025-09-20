@@ -79,3 +79,31 @@ export async function getLoanDocuments(req: Request, res: Response) {
     res.status(500).json({ error: 'Failed to fetch documents' });
   }
 }
+
+export async function deleteLoanDocument(req: Request, res: Response) {
+  try {
+    if (!isAuthenticatedRequest(req)) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const userId = req.user.id;
+    const { loanId, docId } = req.params;
+
+    // Verify ownership & delete
+    const success = await loanDocumentService.deleteLoanDocument(
+      userId,
+      parseInt(loanId ?? '', 10),
+      parseInt(docId ?? '', 10)
+    );
+
+    if (!success) {
+      return res
+        .status(404)
+        .json({ error: 'Document not found or not authorized' });
+    }
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error('❌ Error deleting document:', err);
+    res.status(500).json({ error: 'Failed to delete document' });
+  }
+}

@@ -4,7 +4,7 @@ import {
   uploadLoanDocument,
   fetchLoanDocuments,
 } from '../services/loanService';
-import { uploadFile, type UploadedLoan } from '../services/fileService';
+import { uploadFile } from '../services/fileService';
 import type { LoanDocument } from '../types/loan';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
@@ -84,6 +84,25 @@ export const LoanDocumentUpload = ({ loanId }: { loanId: number }) => {
               {doc.file_name}
             </a>{' '}
             <small>({new Date(doc.uploaded_at).toLocaleDateString()})</small>
+            <button
+              style={{ marginLeft: '1rem', color: 'red' }}
+              onClick={async () => {
+                if (confirm(`Delete ${doc.file_name}?`)) {
+                  await fetch(
+                    `http://localhost:3000/employee/loan/${loanId}/documents/${doc.id}`,
+                    {
+                      method: 'DELETE',
+                      credentials: 'include',
+                    }
+                  );
+
+                  // To update the UI
+                  setDocuments(prev => prev.filter(docs => docs.id != doc.id));
+                }
+              }}
+            >
+              🗑 Delete
+            </button>
           </li>
         ))}
       </ul>

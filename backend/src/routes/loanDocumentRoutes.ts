@@ -3,6 +3,7 @@ import { authMiddleware } from '../middleware/authMiddleware.js';
 import {
   uploadLoanDocument,
   getLoanDocuments,
+  deleteLoanDocument,
 } from '../controllers/loanDocumentController.js';
 import { uploadRouter } from './uploadRoutes.js';
 
@@ -20,4 +21,10 @@ loanDocumentRouter.get(
   '/:loanId/documents',
   authMiddleware('Employee'),
   getLoanDocuments
+);
+
+loanDocumentRouter.delete(
+  '/:loanId/documents/:docId',
+  authMiddleware('Employee'),
+  deleteLoanDocument
 );
