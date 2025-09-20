@@ -65,7 +65,7 @@ export async function applyForLoan(
   repaymentTerm: number,
   purpose: string,
   consent: boolean,
-  coMakerId?: number,
+  coMakerId?: string,
   notes?: string
 ): Promise<Loan> {
   // 1. Check eligibility

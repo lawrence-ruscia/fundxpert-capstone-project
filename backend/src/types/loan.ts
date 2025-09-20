@@ -5,14 +5,14 @@ export type LoanStatus =
   | 'Settled'
   | 'Rejected'
   | 'Cancelled';
- 
+
 export interface Loan {
   id: number;
   user_id: number;
   amount: number;
   repayment_term_months: number;
   purpose: string;
-  co_maker_employee_id?: number | null;
+  co_maker_employee_id?: string | null;
   consent_acknowledged: boolean;
   notes?: string | null;
   status: LoanStatus;

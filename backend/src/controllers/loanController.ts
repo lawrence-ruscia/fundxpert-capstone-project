@@ -40,7 +40,7 @@ export async function applyLoan(req: Request, res: Response) {
       Number(repayment_term_months),
       purpose,
       consent_acknowledged,
-      co_maker_employee_id ? Number(co_maker_employee_id) : undefined,
+      co_maker_employee_id,
       notes
     );
 

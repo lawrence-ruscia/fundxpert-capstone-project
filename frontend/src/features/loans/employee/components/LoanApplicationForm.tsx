@@ -19,6 +19,7 @@ const loanSchema = (maxLoan: number) =>
     consent_acknowledged: z.literal(true, {
       error: 'Consent must be acknowledged',
     }),
+    // TODO: Change Employee Id to string on all instances
     co_maker_employee_id: z.string().optional(),
     notes: z.string().optional(),
   });
@@ -78,7 +79,7 @@ export const LoanApplicationForm = ({
       onSuccess();
     } catch (error) {
       console.error('Loan application failed:', error);
-      // You might want to show an error toast here
+      // TODO: Show an error toast here
     }
   };
 

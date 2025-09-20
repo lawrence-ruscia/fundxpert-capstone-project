@@ -73,7 +73,7 @@ type LoanApplicationRequest = {
   repayment_term_months: number;
   purpose: string;
   consent_acknowledged: boolean;
-  co_maker_employee_id?: number;
+  co_maker_employee_id?: string | null;
   notes?: string;
 };
 
