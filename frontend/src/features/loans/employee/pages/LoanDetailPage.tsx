@@ -1,31 +1,9 @@
-import { useEffect, useState } from 'react';
 import { LoanDocumentUpload } from '../components/LoanDocumentUpload';
-import { useParams } from 'react-router-dom';
-import { fetchLoanDetails } from '../services/loanService';
-import type { LoanResponse } from '../types/loan';
+
+import { useLoanDetails } from '../hooks/useLoanDetails';
 
 export default function LoanDetailPage() {
-  const { loanId } = useParams<{ loanId: string }>();
-  const [loan, setLoan] = useState<LoanResponse | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!loanId) return;
-
-    async function loadLoan() {
-      try {
-        const data = await fetchLoanDetails(parseInt(loanId ?? '', 10));
-        setLoan(data);
-      } catch (err) {
-        setError((err as Error).message);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadLoan();
-  }, [loanId]);
+  const { loan, loading, error } = useLoanDetails();
 
   if (loading) return <p>Loading loan details...</p>;
   if (error) return <p style={{ color: 'red' }}>❌ {error}</p>;
