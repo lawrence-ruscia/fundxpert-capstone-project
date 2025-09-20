@@ -64,6 +64,6 @@ export async function fetchEmployeeLoans(): Promise<Loan[]> {
   if (!res.ok) {
     throw new Error(`Failed to fetch loans: ${res.statusText}`);
   }
-
-  return res.json();
+  const data = await res.json();
+  return data.loans;
 }
