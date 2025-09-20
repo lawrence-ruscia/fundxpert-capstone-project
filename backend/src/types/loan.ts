@@ -36,3 +36,10 @@ export interface LoanEligibility {
   minLoanAmount: number;
   maxRepaymentMonths: number;
 }
+
+export interface LoanDocument {
+  id: number;
+  loan_id: number;
+  file_url: string;
+  uploaded_at: Date;
+}

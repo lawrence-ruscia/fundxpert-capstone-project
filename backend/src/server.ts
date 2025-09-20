@@ -19,11 +19,13 @@ app.use(cookieParser());
 import { authRouter } from './routes/authRoutes.js';
 import { employeeRouter } from './routes/employeeRoutes.js';
 import { empLoanRouter } from './routes/employeeLoanRoutes.js';
+import { loanDocumentRouter } from './routes/loanDocumentRoutes.js';
 
 // Routes
 app.use('/auth', authRouter);
 app.use('/employee', employeeRouter);
 app.use('/employee/loan', empLoanRouter);
+app.use('/employee/loan', loanDocumentRouter);
 
 app.listen(PORT, err => {
   if (err) {
