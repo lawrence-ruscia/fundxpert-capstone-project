@@ -14,9 +14,9 @@ export async function uploadLoanDocument(req: Request, res: Response) {
 
     const userId = req.user.id;
     const { loanId } = req.params;
-    const { fileUrl } = req.body;
+    const { fileUrl, fileName } = req.body;
 
-    if (!fileUrl) {
+    if (!fileUrl || !fileName) {
       return res.status(400).json({ error: 'fileUrl is required' });
     }
 
@@ -37,7 +37,8 @@ export async function uploadLoanDocument(req: Request, res: Response) {
 
     const doc = await loanDocumentService.addLoanDocument(
       Number(loanId),
-      fileUrl
+      fileUrl,
+      fileName
     );
 
     res.status(201).json({ success: true, document: doc });

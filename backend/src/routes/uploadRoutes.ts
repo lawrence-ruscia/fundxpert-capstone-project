@@ -4,6 +4,7 @@ import multer from 'multer';
 import path from 'path';
 import { authMiddleware } from '../middleware/authMiddleware.js';
 import { supabase } from '../config/supabaseClient.config.js';
+import { isAuthenticatedRequest } from '../controllers/employeeControllers.js';
 
 export const uploadRouter = Router();
 
@@ -19,8 +20,12 @@ uploadRouter.post(
         return res.status(400).json({ error: 'No file uploaded' });
       }
 
+      if (!isAuthenticatedRequest(req)) {
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
       const fileExt = req.file.originalname.split('.').pop();
-      const fileName = `${Date.now()}-${req.body.user.id}.${fileExt}`;
+      const fileName = `${Date.now()}-${req.user.id}.${fileExt}`;
       const bucket = 'loan-documents';
 
       // Upload to Supabase
@@ -33,12 +38,18 @@ uploadRouter.post(
 
       if (error) throw error;
 
-      // Get public URL
-      const { data: publicUrl } = supabase.storage
+      // Use signed URL instead of public URL
+      const { data: signedUrl, error: signedError } = await supabase.storage
         .from(bucket)
-        .getPublicUrl(fileName);
+        .createSignedUrl(fileName, 3600); // 1 hour expiry
 
-      res.status(201).json({ fileUrl: publicUrl.publicUrl });
+      if (signedError) throw signedError;
+
+      res.status(201).json({
+        fileUrl: signedUrl.signedUrl,
+        fileName: fileName,
+        expiresAt: new Date(Date.now() + 3600 * 1000).toISOString(),
+      });
     } catch (err) {
       console.error('❌ Supabase upload error:', err);
       res.status(500).json({ error: 'Failed to upload file' });

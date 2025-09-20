@@ -40,8 +40,13 @@ export interface LoanEligibility {
 export interface LoanDocument {
   id: number;
   loan_id: number;
+  file_name: string;
   file_url: string;
   uploaded_at: Date;
 }
+
+export type LoanDocumentResponse = {
+  documents: LoanDocument[];
+};
 
 export type LoanResponse = Loan & { documents: LoanDocument[] };

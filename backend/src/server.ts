@@ -28,7 +28,6 @@ app.use('/employee', employeeRouter);
 app.use('/employee/loan', empLoanRouter);
 app.use('/employee/loan', loanDocumentRouter);
 
-app.use('/files', uploadRouter);
 app.use('/uploads', express.static('uploads')); // serve uploaded files
 
 app.listen(PORT, err => {

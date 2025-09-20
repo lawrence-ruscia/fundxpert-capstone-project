@@ -1,17 +1,16 @@
 // src/components/LoanDocumentUpload.tsx
 import { useState, useEffect } from 'react';
-import type { LoanDocument } from '../services/loanService';
 import {
   uploadLoanDocument,
   fetchLoanDocuments,
 } from '../services/loanService';
-import { uploadFile } from '../services/fileService';
+import { uploadFile, type UploadedLoan } from '../services/fileService';
+import type { LoanDocument } from '../types/loan';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 const ALLOWED_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
 
 export const LoanDocumentUpload = ({ loanId }: { loanId: number }) => {
-  const [fileUrl, setFileUrl] = useState('');
   const [documents, setDocuments] = useState<LoanDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -21,7 +20,8 @@ export const LoanDocumentUpload = ({ loanId }: { loanId: number }) => {
     async function loadDocs() {
       try {
         const data = await fetchLoanDocuments(loanId);
-        setDocuments(data);
+        const { documents } = data;
+        setDocuments(documents);
       } catch (err) {
         setError((err as Error).message);
       } finally {
@@ -50,14 +50,20 @@ export const LoanDocumentUpload = ({ loanId }: { loanId: number }) => {
 
     try {
       // 1. Upload file to server (returns fileUrl)
-      const fileUrl = await uploadFile(file);
+      const uploadedFile = await uploadFile(file);
 
+      const fileUrl = uploadedFile.fileUrl;
+      const fileName = uploadedFile.fileName;
+
+      console.log('File Url: ', fileUrl);
       // 2. Attach fileUrl to loan in DB
-      const resDocument = await uploadLoanDocument(loanId, fileUrl);
+      const resDocument = await uploadLoanDocument(loanId, fileUrl, fileName);
+      console.log('Document: ', resDocument.document);
 
       // 3. Update UI
-      setDocuments(prev => [...prev, resDocument]);
+      setDocuments(prev => [...prev, resDocument.document]);
     } catch (err) {
+      console.error(`Error: ${(err as Error).message}`);
       setError((err as Error).message);
     } finally {
       e.target.value = ''; // reset input
@@ -75,7 +81,7 @@ export const LoanDocumentUpload = ({ loanId }: { loanId: number }) => {
         {documents.map(doc => (
           <li key={doc.id}>
             <a href={doc.file_url} target='_blank' rel='noopener noreferrer'>
-              {doc.file_url}
+              {doc.file_name}
             </a>{' '}
             <small>({new Date(doc.uploaded_at).toLocaleDateString()})</small>
           </li>

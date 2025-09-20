@@ -1,16 +1,22 @@
-import type { Loan, LoanDocument, LoanResponse } from '../types/loan';
+import type {
+  Loan,
+  LoanDocument,
+  LoanDocumentResponse,
+  LoanResponse,
+} from '../types/loan';
 
 export async function uploadLoanDocument(
   loanId: number,
-  fileUrl: string
-): Promise<LoanDocument> {
+  fileUrl: string,
+  fileName: string
+): Promise<{ document: LoanDocument }> {
   const res = await fetch(
-    `http://localhost:3000/employee/loans/${loanId}/documents`,
+    `http://localhost:3000/employee/loan/${loanId}/documents`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       credentials: 'include', // important for httpOnly cookie
-      body: JSON.stringify({ fileUrl }),
+      body: JSON.stringify({ fileUrl, fileName }),
     }
   );
 
@@ -22,9 +28,9 @@ export async function uploadLoanDocument(
 
 export async function fetchLoanDocuments(
   loanId: number
-): Promise<LoanDocument[]> {
+): Promise<LoanDocumentResponse> {
   const res = await fetch(
-    `http://localhost:3000/employee/loans/${loanId}/documents`,
+    `http://localhost:3000/employee/loan/${loanId}/documents`,
     {
       credentials: 'include',
     }

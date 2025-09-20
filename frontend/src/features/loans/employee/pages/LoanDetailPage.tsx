@@ -55,7 +55,7 @@ export default function LoanDetailPage() {
         <p>No documents uploaded yet.</p>
       )}
 
-      {/* // TODO: FIX <LoanDocumentUpload loanId={loan.id} /> */}
+      <LoanDocumentUpload loanId={loan.id} />
     </div>
   );
 }

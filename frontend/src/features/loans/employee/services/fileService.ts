@@ -1,4 +1,10 @@
-export async function uploadFile(file: File): Promise<string> {
+export type UploadedLoan = {
+  fileUrl: string;
+  fileName: string;
+  expiresAt: string;
+};
+
+export async function uploadFile(file: File): Promise<UploadedLoan> {
   const formData = new FormData();
   formData.append('file', file);
 
@@ -12,5 +18,5 @@ export async function uploadFile(file: File): Promise<string> {
     throw new Error((await res.json()).error || 'File upload failed');
 
   const data = await res.json();
-  return data.fileUrl; // backend returns { fileUrl }
+  return data;
 }

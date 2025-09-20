@@ -6,13 +6,14 @@ import type { LoanDocument } from '../types/loan.js';
  */
 export async function addLoanDocument(
   loanId: number,
-  fileUrl: string
+  fileUrl: string,
+  fileName: string
 ): Promise<LoanDocument> {
   const { rows } = await pool.query(
-    `INSERT INTO loan_documents (loan_id, file_url)
-     VALUES ($1, $2)
+    `INSERT INTO loan_documents (loan_id, file_url, file_name)
+     VALUES ($1, $2, $3)
      RETURNING *`,
-    [loanId, fileUrl]
+    [loanId, fileUrl, fileName]
   );
   return rows[0];
 }

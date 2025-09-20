@@ -4,8 +4,11 @@ import {
   uploadLoanDocument,
   getLoanDocuments,
 } from '../controllers/loanDocumentController.js';
+import { uploadRouter } from './uploadRoutes.js';
 
 export const loanDocumentRouter = Router();
+
+loanDocumentRouter.use('/files', uploadRouter);
 
 loanDocumentRouter.post(
   '/:loanId/documents',
