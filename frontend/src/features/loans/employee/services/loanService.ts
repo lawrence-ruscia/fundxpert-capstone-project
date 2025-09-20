@@ -67,3 +67,29 @@ export async function fetchEmployeeLoans(): Promise<Loan[]> {
   const data = await res.json();
   return data.loans;
 }
+
+type LoanApplicationRequest = {
+  amount: number;
+  repayment_term_months: number;
+  purpose: string;
+  consent_acknowledged: boolean;
+  co_maker_employee_id?: number;
+  notes?: string;
+};
+
+export async function applyForLoan(
+  payload: LoanApplicationRequest
+): Promise<Loan> {
+  const res = await fetch('http://localhost:3000/employee/loan/apply', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    credentials: 'include',
+    body: JSON.stringify(payload),
+  });
+
+  if (!res.ok) {
+    throw new Error((await res.json()).error || 'Loan application failed');
+  }
+
+  return res.json();
+}
