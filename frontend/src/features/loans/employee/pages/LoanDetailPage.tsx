@@ -14,7 +14,8 @@ export default function LoanDetailPage() {
       <h2>Loan #{loan.id} Details</h2>
       <p>Status: {loan.status}</p>
       <p>Amount: ₱{loan.amount}</p>
-      <p>Purpose: {loan.purpose}</p>
+      <p>Purpose: {loan.purpose_category}</p>
+      {loan.purpose_detail && <p>Purpose Detail: {loan.purpose_detail}</p>}
       <p>Term: {loan.repayment_term_months} months</p>
       <p>Applied on: {new Date(loan.created_at).toLocaleDateString()}</p>
 
