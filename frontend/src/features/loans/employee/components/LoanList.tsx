@@ -30,15 +30,13 @@ export function LoansList({ loans }: { loans: Loan[] }) {
   if (!loans || loans.length === 0) {
     return (
       <div className='space-y-6'>
-        <Card className='border-0 bg-gradient-to-br from-white to-slate-50 shadow-lg'>
+        <Card className='border-0 shadow-lg'>
           <CardHeader className='pb-4 text-center'>
-            <div className='mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-100 to-teal-100'>
-              <CreditCard className='h-8 w-8 text-blue-600' />
+            <div className='bg-muted mx-auto flex h-16 w-16 items-center justify-center rounded-full'>
+              <CreditCard className='text-muted-foreground h-8 w-8' />
             </div>
-            <CardTitle className='text-2xl font-bold text-slate-900'>
-              No Loans Yet
-            </CardTitle>
-            <CardDescription className='text-base'>
+            <CardTitle className='text-2xl font-bold'>No Loans Yet</CardTitle>
+            <CardDescription className='text-muted-foreground'>
               You haven't applied for any loans. Get started by applying for
               your first loan.
             </CardDescription>

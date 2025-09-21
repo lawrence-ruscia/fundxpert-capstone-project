@@ -14,6 +14,7 @@ import ContributionHistoryPage from '@/features/contributions/employee/pages/Con
 import FundProjectionPage from '@/features/fundProjection/pages/FundProjectionPage';
 import LoanDetailPage from '@/features/loans/employee/pages/LoanDetailPage';
 import LoansPage from '@/features/loans/employee/pages/LoansPage';
+import { LoanApplicationForm } from '@/features/loans/employee/components/LoanApplicationForm';
 
 export const router = createBrowserRouter([
   {
