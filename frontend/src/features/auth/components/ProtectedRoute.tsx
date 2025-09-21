@@ -1,7 +1,6 @@
 import { Navigate, useLocation } from 'react-router-dom';
-import { useEffect, useState } from 'react';
-import { authService, type UserResponse } from '../services/authService';
 import { useAuth } from '../context/AuthContext';
+import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
 interface ProtectedRouteProps {
   children: React.ReactNode;
   allowedRoles?: ('Employee' | 'HR' | 'Admin')[];
@@ -14,7 +13,7 @@ export default function ProtectedRoute({
   const { user, loading, error } = useAuth();
   const location = useLocation();
 
-  if (loading) return <p> Checking authentication...</p>;
+  if (loading) return <LoadingSpinner text={'Checking Authentication'} />;
 
   if (error || !user)
     return (

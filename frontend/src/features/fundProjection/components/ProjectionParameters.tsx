@@ -17,7 +17,6 @@ import {
   Info,
   Calculator,
   AlertCircle,
-  Loader2,
 } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Controller, useForm } from 'react-hook-form';
@@ -27,6 +26,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { CurrencyInput } from '@/shared/components/currency-input';
 import { PercentInput } from '@/shared/components/percent-input';
 import { useEffect, useState } from 'react';
+import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
 
 const projectionSchema = z.object({
   years: z.number().min(1).max(30),
@@ -88,16 +88,7 @@ export const ProjectionParameters = ({
   const watchedYears = watch('years');
 
   if (initializing) {
-    return (
-      <div className='container mx-auto p-6'>
-        <div className='flex min-h-[400px] items-center justify-center'>
-          <div className='flex flex-col items-center space-y-4'>
-            <Loader2 className='text-primary h-8 w-8 animate-spin' />
-            <p className='text-muted-foreground'>Loading employee data...</p>
-          </div>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner text={'Loading Employee Data'} />;
   }
 
   return (

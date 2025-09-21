@@ -24,7 +24,7 @@ import {
 import { BalanceCard } from '@/features/dashboard/employee/components/BalanceCard';
 import { formatCurrency } from '@/features/dashboard/employee/utils/formatters';
 import { LoansList } from '../components/LoanList';
-import { LoadingSpinner } from '../components/LoadingSpinner';
+import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
 
 export default function LoansPage() {
   const [refreshKey, setRefreshKey] = useState(0);
@@ -56,7 +56,7 @@ export default function LoansPage() {
 
   // Loading state
   if (loading || overviewLoading) {
-    return <LoadingSpinner />;
+    return <LoadingSpinner text={'Loading Employee Data'} />;
   }
 
   // Error state

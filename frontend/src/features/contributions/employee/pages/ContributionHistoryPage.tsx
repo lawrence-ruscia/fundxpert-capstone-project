@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Calendar, Loader2, Download } from 'lucide-react';
+import { Calendar, Download } from 'lucide-react';
 
 import {
   Card,
@@ -41,6 +41,7 @@ import { columns } from '../components/data-columns';
 import type { EmployeeOverview } from '@/features/dashboard/employee/types/employeeOverview';
 import { periodOptions } from '../data/periodOptions';
 import { ContributionStats } from '../components/ContributionStats';
+import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
 
 export type EmployeeMetadata = Omit<EmployeeOverview['employee'], 'id'>;
 
@@ -78,11 +79,10 @@ export default function ContributionHistoryPage() {
       position: overview.employee.position,
       employment_status: overview.employee.employment_status,
       date_hired: overview.employee.date_hired,
+      salary: overview.employee.salary,
     };
   }, [overview]);
 
-  // TODO: TABLE
-  // Validate data with Zod
   const validatedData = useMemo(() => {
     try {
       return EmployeeContributionsResponseSchema.parse(data);
@@ -164,21 +164,13 @@ export default function ContributionHistoryPage() {
       department: 'IT',
       position: 'Software Engineer',
       date_hired: '2025-01-01',
+      salary: 10000,
     },
     period
   );
 
   if (loading) {
-    return (
-      <div className='container mx-auto p-6'>
-        <div className='flex min-h-[400px] items-center justify-center'>
-          <div className='flex flex-col items-center space-y-4'>
-            <Loader2 className='text-primary h-8 w-8 animate-spin' />
-            <p className='text-muted-foreground'>Loading contributions...</p>
-          </div>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner text={'Loading Contribution History'} />;
   }
 
   if (error) {

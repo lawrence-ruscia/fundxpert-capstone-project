@@ -17,21 +17,12 @@ import { LoanDocumentUpload } from '../components/LoanDocumentUpload';
 import { useLoanDetails } from '../hooks/useLoanDetails';
 import { Separator } from '@radix-ui/react-select';
 import { LoanStatusBadge } from '../components/LoanStatusBadge';
+import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
 
 export default function LoanDetailPage() {
   const { loan, loading, error } = useLoanDetails();
   if (loading) {
-    return (
-      <div className='bg-background min-h-screen p-6'>
-        <div className='mx-auto max-w-4xl'>
-          <div className='animate-pulse space-y-6'>
-            <div className='bg-muted h-8 w-1/3 rounded'></div>
-            <div className='bg-muted h-32 rounded'></div>
-            <div className='bg-muted h-48 rounded'></div>
-          </div>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner text={'Loading Loan Details'} />;
   }
 
   if (error) {

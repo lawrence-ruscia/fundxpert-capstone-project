@@ -1,5 +1,6 @@
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
 interface AuthRedirectProps {
   children: React.ReactNode;
 }
@@ -8,7 +9,7 @@ export default function AuthRedirect({ children }: AuthRedirectProps) {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <p>Checking authentication...</p>;
+    return <LoadingSpinner text={'Checking Authentication'} />;
   }
 
   if (user) {

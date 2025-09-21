@@ -2,14 +2,12 @@ import { OTPForm } from '../components/OTPForm';
 import { useNavigate, Navigate } from 'react-router-dom';
 import { authService, type UserResponse } from '../services/authService';
 import type { LoginResponse } from './LoginPage';
-import { useState } from 'react';
 import {
   Card,
   CardHeader,
   CardTitle,
   CardDescription,
   CardContent,
-  CardFooter,
 } from '@/components/ui/card';
 import type { UseFormSetError } from 'react-hook-form';
 import type { OTPSchema } from '../schemas/otpSchema';

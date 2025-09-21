@@ -12,11 +12,12 @@ import { FundGrowthChart } from '../components/FundGrowthChart';
 import { QuickActions } from '../components/QuickActions';
 import { LoanStatus } from '../components/LoanStatus';
 import { EligibilityStatus } from '../components/EligibilityStatus';
+import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
 
 export default function EmployeeDashboard() {
   const { data: overview, loading, error } = useEmployeeOverview();
 
-  if (loading) return <p>Loading dashboard...</p>;
+  if (loading) return <LoadingSpinner text={'Loading Dashboard Data'} />;
   if (error) return <p style={{ color: 'red' }}>❌ {error.message}</p>;
   if (!overview) return <p>No data available</p>;
 
