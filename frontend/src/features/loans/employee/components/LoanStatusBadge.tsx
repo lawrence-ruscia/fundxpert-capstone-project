@@ -31,7 +31,7 @@ const loanStatusConfig: Record<LoanStatus, LoanStatusConfig> = {
     variant: 'secondary',
   },
   Active: {
-    icon: PlayCircle,
+    icon: CheckCircle,
     className:
       'bg-blue-500 hover:bg-blue-600 text-white dark:bg-blue-600 dark:hover:bg-blue-700',
     variant: 'secondary',

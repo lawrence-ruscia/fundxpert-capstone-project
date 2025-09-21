@@ -55,20 +55,20 @@ export default function EmployeeDashboard() {
             <BalanceCard
               label='Employee Contributions'
               value={formatCurrency(
-                overview.balances.employee_contribution_total
+                Number(overview.balances.employee_contribution_total)
               )}
               icon={User}
             />
             <BalanceCard
               label='Employer Contributions'
               value={formatCurrency(
-                overview.balances.employer_contribution_total
+                Number(overview.balances.employer_contribution_total)
               )}
               icon={Building2}
             />
             <BalanceCard
               label='Vested Amount'
-              value={formatCurrency(overview.balances.vested_amount)}
+              value={formatCurrency(Number(overview.balances.vested_amount))}
               icon={ShieldCheck}
               comparison={formatVesting(
                 Number(overview.balances.comparisons.vesting_percentage)
@@ -76,7 +76,7 @@ export default function EmployeeDashboard() {
             />
             <BalanceCard
               label='Unvested Amount'
-              value={formatCurrency(overview.balances.unvested_amount)}
+              value={formatCurrency(Number(overview.balances.unvested_amount))}
               icon={Clock}
               comparison={formatVestingDate(
                 overview.employee.date_hired,
@@ -85,7 +85,7 @@ export default function EmployeeDashboard() {
             />
             <BalanceCard
               label='Total Balance'
-              value={formatCurrency(overview.balances.total_balance)}
+              value={formatCurrency(Number(overview.balances.total_balance))}
               icon={PiggyBank}
               comparison={formatGrowth(
                 Number(overview.balances.comparisons.growth_percentage)

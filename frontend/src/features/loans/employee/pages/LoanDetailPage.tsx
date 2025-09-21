@@ -101,7 +101,7 @@ export default function LoanDetailPage() {
                 </CardDescription>
               </div>
 
-              <LoanStatusBadge status={'Pending'} />
+              <LoanStatusBadge status={loan.status} />
             </div>
           </CardHeader>
           <CardContent className='space-y-6'>
