@@ -148,7 +148,7 @@ export async function getLoanDetails(userId: number, loanId: number) {
 
   // fetch documents
   const docsQuery = `
-    SELECT file_url, uploaded_at
+    SELECT file_name, file_url, uploaded_at
     FROM loan_documents
     WHERE loan_id = $1;
   `;

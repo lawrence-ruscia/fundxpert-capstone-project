@@ -60,7 +60,7 @@ export default function LoanListPage() {
   const maxLoanAmount = overview.eligibility.max_loan_amount ?? 0;
 
   return (
-    <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
+    <div style={{ margin: '0 auto', padding: '20px' }}>
       {/* Loans List Section */}
       <LoansList loans={loans || []} />
 

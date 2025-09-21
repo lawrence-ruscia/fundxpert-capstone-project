@@ -88,7 +88,7 @@ export const LoanDocumentUpload = ({ loanId }: { loanId: number }) => {
         </div>
         <CardDescription>
           Upload required documents for your loan application. Accepted formats:
-          PDF, DOC, DOCX, JPG, PNG (Max 10MB each)
+          PDF, JPEG, PNG (Max 10MB each)
         </CardDescription>
       </CardHeader>
 
@@ -129,7 +129,7 @@ export const LoanDocumentUpload = ({ loanId }: { loanId: number }) => {
                 Drop files here or click to browse
               </p>
               <p className='text-muted-foreground text-xs'>
-                PDF, DOC, DOCX, JPG, PNG up to 10MB
+                PDF, JPEG, PNG up to 10MB
               </p>
             </div>
           </div>
@@ -150,14 +150,24 @@ export const LoanDocumentUpload = ({ loanId }: { loanId: number }) => {
                     className='bg-muted/30 flex items-center justify-between rounded-lg border p-3'
                   >
                     <div className='flex min-w-0 flex-1 items-center space-x-3'>
-                      <div className='min-w-0 flex-1'>
-                        <div className='flex items-center space-x-2'>
-                          <p className='truncate text-sm font-medium'>
-                            {doc.file_name}
-                          </p>
+                      <div className='flex min-w-0 flex-1 items-center gap-3'>
+                        <div className='bg-background border-border/50 rounded border p-2'>
+                          <FileText className='text-muted-foreground h-4 w-4' />
                         </div>
-                        <div className='mt-1 flex items-center space-x-4'>
-                          <p className='text-muted-foreground text-xs'>
+                        <div className='min-w-0 flex-1'>
+                          <a
+                            className='truncate font-medium'
+                            href={doc.file_url}
+                            target='_blank'
+                            rel='noopener noreferrer'
+                            title='Download document'
+                          >
+                            {doc.file_name}
+                          </a>
+                        </div>
+
+                        <div className='hidden flex-shrink-0 items-center sm:flex'>
+                          <p className='text-muted-foreground mr-1 text-xs whitespace-nowrap'>
                             {new Date(doc.uploaded_at).toLocaleDateString(
                               'en-US',
                               {

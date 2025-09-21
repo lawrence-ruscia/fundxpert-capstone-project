@@ -2,7 +2,6 @@ import type {
   Loan,
   LoanDocument,
   LoanDocumentResponse,
-  LoanPurposeCategory,
   LoanResponse,
 } from '../types/loan';
 

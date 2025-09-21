@@ -35,7 +35,7 @@ export const LoanStatus = ({
                   : '0'}
               </span>
             </div>
-            {/* // TODO: Make loan id more secure by adding more character (e.g: LN(YYYY)(XXX)) */}
+
             <div className='flex items-center justify-between'>
               <span className='text-sm'>Loan ID</span>
               <Badge variant='outline'>{overview.loan_status.loan_id}</Badge>

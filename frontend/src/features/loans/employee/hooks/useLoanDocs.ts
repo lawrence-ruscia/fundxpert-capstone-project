@@ -6,7 +6,7 @@ import {
 } from '../services/loanService';
 import { uploadFile } from '../services/fileService';
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 const ALLOWED_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
 
 export const useLoanDocs = (loanId: number) => {
@@ -42,7 +42,7 @@ export const useLoanDocs = (loanId: number) => {
     }
 
     if (file.size > MAX_FILE_SIZE) {
-      setError('File must be less than 5MB');
+      setError('File must be less than 10MB');
       e.target.value = '';
       return;
     }
