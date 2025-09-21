@@ -18,7 +18,7 @@ export async function getLoanEligibility(req: Request, res: Response) {
 }
 
 export async function applyLoan(req: Request, res: Response) {
-  try {
+  try { 
     if (!isAuthenticatedRequest(req)) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
@@ -28,20 +28,20 @@ export async function applyLoan(req: Request, res: Response) {
     const {
       amount,
       repayment_term_months,
-      purpose,
+      purpose_category,
+      purpose_detail,
       consent_acknowledged,
       co_maker_employee_id,
-      notes,
     } = req.body;
 
     const loan = await loanService.applyForLoan(
       userId,
       Number(amount),
       Number(repayment_term_months),
-      purpose,
+      purpose_category,
       consent_acknowledged,
       co_maker_employee_id,
-      notes
+      purpose_detail
     );
 
     res.status(201).json({ success: true, loan });

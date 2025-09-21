@@ -4,7 +4,11 @@ import {
   MAX_REPAYMENT_MONTHS,
   MIN_LOAN_AMOUNT,
 } from '../config/policy.config.js';
-import type { Loan, LoanEligibility } from '../types/loan.js';
+import type {
+  Loan,
+  LoanEligibility,
+  LoanPurposeCategory,
+} from '../types/loan.js';
 import { validateLoanRequest } from './utils/applyForLoanUtils.js';
 import {
   getLoanReason,
@@ -63,10 +67,10 @@ export async function applyForLoan(
   userId: number,
   amount: number,
   repaymentTerm: number,
-  purpose: string,
+  purposeCategory: LoanPurposeCategory,
   consent: boolean,
   coMakerId?: string,
-  notes?: string
+  purposeDetail?: string
 ): Promise<Loan> {
   // 1. Check eligibility
   const eligibility = await checkLoanEligibility(userId);
@@ -89,8 +93,8 @@ export async function applyForLoan(
   // 4. Insert loan
   const insertQuery = `
     INSERT INTO loans 
-    (user_id, amount, repayment_term_months, purpose, co_maker_employee_id,
-     consent_acknowledged, notes, status, monthly_amortization)
+    (user_id, amount, repayment_term_months, purpose_category, purpose_detail, co_maker_employee_id,
+     consent_acknowledged, status, monthly_amortization)
     VALUES ($1,$2,$3,$4,$5,$6,$7,'Pending',$8)
     RETURNING *;
   `;
@@ -98,10 +102,10 @@ export async function applyForLoan(
     userId,
     amount,
     repaymentTerm,
-    purpose,
+    purposeCategory,
+    purposeDetail || null,
     coMakerId || null,
     consent,
-    notes || null,
     monthlyAmortization,
   ]);
 
@@ -132,8 +136,8 @@ export async function getLoanHistory(userId: number): Promise<Loan[]> {
 
 export async function getLoanDetails(userId: number, loanId: number) {
   const query = `
-    SELECT id, amount, status, created_at, purpose, 
-            repayment_term_months
+    SELECT id, amount, status, created_at, purpose_category, 
+      purpose_detail, repayment_term_months
     FROM loans 
     WHERE id = $1 AND user_id = $2;
   `;
