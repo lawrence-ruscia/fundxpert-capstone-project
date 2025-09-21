@@ -7,8 +7,6 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import {
   Building2,
   Calculator,
-  ChartBarIncreasing,
-  Loader2,
   PiggyBank,
   TrendingUp,
   User,

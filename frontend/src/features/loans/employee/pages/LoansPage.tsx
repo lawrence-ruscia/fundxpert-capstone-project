@@ -16,7 +16,6 @@ import {
 import {
   Plus,
   AlertCircle,
-  XCircle,
   ShieldCheck,
   PiggyBank,
   Wallet,
@@ -25,6 +24,8 @@ import { BalanceCard } from '@/features/dashboard/employee/components/BalanceCar
 import { formatCurrency } from '@/features/dashboard/employee/utils/formatters';
 import { LoansList } from '../components/LoanList';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
+import { NetworkError } from '@/shared/components/NetworkError';
+import { DataError } from '@/shared/components/DataError';
 
 export default function LoansPage() {
   const [refreshKey, setRefreshKey] = useState(0);
@@ -61,19 +62,15 @@ export default function LoansPage() {
 
   // Error state
   if (error || overviewError) {
-    return (
-      <ErrorMessage
-        message={
-          error?.message || overviewError?.message || 'An error occurred'
-        }
-      />
-    );
+    return <NetworkError message={error?.message || overviewError?.message} />;
   }
 
-  // No overview data (shouldn't happen but good to handle)
   if (!overview) {
     return (
-      <ErrorMessage message='Unable to load loan eligibility information' />
+      <DataError
+        title='No employee overview data found'
+        message='Unable to load loan eligibility information'
+      />
     );
   }
 
@@ -222,19 +219,6 @@ export default function LoansPage() {
           )}
         </div>
       )}
-    </div>
-  );
-}
-
-function ErrorMessage({ message }: { message: string }) {
-  return (
-    <div className='flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50 p-4'>
-      <Alert className='max-w-md border-red-200 bg-red-50'>
-        <XCircle className='h-4 w-4 text-red-600' />
-        <AlertDescription className='font-medium text-red-800'>
-          {message}
-        </AlertDescription>
-      </Alert>
     </div>
   );
 }

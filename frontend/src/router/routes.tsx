@@ -3,7 +3,6 @@ import { LoginPage } from '@/features/auth/pages/LoginPage';
 import EmployeeDashboard from '@/features/dashboard/employee/pages/EmployeeDashboard';
 import HRDashboard from '@/features/dashboard/hr/pages/HRDashboard';
 import AdminDashboard from '@/features/dashboard/admin/pages/AdminDashboard';
-import NotFoundPage from '@/features/NotFoundError';
 import ProtectedRoute from '@/features/auth/components/ProtectedRoute';
 import { Navigate } from 'react-router-dom';
 import { AuthLayout } from '@/shared/layout/AuthLayout';
@@ -14,7 +13,7 @@ import ContributionHistoryPage from '@/features/contributions/employee/pages/Con
 import FundProjectionPage from '@/features/fundProjection/pages/FundProjectionPage';
 import LoanDetailPage from '@/features/loans/employee/pages/LoanDetailPage';
 import LoansPage from '@/features/loans/employee/pages/LoansPage';
-import { LoanApplicationForm } from '@/features/loans/employee/components/LoanApplicationForm';
+import { NotFoundError } from '@/shared/components/NotFoundError';
 
 export const router = createBrowserRouter([
   {
@@ -78,7 +77,7 @@ export const router = createBrowserRouter([
 
   {
     path: '/404',
-    element: <NotFoundPage />,
+    element: <NotFoundError />,
   },
   {
     path: '*',

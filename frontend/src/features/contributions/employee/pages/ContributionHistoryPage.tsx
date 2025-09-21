@@ -42,6 +42,8 @@ import type { EmployeeOverview } from '@/features/dashboard/employee/types/emplo
 import { periodOptions } from '../data/periodOptions';
 import { ContributionStats } from '../components/ContributionStats';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
+import { NetworkError } from '@/shared/components/NetworkError';
+import { DataError } from '@/shared/components/DataError';
 
 export type EmployeeMetadata = Omit<EmployeeOverview['employee'], 'id'>;
 
@@ -174,26 +176,15 @@ export default function ContributionHistoryPage() {
   }
 
   if (error) {
-    return (
-      <div className='container mx-auto p-6'>
-        <Alert variant='destructive'>
-          <AlertDescription>
-            {contributionsError?.message ||
-              overviewError?.message ||
-              'Failed to load data'}
-          </AlertDescription>
-        </Alert>
-      </div>
-    );
+    return <NetworkError message={error?.message || overviewError?.message} />;
   }
 
   if (!data) {
     return (
-      <div className='container mx-auto p-6'>
-        <Alert>
-          <AlertDescription>No contribution data available.</AlertDescription>
-        </Alert>
-      </div>
+      <DataError
+        title='No contribution data available'
+        message='Unable to fetch employee contribution data'
+      />
     );
   }
 

@@ -13,13 +13,21 @@ import { QuickActions } from '../components/QuickActions';
 import { LoanStatus } from '../components/LoanStatus';
 import { EligibilityStatus } from '../components/EligibilityStatus';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
+import { NetworkError } from '@/shared/components/NetworkError';
+import { DataError } from '@/shared/components/DataError';
 
 export default function EmployeeDashboard() {
   const { data: overview, loading, error } = useEmployeeOverview();
 
   if (loading) return <LoadingSpinner text={'Loading Dashboard Data'} />;
-  if (error) return <p style={{ color: 'red' }}>❌ {error.message}</p>;
-  if (!overview) return <p>No data available</p>;
+  if (error) return <NetworkError message={error.message} />;
+  if (!overview)
+    return (
+      <DataError
+        title='No employee overview data found'
+        message='Unable to load employee information'
+      />
+    );
 
   return (
     <>

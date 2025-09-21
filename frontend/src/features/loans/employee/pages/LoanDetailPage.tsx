@@ -5,19 +5,15 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  CalendarDays,
-  Clock,
-  FileText,
-  PhilippinePeso,
-  Target,
-} from 'lucide-react';
+import { CalendarDays, Clock, PhilippinePeso, Target } from 'lucide-react';
 import { LoanDocumentUpload } from '../components/LoanDocumentUpload';
 
 import { useLoanDetails } from '../hooks/useLoanDetails';
 import { Separator } from '@radix-ui/react-select';
 import { LoanStatusBadge } from '../components/LoanStatusBadge';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
+import { DataError } from '@/shared/components/DataError';
+import { NetworkError } from '@/shared/components/NetworkError';
 
 export default function LoanDetailPage() {
   const { loan, loading, error } = useLoanDetails();
@@ -26,42 +22,15 @@ export default function LoanDetailPage() {
   }
 
   if (error) {
-    return (
-      <div className='bg-background min-h-screen p-6'>
-        <div className='mx-auto max-w-4xl'>
-          <Card className='border-destructive/20 bg-destructive/5'>
-            <CardContent className='pt-6'>
-              <div className='text-destructive flex items-center gap-2'>
-                <FileText className='h-5 w-5' />
-                <p className='font-medium'>Error loading loan details</p>
-              </div>
-              <p className='text-muted-foreground mt-1 text-sm'>{error}</p>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
+    return <NetworkError message={error} />;
   }
 
   if (!loan) {
     return (
-      <div className='bg-background min-h-screen p-6'>
-        <div className='mx-auto max-w-4xl'>
-          <Card>
-            <CardContent className='pt-6'>
-              <div className='py-8 text-center'>
-                <FileText className='text-muted-foreground mx-auto mb-4 h-12 w-12' />
-                <p className='text-muted-foreground text-lg font-medium'>
-                  No loan found
-                </p>
-                <p className='text-muted-foreground text-sm'>
-                  The requested loan application could not be located.
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+      <DataError
+        title='No loan found'
+        message=' The requested loan application could not be located.'
+      />
     );
   }
   return (
