@@ -4,25 +4,50 @@ import { z } from 'zod';
 import { applyForLoan } from '../services/loanService';
 
 const loanSchema = (maxLoan: number) =>
-  z.object({
-    amount: z
-      .number({
-        error: 'Amount must be a valid number',
-      })
-      .min(1000, 'Minimum ₱1,000')
-      .max(maxLoan, `Cannot exceed ₱${maxLoan} (50% of vested balance)`),
-    repayment_term_months: z
-      .number()
-      .min(1, 'Minimum 1 month')
-      .max(24, 'Maximum 24 months'),
-    purpose: z.string().min(3, 'Purpose is required'),
-    consent_acknowledged: z.literal(true, {
-      error: 'Consent must be acknowledged',
-    }),
-    // TODO: Change Employee Id to string on all instances
-    co_maker_employee_id: z.string().optional(),
-    notes: z.string().optional(),
-  });
+  z
+    .object({
+      amount: z
+        .number({
+          error: 'Amount must be a valid number',
+        })
+        .min(1000, 'Minimum ₱1,000')
+        .max(maxLoan, `Cannot exceed ₱${maxLoan} (50% of vested balance)`),
+
+      repayment_term_months: z
+        .number({
+          error: 'Repayment term must be a number',
+        })
+        .min(1, 'Minimum 1 month')
+        .max(24, 'Maximum 24 months'),
+
+      // Hybrid purpose
+      purpose_category: z.enum(
+        ['Medical', 'Education', 'Housing', 'Emergency', 'Debt', 'Others'],
+        {
+          error: 'Purpose category is required',
+        }
+      ),
+      purpose_detail: z.string().optional(),
+
+      // Consent must be acknowledged
+      consent_acknowledged: z.literal(true, {
+        error: 'Consent must be acknowledged',
+      }),
+
+      // Optional co-maker
+      co_maker_employee_id: z
+        .string()
+        .regex(/^\d{2}-\d{5}$/, 'Invalid employee ID format (e.g., 12-34567)')
+        .optional(),
+    })
+    .refine(
+      data =>
+        data.purpose_category !== 'Others' || !!data.purpose_detail?.trim(),
+      {
+        message: "Purpose detail is required when 'Others' is selected",
+        path: ['purpose_detail'],
+      }
+    );
 
 type LoanFormData = z.infer<ReturnType<typeof loanSchema>>;
 // Form Field Component
@@ -66,6 +91,7 @@ export const LoanApplicationForm = ({
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
+    watch,
   } = useForm<LoanFormData>({
     resolver: zodResolver(loanSchema(maxLoan)),
     defaultValues: {
@@ -75,13 +101,26 @@ export const LoanApplicationForm = ({
 
   const onSubmit = async (data: LoanFormData) => {
     try {
-      await applyForLoan(data);
+      const payload = {
+        amount: data.amount,
+        repayment_term_months: data.repayment_term_months,
+        purpose_category:
+          data.purpose_category === 'Others'
+            ? `Others: ${data.purpose_detail ?? ''}`
+            : data.purpose_category,
+        purpose_detail: data.purpose_detail,
+        consent_acknowledged: data.consent_acknowledged,
+        co_maker_employee_id: data.co_maker_employee_id ?? null,
+      };
+      await applyForLoan(payload);
       onSuccess();
     } catch (error) {
       console.error('Loan application failed:', error);
       // TODO: Show an error toast here
     }
   };
+
+  const watchedPurpose = watch('purpose_category');
 
   const inputStyle = {
     width: '100%',
@@ -125,14 +164,29 @@ export const LoanApplicationForm = ({
           />
         </FormField>
 
-        <FormField label='Purpose' error={errors.purpose?.message}>
-          <input
-            type='text'
-            style={inputStyle}
-            placeholder='What is this loan for?'
-            {...register('purpose')}
-          />
+        <FormField
+          label='Loan Purpose'
+          error={errors.purpose_category?.message}
+        >
+          <select {...register('purpose_category')}>
+            <option value=''>Select purpose...</option>
+            <option value='Medical'>Medical/Healthcare</option>
+            <option value='Education'>Education/Training</option>
+            <option value='Housing'>Housing/Rent</option>
+            <option value='Emergency'>Emergency</option>
+            <option value='Debt'>Debt</option>
+            <option value='Others'>Others</option>
+          </select>
         </FormField>
+
+        {(watchedPurpose === 'Emergency' || watchedPurpose === 'Others') && (
+          <FormField
+            label='Please specify'
+            error={errors.purpose_detail?.message}
+          >
+            <textarea {...register('purpose_detail')} />
+          </FormField>
+        )}
 
         <FormField
           label='Co-Maker Employee Id (Optional)'
@@ -142,7 +196,10 @@ export const LoanApplicationForm = ({
             type='text'
             style={inputStyle}
             placeholder='EM-002'
-            {...register('co_maker_employee_id')}
+            {...register('co_maker_employee_id', {
+              setValueAs: value =>
+                value?.trim() === '' ? undefined : value?.trim(),
+            })}
           />
         </FormField>
 
@@ -160,18 +217,6 @@ export const LoanApplicationForm = ({
               </option>
             ))}
           </select>
-        </FormField>
-
-        <FormField
-          label='Additional Notes (Optional)'
-          error={errors.notes?.message}
-        >
-          <textarea
-            rows={3}
-            style={{ ...inputStyle, resize: 'vertical' }}
-            placeholder='Any additional information...'
-            {...register('notes')}
-          />
         </FormField>
 
         <FormField label='' error={errors.consent_acknowledged?.message}>

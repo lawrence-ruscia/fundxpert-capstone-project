@@ -2,6 +2,7 @@ import type {
   Loan,
   LoanDocument,
   LoanDocumentResponse,
+  LoanPurposeCategory,
   LoanResponse,
 } from '../types/loan';
 
@@ -71,10 +72,10 @@ export async function fetchEmployeeLoans(): Promise<Loan[]> {
 type LoanApplicationRequest = {
   amount: number;
   repayment_term_months: number;
-  purpose: string;
+  purpose_category: string;
+  purpose_detail?: string | null;
   consent_acknowledged: boolean;
   co_maker_employee_id?: string | null;
-  notes?: string;
 };
 
 export async function applyForLoan(

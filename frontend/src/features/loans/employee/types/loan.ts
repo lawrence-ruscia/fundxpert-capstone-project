@@ -11,10 +11,10 @@ export interface Loan {
   user_id: number;
   amount: number;
   repayment_term_months: number;
-  purpose: string;
-  co_maker_employee_id?: number | null;
+  purpose_category: LoanPurposeCategory;
+  purpose_detail: string;
+  co_maker_employee_id?: string | null;
   consent_acknowledged: boolean;
-  notes?: string | null;
   status: LoanStatus;
   monthly_amortization: number;
   created_at: Date;
@@ -26,6 +26,14 @@ export interface Loan {
   trust_bank_txref?: string | null;
   approval_flow?: unknown; // JSONB, can define structure later
 }
+
+export type LoanPurposeCategory =
+  | 'Medical'
+  | 'Education'
+  | 'Housing'
+  | 'Emergency'
+  | 'Debt'
+  | 'Others';
 
 export interface LoanEligibility {
   eligible: boolean;
@@ -40,8 +48,8 @@ export interface LoanEligibility {
 export interface LoanDocument {
   id: number;
   loan_id: number;
-  file_name: string;
   file_url: string;
+  file_name: string;
   uploaded_at: Date;
 }
 

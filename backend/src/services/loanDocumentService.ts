@@ -1,6 +1,7 @@
 import { pool } from '../config/db.config.js';
 import { supabase } from '../config/supabaseClient.config.js';
 import type { LoanDocument } from '../types/loan.js';
+import { getStoragePathForDeletion } from './utils/deleteLoanDocumentUtils.js';
 
 /**
  * Add a document to a loan
@@ -50,16 +51,30 @@ export async function deleteLoanDocument(
 
   if (rows.length === 0) return false;
 
-  const doc = rows[0];
+  const document = rows[0];
+
+  const storagePath = getStoragePathForDeletion(document);
+  if (!storagePath) {
+    console.error('❌ Cannot determine storage path - aborting deletion');
+    return false;
+  }
 
   // Delete from Supabase
-  const filePath = doc.file_url.split('/').pop(); // if stored as full URL
-  const { error } = await supabase.storage
+  console.log(` Deleting from Supabase Storage: ${storagePath}`);
+  const { error: storageError } = await supabase.storage
     .from('loan-documents')
-    .remove([filePath]);
+    .remove([storagePath]);
 
-  if (error) {
-    console.error('❌ Supabase delete error:', error);
+  if (storageError) {
+    console.error('❌ Supabase Storage deletion failed:', {
+      error: storageError,
+      attemptedPath: storagePath,
+    });
+    return false;
+  }
+
+  if (storageError) {
+    console.error('❌ Supabase delete error:', storageError);
     return false;
   }
 
