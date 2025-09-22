@@ -68,3 +68,7 @@ export interface WithdrawalEligibility {
   snapshot: WithdrawalSnapshot;
   reasonIfNotEligible?: string;
 }
+
+export type WithdrawalResponse = WithdrawalRequest & {
+  documents: WithdrawalDocument[];
+};

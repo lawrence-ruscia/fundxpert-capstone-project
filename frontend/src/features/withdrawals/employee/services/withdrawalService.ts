@@ -10,7 +10,7 @@ export async function uploadLoanDocument(
   fileName: string
 ): Promise<{ document: WithdrawalDocument }> {
   const res = await fetch(
-    `http://localhost:3000/employee/loan/${withdrawalId}/documents`,
+    `http://localhost:3000/employee/withdrawal/${withdrawalId}/documents`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -41,9 +41,9 @@ export async function fetchWithdrawalEligibility(): Promise<WithdrawalEligibilit
 
 export async function fetchWithdrawalDocuments(
   withdrawalId: number
-): Promise<WithdrawalDocument[]> {
+): Promise<{ documents: WithdrawalDocument[] }> {
   const res = await fetch(
-    `http://localhost:3000/employee/loan/${withdrawalId}/documents`,
+    `http://localhost:3000/employee/withdrawal/${withdrawalId}/documents`,
     {
       credentials: 'include',
     }

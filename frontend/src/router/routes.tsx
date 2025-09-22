@@ -15,6 +15,7 @@ import LoanDetailPage from '@/features/loans/employee/pages/LoanDetailPage';
 import LoansPage from '@/features/loans/employee/pages/LoansPage';
 import { NotFoundError } from '@/shared/components/NotFoundError';
 import WithdrawalsPage from '@/features/withdrawals/employee/pages/WithdrawalsPage';
+import WithdrawalDetailPage from '@/features/withdrawals/employee/pages/WithdrawalDetailPage';
 
 export const router = createBrowserRouter([
   {
@@ -58,6 +59,7 @@ export const router = createBrowserRouter([
       { path: 'loans', element: <LoansPage /> },
       { path: 'loans/:loanId', element: <LoanDetailPage /> },
       { path: 'withdrawals', element: <WithdrawalsPage /> },
+      { path: 'withdrawals/:withdrawalId', element: <WithdrawalDetailPage /> },
     ],
   },
   {

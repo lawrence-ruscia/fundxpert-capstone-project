@@ -1,4 +1,4 @@
-import { useLoanDocs } from '../hooks/useLoanDocs';
+import { useWithdrawalDocs } from '../hooks/useLoanDocs';
 import {
   AlertCircle,
   Download,
@@ -20,9 +20,13 @@ import { useCallback, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Separator } from '@radix-ui/react-select';
 
-export const LoanDocumentUpload = ({ loanId }: { loanId: number }) => {
+export const WithdrawalDocumentUpload = ({
+  withdrawalId,
+}: {
+  withdrawalId: number;
+}) => {
   const { documents, handleFileChange, handleFileDelete, loading, error } =
-    useLoanDocs(loanId);
+    useWithdrawalDocs(withdrawalId);
 
   const [dragActive, setDragActive] = useState(false);
 
@@ -203,7 +207,11 @@ export const LoanDocumentUpload = ({ loanId }: { loanId: number }) => {
                         variant='ghost'
                         size='sm'
                         onClick={() =>
-                          handleFileDelete?.(doc.file_name, loanId, doc.id)
+                          handleFileDelete?.(
+                            doc.file_name,
+                            withdrawalId,
+                            doc.id
+                          )
                         }
                         disabled={loading}
                         className='text-destructive hover:text-destructive hover:bg-destructive/10 h-8 w-8 p-0'

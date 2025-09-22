@@ -1,16 +1,16 @@
 import { useEffect, useState } from 'react';
-import type { LoanDocument } from '../types/loan';
 import {
   fetchWithdrawalDocuments,
   uploadLoanDocument,
 } from '../services/withdrawalService';
 import { uploadFile } from '../services/fileService';
+import type { WithdrawalDocument } from '../types/withdrawal';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 const ALLOWED_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
 
-export const useLoanDocs = (loanId: number) => {
-  const [documents, setDocuments] = useState<LoanDocument[]>([]);
+export const useWithdrawalDocs = (withdrawalId: number) => {
+  const [documents, setDocuments] = useState<WithdrawalDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -18,7 +18,7 @@ export const useLoanDocs = (loanId: number) => {
   useEffect(() => {
     async function loadDocs() {
       try {
-        const data = await fetchWithdrawalDocuments(loanId);
+        const data = await fetchWithdrawalDocuments(withdrawalId);
         const { documents } = data;
         setDocuments(documents);
       } catch (err) {
@@ -28,7 +28,7 @@ export const useLoanDocs = (loanId: number) => {
       }
     }
     loadDocs();
-  }, [loanId]);
+  }, [withdrawalId]);
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     if (!e.target.files || e.target.files.length === 0) return;
@@ -57,7 +57,11 @@ export const useLoanDocs = (loanId: number) => {
 
       console.log('File Url: ', fileUrl);
       // 2. Attach fileUrl to loan in DB
-      const resDocument = await uploadLoanDocument(loanId, fileUrl, fileName);
+      const resDocument = await uploadLoanDocument(
+        withdrawalId,
+        fileUrl,
+        fileName
+      );
       console.log('Document: ', resDocument.document);
 
       // 3. Update UI
@@ -73,14 +77,14 @@ export const useLoanDocs = (loanId: number) => {
 
   async function handleFileDelete(
     fileName: string,
-    loanId: number,
+    withdrawalId: number,
     docId: number
   ) {
     if (confirm(`Delete ${fileName}?`)) {
       try {
         setLoading(true);
         await fetch(
-          `http://localhost:3000/employee/loan/${loanId}/documents/${docId}`,
+          `http://localhost:3000/employee/withdrawal/${withdrawalId}/documents/${docId}`,
           {
             method: 'DELETE',
             credentials: 'include',
