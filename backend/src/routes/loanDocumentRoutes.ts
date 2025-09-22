@@ -5,7 +5,7 @@ import {
   getLoanDocuments,
   deleteLoanDocument,
 } from '../controllers/loanDocumentController.js';
-import { uploadRouter } from './uploadRoutes.js';
+import { uploadRouter } from './loanUploadRoutes.js';
 
 export const loanDocumentRouter = Router();
 

@@ -18,15 +18,18 @@ app.use(cookieParser());
 
 import { authRouter } from './routes/authRoutes.js';
 import { employeeRouter } from './routes/employeeRoutes.js';
-import { empLoanRouter } from './routes/employeeLoanRoutes.js';
+import { empLoanRouter } from './routes/loanRoutes.js';
 import { loanDocumentRouter } from './routes/loanDocumentRoutes.js';
-import { uploadRouter } from './routes/uploadRoutes.js';
+import { empWithdrawalRouter } from './routes/withdrawalRoutes.js';
+import { withdrawalDocumentRouter } from './routes/withdrawalDocumentRoutes.js';
 
 // Routes
 app.use('/auth', authRouter);
 app.use('/employee', employeeRouter);
 app.use('/employee/loan', empLoanRouter);
 app.use('/employee/loan', loanDocumentRouter);
+app.use('/employee/withdrawal', empWithdrawalRouter);
+app.use('/employee/withdrawal', withdrawalDocumentRouter);
 
 app.use('/uploads', express.static('uploads')); // serve uploaded files
 
