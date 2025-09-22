@@ -2,13 +2,14 @@
 import { pool } from '../config/db.config.js';
 import { getStoragePathForDeletion } from './utils/deleteLoanDocumentUtils.js';
 import { supabase } from '../config/supabaseClient.config.js';
+import type { WithdrawalDocument } from '../types/withdrawal.js';
 
 export async function addWithdrawalDocument(
   withdrawalId: number,
   fileUrl: string,
   fileName: string,
   uploadedBy: number
-) {
+): Promise<WithdrawalDocument> {
   const res = await pool.query(
     `INSERT INTO withdrawal_documents (withdrawal_id, file_url, file_name, uploaded_by)
      VALUES ($1,$2,$3,$4) RETURNING *`,
@@ -17,9 +18,12 @@ export async function addWithdrawalDocument(
   return res.rows[0];
 }
 
-export async function getWithdrawalDocuments(withdrawalId: number) {
+export async function getWithdrawalDocuments(
+  withdrawalId: number
+): Promise<WithdrawalDocument[]> {
   const res = await pool.query(
-    `SELECT id, file_name, file_url, uploaded_at FROM withdrawal_documents
+    `SELECT *
+     FROM withdrawal_documents
      WHERE withdrawal_id=$1 ORDER BY uploaded_at ASC`,
     [withdrawalId]
   );

@@ -52,7 +52,7 @@ export const sidebarData: SidebarData = {
         },
         {
           title: 'Withdrawals',
-          url: '/withdrawals',
+          url: '/dashboard/withdrawals',
           icon: BanknoteArrowDown,
         },
         {
