@@ -49,3 +49,4 @@ authRouter.post(
 authRouter.post('/2fa/login', authController.loginWith2FA);
 authRouter.get('/me', authMiddleware(), authController.getCurrentUser);
 authRouter.post('/logout', authMiddleware(), authController.logout);
+authRouter.post('/refresh', authMiddleware(), authController.refreshSession);

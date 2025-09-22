@@ -4,6 +4,7 @@ import { pool } from '../config/db.config.js';
 import speakeasy from 'speakeasy';
 import qrcode from 'qrcode';
 import jwt from 'jsonwebtoken';
+import { isAuthenticatedRequest } from './employeeControllers.js';
 
 export async function register(req: Request, res: Response) {
   try {
@@ -208,4 +209,28 @@ export async function logout(req: Request, res: Response) {
   });
 
   res.json({ message: 'Logged out successfully' });
+}
+
+export async function refreshSession(req: Request, res: Response) {
+  try {
+    if (!isAuthenticatedRequest(req))
+      return res.status(401).json({ error: 'Not authenticated' });
+
+    // issue new JWT with same payload, new exp
+    const token = jwt.sign(
+      { id: req.user.id, role: req.user.role },
+      process.env.JWT_SECRET as string,
+      { expiresIn: '1h' }
+    );
+
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+    });
+
+    res.json({ success: true });
+  } catch (err) {
+    if (err) res.status(500).json({ error: 'Could not refresh session' });
+  }
 }
