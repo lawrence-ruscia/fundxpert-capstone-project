@@ -108,6 +108,24 @@ export async function checkWithdrawalEligibility(
     total_balance: Number(employee_total) + Number(employer_total),
   };
 
+  // 6. Check if a withdrawal already exists
+  const existingWithdrawalRes = await pool.query(
+    `SELECT 1 FROM withdrawal_requests 
+   WHERE user_id = $1 
+     AND status IN ('Pending','Approved','Processed')
+   LIMIT 1`,
+    [userId]
+  );
+
+  if (existingWithdrawalRes.rows.length > 0) {
+    return {
+      eligible: false,
+      eligibleTypes: [],
+      snapshot,
+      reasonIfNotEligible: 'A withdrawal request already exists',
+    };
+  }
+
   return {
     eligible: eligibleTypes.length > 0,
     eligibleTypes,

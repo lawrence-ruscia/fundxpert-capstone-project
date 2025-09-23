@@ -266,7 +266,7 @@ export default function WithdrawalsPage() {
                     <Button
                       onClick={() => setShowForm(true)}
                       className='w-full'
-                      disabled={!eligibility.eligible || latest !== null}
+                      disabled={!eligibility.eligible}
                     >
                       <Plus className='mr-2 h-4 w-4' />
                       Request New Withdrawal
@@ -290,17 +290,7 @@ export default function WithdrawalsPage() {
                     <Alert className='mt-4 border-amber-200 bg-amber-50 text-amber-800'>
                       <AlertCircle className='h-4 w-4 text-amber-800' />
                       <AlertDescription className='text-amber-800'>
-                        You are currently not eligible for a withdrawal.
-                      </AlertDescription>
-                    </Alert>
-                  )}
-
-                  {latest !== null && eligibility.eligible && (
-                    <Alert className='mt-4 border-blue-200 bg-blue-50 text-blue-800'>
-                      <AlertCircle className='h-4 w-4 text-blue-800' />
-                      <AlertDescription className='text-blue-800'>
-                        You already have a withdrawal request in progress (#
-                        {latest.id}).
+                        {eligibility.reasonIfNotEligible}
                       </AlertDescription>
                     </Alert>
                   )}

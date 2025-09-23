@@ -1,10 +1,12 @@
 import { pool } from '../config/db.config.js';
 import type { EmployeeOverview } from '../types/employeeOverview.js';
+import { checkLoanEligibility } from './loanService.js';
 import {
   getDateRange,
   isContributionVested,
 } from './utils/getEmployeeContributionsUtils.js';
 import { calculateVesting } from './utils/getEmployeeOverviewUtils.js';
+import { checkWithdrawalEligibility } from './withdrawalService.js';
 
 export async function getEmployeeOverview(
   userId: number
@@ -71,8 +73,11 @@ export async function getEmployeeOverview(
     row.employer_total
   );
 
-  // Loan eligibility (50% of vested)
-  const maxLoanAmount = Math.floor(vestedAmount * 0.5);
+  // Loan eligibility check
+  const loanEligibility = await checkLoanEligibility(userId);
+
+  // Withdrawal eligibility check
+  const withdrawalEligibility = await checkWithdrawalEligibility(userId);
 
   // Year-over-Year growth
   const lastYear = Number(row.last_year_total) || 0;
@@ -124,9 +129,9 @@ export async function getEmployeeOverview(
           active_loan: false,
         },
     eligibility: {
-      can_withdraw: row.employment_status !== 'Active', // allow only on exit
-      can_request_loan: vestedAmount > 0 && !row.loan_id,
-      max_loan_amount: maxLoanAmount,
+      can_withdraw: withdrawalEligibility.eligible, // allow only on exit
+      can_request_loan: loanEligibility.eligible,
+      max_loan_amount: loanEligibility.maxLoanAmount,
     },
   };
 }

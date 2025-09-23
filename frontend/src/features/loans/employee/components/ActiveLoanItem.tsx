@@ -185,6 +185,17 @@ export function ActiveLoanItem({ loan }: { loan: Loan }) {
             </AlertDescription>
           </Alert>
         )}
+
+        {loan.status === 'Approved' && (
+          <Alert className='rounded-lg border-0 border-l-4 border-green-500 bg-green-50 text-green-800 dark:bg-green-900/20'>
+            <CheckCircle className='h-4 w-4' />
+            <AlertTitle className='font-semibold'>Loan Approved</AlertTitle>
+            <AlertDescription className='text-green-800'>
+              Your loan has been approved! Funds will be disbursed shortly and
+              repayment will begin next month.
+            </AlertDescription>
+          </Alert>
+        )}
       </CardContent>
     </Card>
   );
