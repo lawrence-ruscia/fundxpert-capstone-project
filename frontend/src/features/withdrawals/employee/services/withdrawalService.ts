@@ -1,4 +1,5 @@
 import type {
+  WithdrawalApplicationRequest,
   WithdrawalDocument,
   WithdrawalEligibility,
   WithdrawalRequest,
@@ -85,16 +86,6 @@ export async function fetchWithdrawalHistory(): Promise<WithdrawalRequest[]> {
   const data = await res.json();
   return data;
 }
-
-type WithdrawalApplicationRequest = {
-  request_type: string;
-  purpose_detail?: string;
-  requested_amount?: number;
-  payout_method?: string;
-  beneficiary_name?: string;
-  beneficiary_relationship?: string;
-  beneficiary_contact?: string;
-};
 
 export async function applyWithdrawal(
   payload: WithdrawalApplicationRequest

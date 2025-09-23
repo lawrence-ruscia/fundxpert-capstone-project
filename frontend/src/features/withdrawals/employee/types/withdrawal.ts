@@ -33,9 +33,10 @@ export interface WithdrawalRequest {
   unvested_amount: number;
   total_balance: number;
 
-  requested_amount?: number | null;
   payout_amount: number;
   payout_method?: string | null;
+
+  consent_acknowledged: boolean;
 
   status: WithdrawalStatus;
 
@@ -72,3 +73,13 @@ export interface WithdrawalEligibility {
 export type WithdrawalResponse = WithdrawalRequest & {
   documents: WithdrawalDocument[];
 };
+
+export interface WithdrawalApplicationRequest {
+  request_type: string;
+  consent_acknowledged: boolean;
+  purpose_detail?: string;
+  payout_method?: string;
+  beneficiary_name?: string;
+  beneficiary_relationship?: string;
+  beneficiary_contact?: string;
+}

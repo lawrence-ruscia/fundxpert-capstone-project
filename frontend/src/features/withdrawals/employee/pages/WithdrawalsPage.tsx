@@ -7,7 +7,7 @@ import type {
   WithdrawalRequest,
 } from '../types/withdrawal';
 import { useApi } from '@/hooks/useApi';
-import { LoanApplicationForm } from '../components/LoanApplicationForm';
+import { WithdrawalApplicationForm } from '../components/WithdrawalApplicationForm';
 import { useState } from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -93,9 +93,7 @@ export default function WithdrawalsPage() {
     );
   }
 
-  const eligibibleAmount = eligibility.snapshot.vested_amount ?? 0;
   const latest = withdrawals && withdrawals.length > 0 ? withdrawals[0] : null; // one-time, just take latest
-  console.log(latest);
 
   return (
     <div>
@@ -109,10 +107,10 @@ export default function WithdrawalsPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <LoanApplicationForm
+              <WithdrawalApplicationForm
                 onSuccess={handleFormSuccess}
                 onCancel={handleFormCancel}
-                maxLoan={eligibibleAmount}
+                eligibility={eligibility}
               />
             </CardContent>
           </Card>
@@ -310,29 +308,6 @@ export default function WithdrawalsPage() {
               </Card>
             </div>
           </div>
-
-          {/* Form Modal/Section */}
-          {showForm && (
-            <div className='mt-8'>
-              <Card className='shadow-xl'>
-                <CardHeader>
-                  <CardTitle className='text-2xl'>
-                    Withdrawal Application
-                  </CardTitle>
-                  <CardDescription>
-                    Complete the form below to apply for withdrawal
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {/* <LoanApplicationForm
-                    onSuccess={handleFormSuccess}
-                    onCancel={handleFormCancel}
-                    maxLoan={maxLoanAmount}
-                  /> */}
-                </CardContent>
-              </Card>
-            </div>
-          )}
         </div>
       )}
     </div>

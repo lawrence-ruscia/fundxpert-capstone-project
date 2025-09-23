@@ -123,8 +123,8 @@ export async function applyWithdrawal(
   userId: number,
   payload: {
     request_type: string;
+    consent_acknowledged: boolean;
     purpose_detail?: string;
-    requested_amount?: number;
     payout_method?: string;
     beneficiary_name?: string;
     beneficiary_relationship?: string;
@@ -152,19 +152,15 @@ export async function applyWithdrawal(
       break;
   }
 
-  if (payload.requested_amount && payload.requested_amount > payoutAmount) {
-    throw new Error('Requested amount exceeds eligible payout');
-  }
-
   const insertRes = await pool.query(
     `INSERT INTO withdrawal_requests
-     (user_id, request_type, purpose_detail,
-      employee_contribution_total, employer_contribution_total,
-      vested_amount, unvested_amount, total_balance,
-      requested_amount, payout_amount, payout_method,
-      beneficiary_name, beneficiary_relationship, beneficiary_contact)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
-     RETURNING *`,
+   (user_id, request_type, purpose_detail,
+    employee_contribution_total, employer_contribution_total,
+    vested_amount, unvested_amount, total_balance,
+    payout_amount, payout_method, consent_acknowledged,
+    beneficiary_name, beneficiary_relationship, beneficiary_contact)
+   VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14)
+   RETURNING *`,
     [
       userId,
       payload.request_type,
@@ -174,9 +170,9 @@ export async function applyWithdrawal(
       snapshot.vested_amount,
       snapshot.unvested_amount,
       snapshot.total_balance,
-      payload.requested_amount || null,
-      payoutAmount,
+      payoutAmount, // always vested amount snapshot
       payload.payout_method || null,
+      payload.consent_acknowledged, // must be true
       payload.beneficiary_name || null,
       payload.beneficiary_relationship || null,
       payload.beneficiary_contact || null,

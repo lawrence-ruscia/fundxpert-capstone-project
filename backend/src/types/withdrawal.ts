@@ -33,9 +33,10 @@ export interface WithdrawalRequest {
   unvested_amount: number;
   total_balance: number;
 
-  requested_amount?: number | null;
   payout_amount: number;
   payout_method?: string | null;
+
+  consent_acknowkedged: boolean;
 
   status: WithdrawalStatus;
 
