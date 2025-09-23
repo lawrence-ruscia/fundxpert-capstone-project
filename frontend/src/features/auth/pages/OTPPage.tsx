@@ -24,21 +24,25 @@ export const OTPPage = () => {
     return <Navigate to='/auth/login' replace />;
   }
 
+  const mode = sessionStorage.getItem('twofa_mode');
   const handle2FALogin = async (
     data: OTPSchema,
     setError: UseFormSetError<OTPSchema>
   ) => {
     try {
-      const response: LoginResponse = await authService.verify2FA(
-        userId,
-        data.otp
-      );
+      const response: LoginResponse =
+        mode === 'setup'
+          ? await authService.verify2FA(userId, data.otp) // first-time setup
+          : await authService.login2FA(userId, data.otp); // normal login
+
       if ('user' in response) {
         // Clear temporary userId
         sessionStorage.removeItem('twofa_userId');
+        sessionStorage.removeItem('twofa_mode');
 
         login(response.user as UserResponse);
-        // Redirect to dashboard
+        // Redirect to dashboard  
+        console.log('User is: ', response);
         navigate('/dashboard', { replace: true });
       }
     } catch (err) {

@@ -1,13 +1,8 @@
 import type { LoginSchema } from '../schemas/loginSchema';
-import type { LoginResponse } from '../pages/LoginPage';
+import type { LoginResponse, UserResponse } from '../types/loginResponse';
 import { logout } from '@/utils/auth';
 
 // TODO: Move these to global shared/types folder
-export type UserResponse = {
-  id: number;
-  name: string;
-  role: 'Employee' | 'HR' | 'Admin';
-};
 
 export const authService = {
   login: async (data: LoginSchema): Promise<LoginResponse> => {
@@ -27,7 +22,36 @@ export const authService = {
     return responseData;
   },
 
+  setup2FA: async (userId: number) => {
+    const res = await fetch('http://localhost:3000/auth/2fa/setup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId }),
+    });
+    return res.json();
+  },
+
   verify2FA: async (
+    userId: number | null,
+    otp: string
+  ): Promise<LoginResponse> => {
+    const res = await fetch('http://localhost:3000/auth/2fa/verify-setup', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId, token: otp }),
+      credentials: 'include',
+    });
+
+    const responseData = await res.json();
+
+    if (!res.ok) {
+      throw new Error(responseData.error || '2FA failed');
+    }
+
+    return responseData;
+  },
+
+  login2FA: async (
     userId: number | null,
     otp: string
   ): Promise<LoginResponse> => {
@@ -65,7 +89,7 @@ export const authService = {
       throw new Error(responseData.error || 'Not Authenticated');
     }
 
-    return responseData.user;
+    return responseData;
   },
 
   logoutUser: async () => {

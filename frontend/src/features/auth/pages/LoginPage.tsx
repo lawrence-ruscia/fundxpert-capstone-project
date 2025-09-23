@@ -1,7 +1,7 @@
 import { LoginForm } from '../components/LoginForm';
 import type { LoginSchema } from '../schemas/loginSchema';
-import { authService, type UserResponse } from '../services/authService';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { authService } from '../services/authService';
+import { useNavigate } from 'react-router-dom';
 import {
   Card,
   CardContent,
@@ -12,19 +12,15 @@ import {
 } from '@/components/ui/card';
 import type { UseFormSetError } from 'react-hook-form';
 import { useAuth } from '../context/AuthContext';
+import type { LoginResponse } from '../types/loginResponse';
 
-export type LoginResponse =
-  | UserResponse
-  | {
-      twofaRequired: true;
-      userId: number;
-    };
-
+const storeTwoFaInfo = (userId: number, twofa_mode: 'setup' | 'login') => {
+  sessionStorage.setItem('twofa_userId', String(userId));
+  sessionStorage.setItem('twofa_mode', twofa_mode);
+};
 export const LoginPage = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
-  const state = location.state as { message?: string } | null;
 
   const onSubmit = async (
     data: LoginSchema,
@@ -33,15 +29,21 @@ export const LoginPage = () => {
     try {
       const response: LoginResponse = await authService.login(data);
 
-      console.log('Response: ', response);
-      // Navigate to OTP page if 2fa is required
+      if ('twofaSetupRequired' in response) {
+        // Store userId for setup step
+        storeTwoFaInfo(response.userId, 'setup');
+        navigate('/auth/setup-2fa');
+      }
+
       if ('twofaRequired' in response) {
-        // Store userId in sessionStorage so it's available after refresh
-        sessionStorage.setItem('twofa_userId', String(response.userId));
-        navigate('/auth/verify-2fa');
-      } else if ('user' in response) {
-        login(response);
-        // redirect after
+        // Existing 2FA enabled, go to OTP verification
+        storeTwoFaInfo(response.userId, 'login');
+        navigate('/auth/login-2fa');
+      }
+
+      if ('user' in response) {
+        // Fully logged in (no 2FA at all or already completed)
+        login(response.user);
         navigate('/dashboard', { replace: true });
       }
     } catch (err) {
@@ -58,9 +60,6 @@ export const LoginPage = () => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        {state?.message && (
-          <p className='text-sm font-medium text-red-500'>{state.message}</p>
-        )}
         <LoginForm onSubmit={onSubmit} />
       </CardContent>
       <CardFooter>

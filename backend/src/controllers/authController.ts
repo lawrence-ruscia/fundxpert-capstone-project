@@ -30,25 +30,16 @@ export async function login(req: Request, res: Response) {
     const { email, password } = req.body.data ?? req.body;
     const result = await authService.loginUser(email, password);
 
-    if ('twofaRequired' in result && result.twofaRequired) {
-      return res.json({
-        twofaRequired: result.twofaRequired,
-        userId: result.userId,
-      });
+    if ('twofaSetupRequired' in result) {
+      return res.json(result); // { twofaSetupRequired: true, userId }
     }
 
-    if ('token' in result && result.token) {
-      // Set it as httpOnly cookie, instead of diretly setting token in body
-      res.cookie('token', result.token, {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production', // only over HTTPS in prod
-        sameSite: 'strict', // CSRF protection
-        maxAge: 60 * 60 * 1000, // 1h
-      });
-
-      // Send only non-sensitive user info back
-      return res.json({ user: result.user });
+    if ('twofaRequired' in result) {
+      return res.json(result); // { twofaRequired: true, userId }
     }
+
+    // fallback (shouldn't happen here, since normal login goes through 2FA)
+    return res.status(400).json({ error: 'Unexpected login state' });
   } catch (err) {
     if (err instanceof Error) {
       console.error(err);
@@ -105,7 +96,7 @@ export async function verify2FASetup(req: Request, res: Response) {
 
     // Fetch stored secret for this user
     const { rows } = await pool.query(
-      'SELECT twofa_secret FROM users WHERE id = $1',
+      'SELECT id, name, role, twofa_secret FROM users WHERE id = $1',
       [userId]
     );
     const user = rows[0];
@@ -131,7 +122,28 @@ export async function verify2FASetup(req: Request, res: Response) {
       userId,
     ]);
 
-    res.json({ message: '2FA successfully enabled' });
+    // Generate JWT token right away
+    const jwtToken = jwt.sign(
+      { id: user.id, role: user.role },
+      process.env.JWT_SECRET as string,
+      { expiresIn: '1h' }
+    );
+
+    // Store JWT in httpOnly cookie
+    res.cookie('token', jwtToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 60 * 60 * 1000, // 1h
+    });
+
+    return res.json({
+      user: {
+        id: user.id,
+        name: user.name,
+        role: user.role,
+      },
+    });
   } catch (err) {
     console.error('2FA verification error:', err);
     res.status(500).json({ error: 'Failed to verify 2FA setup' });
@@ -177,6 +189,7 @@ export async function loginWith2FA(req: Request, res: Response) {
     });
 
     return res.json({
+      message: '2FA login successfull',
       user: {
         id: user.id,
         name: user.name,

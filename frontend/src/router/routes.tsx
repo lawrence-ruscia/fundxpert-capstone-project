@@ -16,6 +16,7 @@ import LoansPage from '@/features/loans/employee/pages/LoansPage';
 import { NotFoundError } from '@/shared/components/NotFoundError';
 import WithdrawalsPage from '@/features/withdrawals/employee/pages/WithdrawalsPage';
 import WithdrawalDetailPage from '@/features/withdrawals/employee/pages/WithdrawalDetailPage';
+import { Setup2FAPage } from '@/features/auth/pages/Setup2FAPage';
 
 export const router = createBrowserRouter([
   {
@@ -35,12 +36,16 @@ export const router = createBrowserRouter([
         ),
       },
       {
-        path: 'verify-2fa',
+        path: 'login-2fa',
         element: (
           <AuthRedirect>
             <OTPPage />
           </AuthRedirect>
         ),
+      },
+      {
+        path: 'setup-2fa',
+        element: <Setup2FAPage />,
       },
       { index: true, element: <Navigate to='/auth/login' replace /> },
     ],

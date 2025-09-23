@@ -1,6 +1,5 @@
 import type { UserResponse } from '../types/userResponse.js';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
 import { pool } from '../config/db.config.js';
 import { PASSWORD_HISTORY_LIMIT } from '../config/security.config.js';
 import {
@@ -22,10 +21,12 @@ export type JWTLoginResponse = {
   };
 };
 
-export type TwoFALoginResponse = {
-  twofaRequired: boolean;
-  userId: number;
-};
+export type TwoFALoginResponse =
+  | {
+      twofaRequired: boolean;
+      userId: number;
+    }
+  | { twofaSetupRequired: boolean; userId: number };
 
 export type LoginResponse = JWTLoginResponse | TwoFALoginResponse;
 
@@ -93,19 +94,13 @@ export async function loginUser(
   // 5. Successful login cleanup
   await resetFailedAttempts(user.id);
 
-  // If 2FA is enabled, don’t issue JWT yet
-  if (user.is_twofa_enabled) {
-    return { twofaRequired: true, userId: user.id };
+  //  If 2FA is not enabled yet → require setup
+  if (!user.is_twofa_enabled) {
+    return { twofaSetupRequired: true, userId: user.id };
   }
 
-  // 6. Generate token and response
-  const token = jwt.sign(
-    { id: user.id, role: user.role },
-    process.env.JWT_SECRET as string,
-    { expiresIn: '1h' }
-  );
-
-  return { token, user: { id: user.id, name: user.name, role: user.role } };
+  // 4. If 2FA enabled → require OTP verification
+  return { twofaRequired: true, userId: user.id };
 }
 
 export async function resetPassword(userId: number, newPassword: string) {
