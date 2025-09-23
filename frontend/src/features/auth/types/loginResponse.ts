@@ -1,9 +1,11 @@
 export type UserResponse = {
-  user: {
-    id: number;
-    name: string;
-    role: 'Employee' | 'HR' | 'Admin';
-  };
+  user: UserType;
+};
+
+export type UserType = {
+  id: number;
+  name: string;
+  role: 'Employee' | 'HR' | 'Admin';
 };
 
 export type TwoFALoginResponse =

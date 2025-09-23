@@ -39,6 +39,7 @@ export const LoginPage = () => {
         // Existing 2FA enabled, go to OTP verification
         storeTwoFaInfo(response.userId, 'login');
         navigate('/auth/login-2fa');
+        return;
       }
 
       if ('user' in response) {

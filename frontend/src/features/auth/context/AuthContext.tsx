@@ -1,12 +1,12 @@
 import { createContext, useContext, useEffect, useState } from 'react';
-import type { UserResponse } from '../services/authService';
 import { authService } from '../services/authService';
+import type { UserType } from '../types/loginResponse';
 
 type AuthContextType = {
-  user: UserResponse | null;
+  user: UserType | null;
   loading: boolean;
   error: string | null;
-  login: (user: UserResponse) => void;
+  login: (user: UserType) => void;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
 };
@@ -14,7 +14,7 @@ type AuthContextType = {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<UserResponse | null>(null);
+  const [user, setUser] = useState<UserType | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -24,7 +24,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     async function init() {
       try {
         const userData = await authService.fetchCurrentUser();
-        if (mounted) setUser(userData);
+        if (mounted) setUser(userData.user);
       } catch (err) {
         if (mounted) {
           setUser(null);
@@ -41,7 +41,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const login = (userData: UserResponse) => {
+  const login = (userData: UserType) => {
     setUser(userData);
     setError(null);
   };
@@ -63,7 +63,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshUser = async () => {
     try {
       const data = await authService.fetchCurrentUser();
-      setUser(data);
+      setUser(data.user);
     } catch (err) {
       setUser(null);
       setError((err as Error).message);
