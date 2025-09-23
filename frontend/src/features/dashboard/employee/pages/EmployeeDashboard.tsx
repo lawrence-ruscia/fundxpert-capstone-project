@@ -15,6 +15,7 @@ import { EligibilityStatus } from '../components/EligibilityStatus';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
 import { NetworkError } from '@/shared/components/NetworkError';
 import { DataError } from '@/shared/components/DataError';
+import { useLoanDetails } from '@/features/loans/employee/hooks/useLoanDetails';
 
 export default function EmployeeDashboard() {
   const { data: overview, loading, error } = useEmployeeOverview();
@@ -113,7 +114,7 @@ export default function EmployeeDashboard() {
         </div>
 
         <div className='grid gap-4 lg:grid-cols-2'>
-          <LoanStatus overview={overview} />
+          <LoanStatus />
           <EligibilityStatus overview={overview} />
         </div>
       </div>

@@ -6,16 +6,10 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  TrendingUp,
-  Banknote,
-  ArrowDownCircle,
-  FileText,
-  Shield,
-} from 'lucide-react';
+import { TrendingUp, Banknote, ArrowDownCircle, Target } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 export const QuickActions = ({ ...props }) => {
-  // TODO: Add navigation to each button
   return (
     <Card {...props}>
       <CardHeader>
@@ -24,24 +18,31 @@ export const QuickActions = ({ ...props }) => {
       </CardHeader>
       <CardContent className='flex flex-col gap-4'>
         <Button size='lg' className='justify-start gap-3 px-4'>
-          <TrendingUp />
-          <span>View Contributions</span>
+          <Link
+            to='/dashboard/contributions'
+            className='flex items-center gap-4'
+          >
+            <TrendingUp />
+            <span>View Contributions</span>
+          </Link>
         </Button>
         <Button size='lg' className='justify-start gap-3 px-4'>
-          <Banknote />
-          <span>Request Loan</span>
+          <Link to='/dashboard/projection' className='flex items-center gap-4'>
+            <Target />
+            <span>Project Fund Growth</span>
+          </Link>
         </Button>
         <Button size='lg' className='justify-start gap-3 px-4'>
-          <ArrowDownCircle />
-          <span>Request Withdrawal</span>
+          <Link to='/dashboard/loans' className='flex items-center gap-4'>
+            <Banknote />
+            <span>Request Loan</span>
+          </Link>
         </Button>
         <Button size='lg' className='justify-start gap-3 px-4'>
-          <FileText />
-          <span>Download Statement</span>
-        </Button>
-        <Button size='lg' className='justify-start gap-3 px-4'>
-          <Shield />
-          <span>Security Settings</span>
+          <Link to='/dashboard/withdrawals' className='flex items-center gap-4'>
+            <ArrowDownCircle />
+            <span>Request Withdrawal</span>
+          </Link>
         </Button>
       </CardContent>
     </Card>
