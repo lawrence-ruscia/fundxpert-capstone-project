@@ -55,58 +55,6 @@ export const sidebarData: SidebarData = {
           url: '/dashboard/withdrawals',
           icon: BanknoteArrowDown,
         },
-        {
-          title: 'Reports / Statements',
-          url: '/reports',
-          icon: FileText,
-        },
-        {
-          title: 'Knowledge Base  ',
-          url: '/reports',
-          icon: BookOpen,
-        },
-      ],
-    },
-
-    {
-      title: 'Others',
-      items: [
-        {
-          title: 'Settings',
-          icon: Settings,
-          items: [
-            {
-              title: 'Profile',
-              url: '/settings',
-              icon: UserCog,
-            },
-            {
-              title: 'Account',
-              url: '/settings/account',
-              icon: Wrench,
-            },
-            {
-              title: 'Appearance',
-              url: '/settings/appearance',
-              icon: Palette,
-            },
-            {
-              title: 'Notifications',
-              url: '/settings/notifications',
-              icon: Bell,
-            },
-            {
-              title: 'Display',
-              url: '/settings/display',
-              icon: Monitor,
-            },
-          ],
-        },
-        {
-          title: 'Help Center',
-          url: '/help-center',
-          icon: HelpCircle,
-        },
       ],
     },
   ],
