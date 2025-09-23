@@ -6,15 +6,12 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import {
-  Building2,
   CalendarDays,
-  CheckCircle,
   Clock,
   FileText,
   PhilippinePeso,
   Target,
   User,
-  Wallet,
 } from 'lucide-react';
 import { useWithdrawalDetails } from '../hooks/useWithdrawalDetails';
 import { Separator } from '@radix-ui/react-select';

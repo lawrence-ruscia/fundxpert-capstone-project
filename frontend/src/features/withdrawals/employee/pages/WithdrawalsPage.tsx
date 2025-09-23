@@ -59,7 +59,7 @@ export default function WithdrawalsPage() {
     data: eligibility,
     loading: eligibilityLoading,
     error: eligibilityError,
-  } = useApi<WithdrawalEligibility>(fetchWithdrawalEligibility);
+  } = useApi<WithdrawalEligibility>(fetchWithdrawalEligibility, [refreshKey]);
 
   const [showForm, setShowForm] = useState(false);
 
@@ -92,9 +92,26 @@ export default function WithdrawalsPage() {
       />
     );
   }
+  // FIX: Filter for active withdrawals and get the latest one
+  const pendingWithdrawals =
+    withdrawals?.filter(
+      w =>
+        w.status !== 'Approved' &&
+        w.status !== 'Cancelled' &&
+        w.status !== 'Processed' &&
+        w.status !== 'Rejected'
+    ) || [];
 
-  const latest = withdrawals && withdrawals.length > 0 ? withdrawals[0] : null; // one-time, just take latest
+  // Show active withdrawal or latest withdrawal
+  const withdrawalToShow =
+    pendingWithdrawals.length > 0 ? pendingWithdrawals[0] : withdrawals?.[0];
 
+  const latest = withdrawals && withdrawals.length > 0 ? withdrawals[0] : null;
+  const hasActiveWithdrawal = pendingWithdrawals.length > 0;
+
+  // FIX: Button should be disabled if not eligible OR if there's already an active withdrawal
+  const canRequestNewWithdrawal = eligibility.eligible && !hasActiveWithdrawal;
+  console.log('Reason if not eligible: ', eligibility.reasonIfNotEligible);
   return (
     <div>
       {showForm ? (
@@ -241,8 +258,32 @@ export default function WithdrawalsPage() {
                     </div>
                   ) : (
                     <div className='space-y-4'>
-                      {withdrawals && withdrawals[0] !== null && (
-                        <WithdrawalItem withdrawal={withdrawals[0]} />
+                      {withdrawals?.length === 0 ? (
+                        <div className='py-8 text-center'>
+                          <p className='font-medium'>
+                            No active withdrawal requests
+                          </p>
+                          <p className='text-muted-foreground mt-1 text-sm'>
+                            Your recent requests have been completed or
+                            cancelled
+                          </p>
+                        </div>
+                      ) : withdrawalToShow ? (
+                        <WithdrawalItem
+                          withdrawal={withdrawalToShow}
+                          onSuccess={() => setRefreshKey(prev => prev + 1)}
+                        />
+                      ) : (
+                        // All withdrawals are completed/cancelled message
+                        <div className='py-8 text-center'>
+                          <p className='font-medium'>
+                            No active withdrawal requests
+                          </p>
+                          <p className='text-muted-foreground mt-1 text-sm'>
+                            Your recent requests have been completed or
+                            cancelled
+                          </p>
+                        </div>
                       )}
                     </div>
                   )}
@@ -266,7 +307,7 @@ export default function WithdrawalsPage() {
                     <Button
                       onClick={() => setShowForm(true)}
                       className='w-full'
-                      disabled={!eligibility.eligible}
+                      disabled={!canRequestNewWithdrawal}
                     >
                       <Plus className='mr-2 h-4 w-4' />
                       Request New Withdrawal
@@ -286,7 +327,7 @@ export default function WithdrawalsPage() {
                     </div>
                   )}
 
-                  {!eligibility.eligible && (
+                  {!canRequestNewWithdrawal && (
                     <Alert className='mt-4 border-amber-200 bg-amber-50 text-amber-800'>
                       <AlertCircle className='h-4 w-4 text-amber-800' />
                       <AlertDescription className='text-amber-800'>

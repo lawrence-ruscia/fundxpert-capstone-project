@@ -83,3 +83,8 @@ export interface WithdrawalApplicationRequest {
   beneficiary_relationship?: string;
   beneficiary_contact?: string;
 }
+
+export interface CancelWithdrawalResponse {
+  success: boolean;
+  message: string;
+}

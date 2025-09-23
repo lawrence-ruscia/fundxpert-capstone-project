@@ -1,4 +1,5 @@
 import type {
+  CancelWithdrawalResponse,
   WithdrawalApplicationRequest,
   WithdrawalDocument,
   WithdrawalEligibility,
@@ -101,5 +102,23 @@ export async function applyWithdrawal(
     throw new Error((await res.json()).error || 'Loan application failed');
   }
 
+  return res.json();
+}
+
+export async function cancelWithdrawal(
+  withdrawalId: number
+): Promise<CancelWithdrawalResponse> {
+  const res = await fetch(
+    `http://localhost:3000/employee/withdrawal/${withdrawalId}/cancel`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    }
+  );
+
+  if (!res.ok) {
+    throw new Error((await res.json()).error || 'Loan application failed');
+  }
   return res.json();
 }
