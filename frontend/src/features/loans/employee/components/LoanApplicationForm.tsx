@@ -390,13 +390,30 @@ export const LoanApplicationForm = ({
                 </Label>
                 <ul className='text-muted-foreground ml-4 list-disc space-y-1 text-xs'>
                   <li>
-                    Interest rates and repayment schedule as per company policy
+                    The maximum loanable amount is{' '}
+                    <strong>50% of my vested fund balance</strong>.
                   </li>
                   <li>
-                    Automatic deduction from salary/benefits for loan repayment
+                    The repayment term shall not exceed{' '}
+                    <strong>24 months</strong>.
                   </li>
-                  <li>Processing and approval procedures</li>
-                  <li>Consequences of default or early settlement</li>
+                  <li>
+                    <strong>Automatic deductions</strong> will be made from my
+                    salary and/or benefits until the loan is fully settled.
+                  </li>
+                  <li>
+                    Only <strong>one active loan</strong> may be maintained at a
+                    time.
+                  </li>
+                  <li>
+                    The loan request is subject to{' '}
+                    <strong>review and approval</strong> by HR and Finance.
+                  </li>
+                  <li>
+                    Failure to comply with repayment terms may result in{' '}
+                    <strong>forfeiture of benefits</strong> or other actions as
+                    per company policy.
+                  </li>
                 </ul>
               </div>
             </div>

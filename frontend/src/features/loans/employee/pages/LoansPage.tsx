@@ -162,7 +162,7 @@ export default function LoansPage() {
                     <Button
                       onClick={() => setShowForm(true)}
                       className='w-full'
-                      // disabled={!overview.eligibility.can_request_loan}
+                      disabled={!overview.eligibility.can_request_loan}
                     >
                       <Plus className='mr-2 h-4 w-4' />
                       Apply for New Loan
@@ -194,29 +194,6 @@ export default function LoansPage() {
               </Card>
             </div>
           </div>
-
-          {/* Form Modal/Section */}
-          {showForm && (
-            <div className='mt-8'>
-              <Card className='shadow-xl'>
-                <CardHeader>
-                  <CardTitle className='text-2xl'>
-                    New Loan Application
-                  </CardTitle>
-                  <CardDescription>
-                    Complete the form below to apply for a new loan
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <LoanApplicationForm
-                    onSuccess={handleFormSuccess}
-                    onCancel={handleFormCancel}
-                    maxLoan={maxLoanAmount}
-                  />
-                </CardContent>
-              </Card>
-            </div>
-          )}
         </div>
       )}
     </div>
