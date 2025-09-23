@@ -1,3 +1,5 @@
+import type { WithdrawalType } from './withdrawal.js';
+
 export type EmployeeOverview = {
   employee: {
     id: number;
@@ -29,6 +31,7 @@ export type EmployeeOverview = {
   eligibility: {
     can_withdraw: boolean;
     can_request_loan: boolean;
+    eligible_types: WithdrawalType[];
     max_loan_amount: number;
   };
 };

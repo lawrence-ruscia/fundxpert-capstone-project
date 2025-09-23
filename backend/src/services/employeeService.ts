@@ -131,6 +131,7 @@ export async function getEmployeeOverview(
     eligibility: {
       can_withdraw: withdrawalEligibility.eligible, // allow only on exit
       can_request_loan: loanEligibility.eligible,
+      eligible_types: withdrawalEligibility.eligibleTypes,
       max_loan_amount: loanEligibility.maxLoanAmount,
     },
   };

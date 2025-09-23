@@ -15,7 +15,6 @@ import { EligibilityStatus } from '../components/EligibilityStatus';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
 import { NetworkError } from '@/shared/components/NetworkError';
 import { DataError } from '@/shared/components/DataError';
-import { useLoanDetails } from '@/features/loans/employee/hooks/useLoanDetails';
 
 export default function EmployeeDashboard() {
   const { data: overview, loading, error } = useEmployeeOverview();

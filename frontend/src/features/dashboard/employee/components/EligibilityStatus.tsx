@@ -45,12 +45,29 @@ export const EligibilityStatus = ({
               : 'Not Eligible'}
           </Badge>
         </div>
-        <div className='border-t pt-2'>
-          <div className='flex items-center justify-between'>
-            <span className='text-sm'>Max Loan Amount</span>
-            <span className='font-semibold'>
-              ₱{overview.eligibility.max_loan_amount.toLocaleString()}
-            </span>
+        <div className='border-t pt-4'>
+          <div className='space-y-3'>
+            <div className='flex items-start justify-between'>
+              <span className='text-muted-foreground text-sm'>
+                Eligible Withdrawal Types
+              </span>
+              <div className='flex flex-col gap-1 text-right'>
+                {overview.eligibility.eligible_types &&
+                  overview.eligibility.eligible_types.map(type => (
+                    <span key={type} className='text-sm font-medium'>
+                      {type}
+                    </span>
+                  ))}
+              </div>
+            </div>
+            <div className='flex items-center justify-between'>
+              <span className='text-muted-foreground text-sm'>
+                Max Loan Amount
+              </span>
+              <span className='font-semibold'>
+                ₱{overview.eligibility.max_loan_amount.toLocaleString()}
+              </span>
+            </div>
           </div>
         </div>
       </CardContent>
