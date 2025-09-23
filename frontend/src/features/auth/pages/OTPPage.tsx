@@ -12,6 +12,7 @@ import {
 import type { UseFormSetError } from 'react-hook-form';
 import type { OTPSchema } from '../schemas/otpSchema';
 import { useAuth } from '../context/AuthContext';
+import { BackButton } from '@/shared/components/back-button';
 
 export const OTPPage = () => {
   const { login } = useAuth();
@@ -41,7 +42,7 @@ export const OTPPage = () => {
         sessionStorage.removeItem('twofa_mode');
 
         login(response.user as UserResponse);
-        // Redirect to dashboard  
+        // Redirect to dashboard
         console.log('User is: ', response);
         navigate('/dashboard', { replace: true });
       }
@@ -55,6 +56,7 @@ export const OTPPage = () => {
   return (
     <Card className='gap-4'>
       <CardHeader>
+        <BackButton />
         <CardTitle className='text-base tracking-tight'>
           Two-factor Authentication
         </CardTitle>

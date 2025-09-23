@@ -1,25 +1,24 @@
-import { Link, useNavigate } from 'react-router-dom';
 import useDialogState from '@/hooks/useDialogState';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { SignOutDialog } from './sign-out-dialog';
 import { useAuth } from '@/features/auth/context/AuthContext';
 import { getInitials } from '@/utils/getInitials';
+import { LogOut, QrCode } from 'lucide-react';
+import { ResetQRDialog } from './reset-qr-dialog';
 
 export function ProfileDropdown() {
   const { user, loading } = useAuth();
-
-  const [open, setOpen] = useDialogState();
+  const [qrOpen, setQrOpen] = useDialogState();
+  const [signOutOpen, setSignOutOpen] = useDialogState();
 
   return (
     <>
@@ -44,17 +43,27 @@ export function ProfileDropdown() {
             )}
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
-
           <DropdownMenuItem
             className='cursor-pointer'
-            onClick={() => setOpen(true)}
+            onClick={() => setQrOpen(true)}
           >
+            <QrCode />
+            Reset QR / Re-bind 2FA
+          </DropdownMenuItem>
+
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            className='cursor-pointer'
+            onClick={() => setSignOutOpen(true)}
+          >
+            <LogOut />
             Sign out
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <SignOutDialog open={!!open} onOpenChange={setOpen} />
+      <ResetQRDialog open={!!qrOpen} onOpenChange={setQrOpen} />
+      <SignOutDialog open={!!signOutOpen} onOpenChange={setSignOutOpen} />
     </>
   );
 }

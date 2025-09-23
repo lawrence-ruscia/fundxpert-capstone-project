@@ -1,18 +1,9 @@
-import { Link } from 'react-router-dom';
-import {
-  BadgeCheck,
-  Bell,
-  ChevronsUpDown,
-  CreditCard,
-  LogOut,
-  Sparkles,
-} from 'lucide-react';
+import { ChevronsUpDown, LogOut, QrCode } from 'lucide-react';
 import useDialogState from '@/hooks/useDialogState';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   DropdownMenu,
   DropdownMenuContent,
-  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -26,15 +17,20 @@ import {
 } from '@/components/ui/sidebar';
 import { SignOutDialog } from './sign-out-dialog';
 import { getInitials } from '@/utils/getInitials';
-import type { UserResponse } from '@/features/auth/services/authService';
+import { ResetQRDialog } from './reset-qr-dialog';
 
 type NavUserProps = {
-  user: UserResponse;
+  user: {
+    id: number;
+    name: string;
+    role: 'Employee' | 'HR' | 'Admin';
+  };
 };
 
 export function NavUser({ user }: NavUserProps) {
   const { isMobile } = useSidebar();
-  const [open, setOpen] = useDialogState();
+  const [qrOpen, setQrOpen] = useDialogState();
+  const [signOutOpen, setSignOutOpen] = useDialogState();
 
   return (
     <>
@@ -81,7 +77,19 @@ export function NavUser({ user }: NavUserProps) {
                 </div>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => setOpen(true)}>
+              <DropdownMenuItem
+                className='cursor-pointer'
+                onClick={() => setQrOpen(true)}
+              >
+                <QrCode />
+                Reset QR / Re-bind 2FA
+              </DropdownMenuItem>
+
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className='cursor-pointer'
+                onClick={() => setSignOutOpen(true)}
+              >
                 <LogOut />
                 Sign out
               </DropdownMenuItem>
@@ -90,7 +98,9 @@ export function NavUser({ user }: NavUserProps) {
         </SidebarMenuItem>
       </SidebarMenu>
 
-      <SignOutDialog open={!!open} onOpenChange={setOpen} />
+      {/* Attach dialogs */}
+      <ResetQRDialog open={!!qrOpen} onOpenChange={setQrOpen} />
+      <SignOutDialog open={!!signOutOpen} onOpenChange={setSignOutOpen} />
     </>
   );
 }

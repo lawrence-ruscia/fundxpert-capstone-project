@@ -202,6 +202,41 @@ export async function loginWith2FA(req: Request, res: Response) {
   }
 }
 
+export async function reset2FA(req: Request, res: Response) {
+  try {
+    if (!isAuthenticatedRequest(req)) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    const userId = req.user.id;
+
+    // 1. Generate a new secret
+    const secret = speakeasy.generateSecret({
+      name: 'FundXpert',
+      length: 20,
+    });
+
+    // 2. Store new secret, disable 2FA until verified again
+    await pool.query(
+      `UPDATE users 
+         SET twofa_secret = $1, is_twofa_enabled = false 
+         WHERE id = $2`,
+      [secret.base32, userId]
+    );
+
+    // 3. Create QR code from otpauth_url
+    const qrCodeDataURL = await qrcode.toDataURL(secret.otpauth_url || '');
+
+    // 4. Return QR for re-binding
+    res.json({
+      message: '2FA has been reset. Please scan the new QR code.',
+      qrCode: qrCodeDataURL,
+    });
+  } catch (err) {
+    console.error('❌ Reset 2FA error:', err);
+    res.status(500).json({ error: 'Failed to reset 2FA' });
+  }
+}
+
 export async function getCurrentUser(req: Request, res: Response) {
   try {
     const user = req.user;

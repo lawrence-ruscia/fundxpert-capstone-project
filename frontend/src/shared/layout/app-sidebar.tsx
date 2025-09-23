@@ -1,4 +1,3 @@
-import Logo from '@/components/ui/logo';
 import { NavUser } from '../components/nav-user';
 import {
   Sidebar,

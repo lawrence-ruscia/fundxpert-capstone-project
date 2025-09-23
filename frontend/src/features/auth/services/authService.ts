@@ -71,6 +71,19 @@ export const authService = {
     return responseData;
   },
 
+  reset2FA: async () => {
+    const res = await fetch('http://localhost:3000/auth/2fa/reset', {
+      method: 'POST',
+      credentials: 'include', // send cookies
+    });
+
+    if (!res.ok) {
+      throw new Error('Failed to reset 2FA');
+    }
+
+    return res.json(); // { message, qrCode }
+  },
+
   fetchCurrentUser: async (): Promise<UserResponse> => {
     const res = await fetch('http://localhost:3000/auth/me', {
       method: 'GET',

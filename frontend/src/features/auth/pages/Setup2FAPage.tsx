@@ -1,42 +1,100 @@
-import { useNavigate } from 'react-router-dom';
-import { useState, useEffect } from 'react';
-import { authService } from '../services/authService';
+import { DataError } from '@/shared/components/DataError';
+import { use2faSetup } from '../hooks/use2faSetup';
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { RefreshCw } from 'lucide-react';
+import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
+import { BackButton } from '@/shared/components/back-button';
 
 export const Setup2FAPage = () => {
-  const navigate = useNavigate();
-  const storedUserId = sessionStorage.getItem('twofa_userId');
-  const userId = storedUserId ? parseInt(storedUserId, 10) : null;
+  const { userId, qrCode, isLoading, error, handleProceed, retryFetch } =
+    use2faSetup();
 
-  const [qrCode, setQrCode] = useState<string | null>(null);
+  // User ID validation - redirect handled in hook
+  if (!userId) {
+    return (
+      <DataError
+        title='Failed to Load User Data'
+        message='Unable to retrieve user information. Please log in again.'
+      />
+    );
+  }
 
-  useEffect(() => {
-    if (!userId) {
-      navigate('/auth/login');
-      return;
-    }
+  // Loading state
+  if (isLoading) {
+    return <LoadingSpinner text='Generating QR' />;
+  }
 
-    // Call backend to get QR code
-    authService.setup2FA(userId).then(res => {
-      setQrCode(res.qrCode);
-    });
-  }, [userId, navigate]);
-
-  const handleProceed = () => {
-    // After scanning, user clicks "Next" → go to OTPPage
-    navigate('/auth/login-2fa');
-  };
-
-  if (!userId) return null;
+  // Error state with retry option
+  if (error) {
+    return <DataError title='Failed to Setup 2FA' message={error} />;
+  }
 
   return (
-    <div>
-      <h1>🔐 Setup Two-Factor Authentication</h1>
-      {qrCode && <img src={qrCode} alt='Scan QR for 2FA' />}
-      <p>
-        Scan this QR code using Google Authenticator or Authy, then click "Next"
-        to enter your 6-digit code.
-      </p>
-      <button onClick={handleProceed}>Next</button>
-    </div>
+    <Card className='gap-4'>
+      <CardHeader className='space-y-4 text-center'>
+        <BackButton />
+
+        <CardTitle className='text-xl font-semibold'>
+          Setup Two-Factor Authentication
+        </CardTitle>
+        <CardDescription className='text-sm leading-relaxed'>
+          Scan this QR code using your authenticator app, then click "Next" to
+          enter your 6-digit code.
+        </CardDescription>
+      </CardHeader>
+
+      <CardContent className='space-y-6'>
+        <div className='flex justify-center'>
+          <div className='bg-muted rounded-lg p-4'>
+            {qrCode ? (
+              <img
+                src={qrCode}
+                alt='Scan QR for 2FA'
+                className='h-48 w-48 object-contain'
+                onError={e => {
+                  console.error('QR code image failed to load');
+                  e.currentTarget.src = '/placeholder.svg';
+                }}
+              />
+            ) : (
+              <div className='flex h-48 w-48 items-center justify-center rounded bg-gray-200'>
+                <span className='text-muted-foreground'>
+                  Loading QR code...
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className='flex gap-3'>
+          <Button
+            variant='outline'
+            onClick={retryFetch}
+            className='flex-1'
+            disabled={isLoading}
+          >
+            <RefreshCw
+              className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`}
+            />
+            Generate New QR
+          </Button>
+
+          <Button
+            className='flex-1'
+            onClick={handleProceed}
+            disabled={!qrCode || isLoading}
+          >
+            Next
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
   );
 };

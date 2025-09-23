@@ -43,6 +43,7 @@ authRouter.post(
 authRouter.post('/2fa/setup', authController.setup2FA);
 authRouter.post('/2fa/verify-setup', authController.verify2FASetup);
 authRouter.post('/2fa/login', authController.loginWith2FA);
+authRouter.post('/2fa/reset', authMiddleware(), authController.reset2FA);
 authRouter.get('/me', authMiddleware(), authController.getCurrentUser);
 authRouter.post('/logout', authMiddleware(), authController.logout);
 authRouter.post('/refresh', authMiddleware(), authController.refreshSession);
