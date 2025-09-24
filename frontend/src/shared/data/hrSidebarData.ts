@@ -4,6 +4,8 @@ import {
   ChartLine,
   Wallet,
   BanknoteArrowDown,
+  Users,
+  BarChart3,
 } from 'lucide-react';
 import type { SidebarData } from '../types/navTypes';
 
@@ -24,15 +26,16 @@ export const hrSidebarData: SidebarData = {
           icon: LayoutDashboard,
         },
         {
-          title: 'Contributions History',
+          title: 'Employees',
+          url: '/dashboard/contributions',
+          icon: Users,
+        },
+        {
+          title: 'Contributions',
           url: '/dashboard/contributions',
           icon: PiggyBank,
         },
-        {
-          title: 'Fund Projection',
-          url: '/dashboard/projection',
-          icon: ChartLine,
-        },
+
         {
           title: 'Loans',
           url: '/dashboard/loans',
@@ -42,6 +45,11 @@ export const hrSidebarData: SidebarData = {
           title: 'Withdrawals',
           url: '/dashboard/withdrawals',
           icon: BanknoteArrowDown,
+        },
+        {
+          title: 'Reports',
+          url: '/dashboard/withdrawals',
+          icon: BarChart3,
         },
       ],
     },

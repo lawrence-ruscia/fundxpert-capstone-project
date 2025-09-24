@@ -22,7 +22,7 @@ export const BalanceCard = ({
         <CardTitle className='text-sm font-medium'>{label}</CardTitle>
         <Icon />
       </CardHeader>
-      <CardContent>
+      <CardContent className='space-y-1'>
         <div className='text-2xl font-semibold tabular-nums'>{value}</div>
         <p className='text-muted-foreground text-xs'>{comparison}</p>
       </CardContent>

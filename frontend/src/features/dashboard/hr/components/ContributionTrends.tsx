@@ -300,9 +300,10 @@ export function ContributionTrends() {
                         });
                       }}
                       formatter={(value, name) => [
-                        `₱${Number(value).toLocaleString()}`,
                         chartConfig[name as keyof typeof chartConfig]?.label ||
                           name,
+                        ': ',
+                        `₱${Number(value).toLocaleString()} `,
                       ]}
                       indicator='dot'
                     />
