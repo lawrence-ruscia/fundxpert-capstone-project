@@ -49,12 +49,6 @@ export function ContributionTrends() {
 
   const { data: contributions, loading, error } = useContributionTrends('all');
 
-  useEffect(() => {
-    if (isMobile && timeRange !== '3m') {
-      setTimeRange('3m');
-    }
-  }, [isMobile, timeRange]);
-
   const transformedData = useMemo(() => {
     if (!contributions?.contributions) {
       return [];

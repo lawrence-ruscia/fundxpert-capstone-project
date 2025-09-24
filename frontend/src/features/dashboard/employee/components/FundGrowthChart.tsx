@@ -24,7 +24,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useEmployeeContributions } from '@/features/contributions/employee/hooks/useEmployeeContributions';
 import type { ContributionPeriod } from '@/features/contributions/employee/types/employeeContributions';
 
@@ -57,12 +57,6 @@ export function FundGrowthChart() {
     loading,
     error,
   } = useEmployeeContributions('all');
-
-  useEffect(() => {
-    if (isMobile && timeRange !== '3m') {
-      setTimeRange('3m');
-    }
-  }, [isMobile, timeRange]);
 
   const transformedData = useMemo(() => {
     if (!contributionsData?.contributions) {
