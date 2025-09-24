@@ -28,6 +28,7 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { ConfirmDialog } from '@/shared/components/confirm-dialog';
 import { formatCurrency } from '@/features/dashboard/employee/utils/formatters';
+import { toast } from 'sonner';
 
 export default function WithdrawalDetailPage() {
   const [showCancelDialog, setShowCancelDialog] = useState(false);
@@ -44,7 +45,11 @@ export default function WithdrawalDetailPage() {
       if (withdrawal) {
         await cancelWithdrawalRequest(withdrawal.id);
 
-        // Update local state after successful API call
+        // Success toast
+        toast.success('Withdrawal Request Cancelled', {
+          description: `Withdrawal request #${withdrawal.id} has been successfully cancelled.`,
+          duration: 4000,
+        });
 
         // Close dialog
         setShowCancelDialog(false);
@@ -53,6 +58,19 @@ export default function WithdrawalDetailPage() {
     } catch (err) {
       // Error is handled by the hook
       console.error('Failed to cancel withdrawal:', err);
+
+      // Error toast
+      toast.error('Cancellation Failed', {
+        description:
+          err instanceof Error
+            ? err.message
+            : 'Unable to cancel your withdrawal request. Please try again or contact support.',
+        duration: 5000,
+        action: {
+          label: 'Try Again',
+          onClick: () => handleCancelWithdrawal(),
+        },
+      });
     }
   };
 

@@ -45,9 +45,10 @@ export default function LoanDetailPage() {
         await cancelLoanRequest(loan.id);
 
         toast.success('Loan Request Cancelled', {
-          description: `Your loan application for ${formatCurrency(Number(loan.amount))} has been successfully cancelled.`,
+          description: `Loan application # ${loan.id} has been successfully cancelled.`,
           duration: 4000,
         });
+
         // Close dialog
         setShowCancelDialog(false);
         navigate(-1);
@@ -56,9 +57,16 @@ export default function LoanDetailPage() {
       // Error is handled by the hook
       console.error('Failed to cancel withdrawal:', err);
 
-      toast.success('Loan Request Cancelled', {
-        description: `Your loan application for ${formatCurrency(Number(loan?.amount))} has been successfully cancelled.`,
-        duration: 4000,
+      toast.error('Cancellation Failed', {
+        description:
+          err instanceof Error
+            ? err.message
+            : 'Unable to cancel your loan application. Please try again or contact support.',
+        duration: 5000,
+        action: {
+          label: 'Try Again',
+          onClick: () => handleCancelLoan(),
+        },
       });
     }
   };

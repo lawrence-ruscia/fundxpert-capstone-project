@@ -39,6 +39,7 @@ import type {
   WithdrawalEligibility,
   WithdrawalType,
 } from '../types/withdrawal';
+import { toast } from 'sonner';
 
 const withdrawalSchema = (eligibility: WithdrawalEligibility) =>
   z
@@ -173,10 +174,28 @@ export const WithdrawalApplicationForm = ({
         beneficiary_contact: data.beneficiary_contact,
       };
       await applyWithdrawal(payload);
+
+      // Success toast
+      toast.success('Withdrawal Application Submitted Successfully!', {
+        description: `Your ${data.request_type.toLowerCase()} withdrawal request has been submitted and is now under review.`,
+        duration: 5000,
+      });
+
       onSuccess();
     } catch (error) {
       console.error('Withdrawal application failed:', error);
-      // TODO: Show an error toast here
+      // Error toast
+      toast.error('Withdrawal Application Failed', {
+        description:
+          error instanceof Error
+            ? error.message
+            : 'Unable to submit your withdrawal application. Please check your details and try again.',
+        duration: 6000,
+        action: {
+          label: 'Retry',
+          onClick: () => onSubmit(data),
+        },
+      });
     }
   };
 
