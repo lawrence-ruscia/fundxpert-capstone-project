@@ -149,7 +149,10 @@ export function LoansList({ loans }: { loans: Loan[] }) {
                   </TabsTrigger>
                 </TabsList>
               </div>
-              <TabsContent value='all' className='space-y-3'>
+              <TabsContent
+                value='all'
+                className='max-h-96 space-y-3 overflow-y-auto'
+              >
                 {loanHistory.map(loan => (
                   <HistoryLoanItem key={loan.id} loan={loan} />
                 ))}
@@ -163,7 +166,10 @@ export function LoansList({ loans }: { loans: Loan[] }) {
                   ))}
               </TabsContent>
 
-              <TabsContent value='pending' className='space-y-3'>
+              <TabsContent
+                value='pending'
+                className='max-h-96 space-y-3 overflow-y-auto'
+              >
                 {loanHistory
                   .filter(l => l.status === 'Pending')
                   .map(loan => (
@@ -171,7 +177,10 @@ export function LoansList({ loans }: { loans: Loan[] }) {
                   ))}
               </TabsContent>
 
-              <TabsContent value='approved' className='space-y-3'>
+              <TabsContent
+                value='approved'
+                className='max-h-96 space-y-3 overflow-y-auto'
+              >
                 {loanHistory
                   .filter(l => l.status === 'Approved')
                   .map(loan => (
@@ -179,14 +188,20 @@ export function LoansList({ loans }: { loans: Loan[] }) {
                   ))}
               </TabsContent>
 
-              <TabsContent value='rejected' className='space-y-3'>
+              <TabsContent
+                value='rejected'
+                className='max-h-96 space-y-3 overflow-y-auto'
+              >
                 {loanHistory
                   .filter(l => l.status === 'Rejected')
                   .map(loan => (
                     <HistoryLoanItem key={loan.id} loan={loan} />
                   ))}
               </TabsContent>
-              <TabsContent value='cancelled' className='space-y-3'>
+              <TabsContent
+                value='cancelled'
+                className='max-h-96 space-y-3 overflow-y-auto'
+              >
                 {loanHistory
                   .filter(l => l.status === 'Cancelled')
                   .map(loan => (
