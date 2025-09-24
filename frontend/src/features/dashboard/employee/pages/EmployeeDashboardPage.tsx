@@ -1,22 +1,22 @@
-import { useEmployeeOverview } from '../hooks/useEmployeeOverview';
-import { BalanceCard } from '../components/BalanceCard';
-import { EmploymentStatusBadge } from '../components/EmployeeStatusBadge';
+import { useEmployeeOverview } from '../hooks/useEmployeeOverview.js';
+import { BalanceCard } from '../components/BalanceCard.js';
+import { EmploymentStatusBadge } from '../components/EmployeeStatusBadge.js';
 import {
   formatCurrency,
   formatGrowth,
   formatVesting,
   formatVestingDate,
-} from '../utils/formatters';
+} from '../utils/formatters.js';
 import { Building2, Clock, PiggyBank, ShieldCheck, User } from 'lucide-react';
-import { FundGrowthChart } from '../components/FundGrowthChart';
-import { QuickActions } from '../components/QuickActions';
-import { LoanStatus } from '../components/LoanStatus';
-import { EligibilityStatus } from '../components/EligibilityStatus';
+import { FundGrowthChart } from '../components/FundGrowthChart.js';
+import { QuickActions } from '../components/QuickActions.js';
+import { LoanStatus } from '../components/LoanStatus.js';
+import { EligibilityStatus } from '../components/EligibilityStatus.js';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
 import { NetworkError } from '@/shared/components/NetworkError';
 import { DataError } from '@/shared/components/DataError';
 
-export default function EmployeeDashboard() {
+export default function EmployeeDashboardPage() {
   const { data: overview, loading, error } = useEmployeeOverview();
 
   if (loading) return <LoadingSpinner text={'Loading Dashboard Data'} />;
@@ -25,7 +25,7 @@ export default function EmployeeDashboard() {
     return (
       <DataError
         title='No employee overview data found'
-        message='Unable to load employee information'
+        message='Unable to load employee informatio n'
       />
     );
 

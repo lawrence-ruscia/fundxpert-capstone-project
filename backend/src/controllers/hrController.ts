@@ -7,7 +7,7 @@ import {
   getPendingWithdrawals,
   getWithdrawalSummary,
 } from '../services/hrService.js';
-import type { TrendPeriod } from '../types/hrTypes.js';
+import type { HRContributionPeriod } from '../types/hrTypes.js';
 
 // Overview
 export async function getOverviewHandler(req: Request, res: Response) {
@@ -26,7 +26,7 @@ export async function getContributionTrendsHandler(
   res: Response
 ) {
   try {
-    const period = (req.query.period as TrendPeriod) || 'current_year';
+    const period = (req.query.period as HRContributionPeriod) || 'current_year';
     const result = await getHRContributions(period);
     res.json(result);
   } catch (err) {

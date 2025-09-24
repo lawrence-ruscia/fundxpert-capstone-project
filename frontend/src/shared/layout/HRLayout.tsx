@@ -8,13 +8,13 @@ import { Header } from './Header';
 import { ThemeSwitch } from '../components/theme-switch';
 import { ProfileDropdown } from '../components/profile-dropdown';
 import { Main } from './Main';
-import { employeeSidebarData } from '../data/employeeSidebarData';
-export default function EmployeeLayout() {
+import { hrSidebarData } from '../data/hrSidebarData';
+export default function HRLayout() {
   const defaultOpen = getCookie('sidebar_state') !== 'false';
   return (
     <LayoutProvider>
       <SidebarProvider defaultOpen={defaultOpen}>
-        <AppSidebar sidebarData={employeeSidebarData} />
+        <AppSidebar sidebarData={hrSidebarData} />
         <SidebarInset
           className={cn(
             // Set content container, so we can use container queries

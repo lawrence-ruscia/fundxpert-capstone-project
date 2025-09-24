@@ -1,7 +1,6 @@
 import { createBrowserRouter } from 'react-router-dom';
 import { LoginPage } from '@/features/auth/pages/LoginPage';
-import EmployeeDashboard from '@/features/dashboard/employee/pages/EmployeeDashboard';
-import HRDashboard from '@/features/dashboard/hr/pages/HRDashboard';
+import EmployeeDashboardPage from '@/features/dashboard/employee/pages/EmployeeDashboardPage';
 import AdminDashboard from '@/features/dashboard/admin/pages/AdminDashboard';
 import ProtectedRoute from '@/features/auth/components/ProtectedRoute';
 import { Navigate } from 'react-router-dom';
@@ -17,6 +16,8 @@ import { NotFoundError } from '@/shared/components/NotFoundError';
 import WithdrawalsPage from '@/features/withdrawals/employee/pages/WithdrawalsPage';
 import WithdrawalDetailPage from '@/features/withdrawals/employee/pages/WithdrawalDetailPage';
 import { Setup2FAPage } from '@/features/auth/pages/Setup2FAPage';
+import { HRDashboardPage } from '@/features/dashboard/hr/pages/HRDashboardPage';
+import HRLayout from '@/shared/layout/HRLayout';
 
 export const router = createBrowserRouter([
   {
@@ -58,7 +59,7 @@ export const router = createBrowserRouter([
       </ProtectedRoute>
     ),
     children: [
-      { index: true, element: <EmployeeDashboard /> },
+      { index: true, element: <EmployeeDashboardPage /> },
       { path: 'contributions', element: <ContributionHistoryPage /> },
       { path: 'projection', element: <FundProjectionPage /> },
       { path: 'loans', element: <LoansPage /> },
@@ -71,9 +72,10 @@ export const router = createBrowserRouter([
     path: '/hr-dashboard',
     element: (
       <ProtectedRoute allowedRoles={['HR']}>
-        <HRDashboard />
+        <HRLayout />
       </ProtectedRoute>
     ),
+    children: [{ index: true, element: <HRDashboardPage /> }],
   },
   {
     path: '/admin-dashboard',

@@ -1,5 +1,7 @@
-import type { LoanStatus } from './loan.js';
-import type { WithdrawalStatus } from './withdrawal.js';
+import type { LoanStatus } from '@/features/loans/employee/types/loan';
+import type { WithdrawalStatus } from '@/features/withdrawals/employee/types/withdrawal';
+
+// Improve this HRDashboardPage for my Provident Fund Tracker System, just change the structure and the layout/spacing, but don't change the colors as I already have a pre-defined design system using tailwind, use shadcn if you want for the components, I'll Provide the necessary data:
 
 /**
  * Overview
@@ -14,6 +16,7 @@ export type HrOverviewResponse = {
   pending_withdrawals: number;
   processsed_withdrawals_this_month: number;
 };
+
 /**
  * Contributions Trends
  */

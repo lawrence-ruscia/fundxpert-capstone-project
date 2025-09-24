@@ -6,13 +6,13 @@ import {
   SidebarHeader,
   SidebarRail,
 } from '@/components/ui/sidebar';
-import { sidebarData } from '../data/sidebarData';
 import { NavGroup } from '../components/nav-group';
 import { AppTitle } from '../components/app-title';
 import { useLayout } from '../context/layout-provider';
 import { useAuth } from '@/features/auth/context/AuthContext';
+import type { SidebarData } from '../types/navTypes';
 
-export function AppSidebar() {
+export function AppSidebar({ sidebarData }: { sidebarData: SidebarData }) {
   const { collapsible, variant } = useLayout();
   const { user, loading } = useAuth();
 

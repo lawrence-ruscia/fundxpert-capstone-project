@@ -1,25 +1,13 @@
 import {
-  ChartLine,
   LayoutDashboard,
-  Monitor,
   PiggyBank,
-  HelpCircle,
-  Bell,
-  Palette,
-  Settings,
-  Wrench,
-  UserCog,
-  CircleQuestionMark,
+  ChartLine,
   Wallet,
-  Shield,
-  ArrowDownCircle,
   BanknoteArrowDown,
-  FileText,
-  BookOpen,
 } from 'lucide-react';
-import { type SidebarData } from '@/shared/types/navTypes';
+import type { SidebarData } from '../types/navTypes';
 
-export const sidebarData: SidebarData = {
+export const hrSidebarData: SidebarData = {
   user: {
     name: 'John Doe',
     email: 'johndoe@metrobank.ph',

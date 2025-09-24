@@ -34,6 +34,8 @@ const employmentStatusConfig: Record<EmploymentStatus, EmploymentStatusConfig> =
         'bg-red-500 hover:bg-red-600 text-white dark:bg-red-600 dark:hover:bg-red-700',
       variant: 'destructive',
     },
+
+    
   };
 
 interface EmploymentStatusBadgeProps {

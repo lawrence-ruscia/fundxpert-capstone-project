@@ -1,20 +1,65 @@
 import { pool } from '../config/db.config.js';
+import type {
+  HRContributionsResponse,
+  HrOverviewResponse,
+} from '../types/hrTypes.js';
+
 import { getDateRange } from './utils/getEmployeeContributionsUtils.js';
-export async function getHRDashboardOverview() {
+
+export async function getHRDashboardOverview(): Promise<HrOverviewResponse> {
   const query = `
-    SELECT
-      (SELECT COUNT(*) FROM users WHERE role='Employee') AS total_employees,
-      (SELECT COUNT(*) FROM users WHERE employment_status='Active' AND role='Employee') AS active_employees,
-      (SELECT SUM(employee_amount) FROM contributions) AS total_employee_contributions,
-      (SELECT SUM(employer_amount) FROM contributions) AS total_employer_contributions,
-      (SELECT COUNT(*) FROM loans WHERE status='Pending') AS pending_loans,
-      (SELECT COUNT(*) FROM withdrawal_requests WHERE status='Pending') AS pending_withdrawals;
+      WITH employee_summary AS (
+        SELECT 
+          COUNT(*) AS total_employees,
+          COUNT(*) FILTER (WHERE employment_status = 'Active') AS active_employees
+        FROM users
+        WHERE role = 'Employee'
+      ),
+      contribution_summary AS (
+        SELECT
+          COALESCE(SUM(employee_amount), 0) AS total_employee_contributions,
+          COALESCE(SUM(employer_amount), 0) AS total_employer_contributions
+        FROM contributions
+      ),
+      loan_summary AS (
+        SELECT
+          COUNT(*) FILTER (WHERE status = 'Pending') AS pending_loans,
+          COUNT(*) FILTER (
+            WHERE status = 'Approved'
+              AND DATE_TRUNC('month', created_at) = DATE_TRUNC('month', CURRENT_DATE)
+          ) AS approved_loans_this_month
+        FROM loans
+      ),
+      withdrawal_summary AS (
+        SELECT
+          COUNT(*) FILTER (WHERE status = 'Pending') AS pending_withdrawals,
+          COUNT(*) FILTER (
+            WHERE status = 'Processed'
+              AND DATE_TRUNC('month', processed_at) = DATE_TRUNC('month', CURRENT_DATE)
+          ) AS processed_withdrawals_this_month
+        FROM withdrawal_requests
+      )
+      SELECT 
+        es.total_employees,
+        es.active_employees,
+        cs.total_employee_contributions,
+        cs.total_employer_contributions,
+        ls.pending_loans,
+        ls.approved_loans_this_month,
+        ws.pending_withdrawals,
+        ws.processed_withdrawals_this_month
+      FROM employee_summary es
+      CROSS JOIN contribution_summary cs
+      CROSS JOIN loan_summary ls
+      CROSS JOIN withdrawal_summary ws;
   `;
   const { rows } = await pool.query(query);
   return rows[0];
 }
 
-export async function getHRContributions(period: string = 'year') {
+export async function getHRContributions(
+  period = 'year'
+): Promise<HRContributionsResponse> {
   const { startDate, endDate } = getDateRange(period);
 
   let query = `
@@ -68,14 +113,16 @@ export async function getHRContributions(period: string = 'year') {
     };
   });
 
+  const totals = {
+    employee: totalEmployee,
+    employer: totalEmployer,
+    grand_total: totalEmployee + totalEmployer,
+  };
+
   return {
     period,
     contributions,
-    totals: {
-      employee: totalEmployee,
-      employer: totalEmployer,
-      grand_total: totalEmployee + totalEmployer,
-    },
+    totals,
   };
 }
 
