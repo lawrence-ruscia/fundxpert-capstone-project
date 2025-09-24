@@ -42,7 +42,7 @@ export default function LoansPage() {
     data: overview,
     loading: overviewLoading,
     error: overviewError,
-  } = useEmployeeOverview([refreshKey]);
+  } = useEmployeeOverview();
 
   const [showForm, setShowForm] = useState(false);
 
