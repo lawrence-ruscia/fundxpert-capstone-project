@@ -1,4 +1,4 @@
-export const getOverview = async () => {
+export const fetchHROverview = async () => {
   const res = await fetch('http://localhost:3000/hr/overview', {
     method: 'GET',
     credentials: 'include',
@@ -11,8 +11,14 @@ export const getOverview = async () => {
   return res.json();
 };
 
-export const getContributionTrends = async () => {
-  const res = await fetch('http://localhost:3000/hr/contributions/trends', {
+export const fetchContributionTrends = async (period: string = 'all') => {
+  const url = new URL('http://localhost:3000/hr/contributions/trends');
+
+  if (period) {
+    url.searchParams.set('period', period.toString());
+  }
+
+  const res = await fetch(url.toString(), {
     method: 'GET',
     credentials: 'include',
   });
@@ -24,7 +30,7 @@ export const getContributionTrends = async () => {
   return res.json();
 };
 
-export const getLoanSummary = async () => {
+export const fetchLoanSummary = async () => {
   const res = await fetch('http://localhost:3000/hr/loans/summary', {
     method: 'GET',
     credentials: 'include',
@@ -37,7 +43,7 @@ export const getLoanSummary = async () => {
   return res.json();
 };
 
-export const getWithdrawalSummary = async () => {
+export const fetchWithdrawalSummary = async () => {
   const res = await fetch('http://localhost:3000/hr/withdrawals/summary', {
     method: 'GET',
     credentials: 'include',
@@ -50,7 +56,7 @@ export const getWithdrawalSummary = async () => {
   return res.json();
 };
 
-export const getPendingLoans = async () => {
+export const fetchPendingLoans = async () => {
   const res = await fetch('http://localhost:3000/hr/loans/pending', {
     method: 'GET',
     credentials: 'include',
@@ -63,7 +69,7 @@ export const getPendingLoans = async () => {
   return res.json();
 };
 
-export const getPendingWithdrawals = async () => {
+export const fetchPendingWithdrawals = async () => {
   const res = await fetch('http://localhost:3000/hr/withdrawals/pending', {
     method: 'GET',
     credentials: 'include',

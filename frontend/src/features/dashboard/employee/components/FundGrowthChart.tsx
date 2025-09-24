@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -60,10 +59,10 @@ export function FundGrowthChart() {
   } = useEmployeeContributions('all');
 
   useEffect(() => {
-    if (isMobile) {
+    if (isMobile && timeRange !== '3m') {
       setTimeRange('3m');
     }
-  }, [isMobile]);
+  }, [isMobile, timeRange]);
 
   const transformedData = useMemo(() => {
     if (!contributionsData?.contributions) {

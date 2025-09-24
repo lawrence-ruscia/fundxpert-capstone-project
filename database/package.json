@@ -6,7 +6,7 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "seed:users": "tsx ./seeds/seedUsers.ts",
-    "seed:employees": "tsx ./seeds/seedEmployeeOverview.ts"
+    "seed:employees": "tsx ./seeds/seedEmployees.ts"
   },
   "keywords": [],
   "author": "",

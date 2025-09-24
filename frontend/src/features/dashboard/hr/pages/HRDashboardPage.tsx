@@ -12,6 +12,8 @@ import {
 } from 'lucide-react';
 import { BalanceCard } from '../../employee/components/BalanceCard';
 import { formatCurrency, formatGrowth } from '../../employee/utils/formatters';
+import { FundGrowthChart } from '../../employee/components/FundGrowthChart';
+import { ContributionTrends } from '../components/ContributionTrends';
 
 export const HRDashboardPage = () => {
   const { user } = useAuth();
@@ -78,7 +80,9 @@ export const HRDashboardPage = () => {
           </div>
           <div className='grid grid-cols-1 gap-4 lg:grid-cols-8'>
             <div className='col-span-1 lg:col-span-5'>
-              <div>{/* <FundGrowthChart /> */}</div>
+              <div>
+                <ContributionTrends />
+              </div>
             </div>
 
             {/* <QuickActions className='col-span-1 lg:col-span-3' /> */}

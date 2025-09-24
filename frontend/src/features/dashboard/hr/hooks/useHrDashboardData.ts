@@ -1,24 +1,24 @@
 import { useState, useEffect } from 'react';
 import {
-  getOverview,
-  getContributionTrends,
-  getLoanSummary,
-  getWithdrawalSummary,
-  getPendingLoans,
-  getPendingWithdrawals,
+  fetchHROverview,
+  fetchContributionTrends,
+  fetchLoanSummary,
+  fetchWithdrawalSummary,
+  fetchPendingLoans,
+  fetchPendingWithdrawals,
 } from '../services/hrDashboardService';
 import type {
   HrOverviewResponse,
-  HRContributionRecord,
   HRLoanSummaryResponse,
   HRWithdrawalSummaryResponse,
   HRLoanPendingResponse,
   HRWithdrawalPendingResponse,
+  HRContributionsResponse,
 } from '../types/hrDashboardTypes';
 
 export interface HRDashboardData {
   overview: HrOverviewResponse | null;
-  contributions: HRContributionRecord[];
+  contributions: HRContributionsResponse | null;
   loanSummary: HRLoanSummaryResponse[] | null;
   withdrawalSummary: HRWithdrawalSummaryResponse[] | null;
   pendingLoans: HRLoanPendingResponse[];
@@ -28,7 +28,7 @@ export interface HRDashboardData {
 export function useHRDashboardData() {
   const [data, setData] = useState<HRDashboardData>({
     overview: null,
-    contributions: [],
+    contributions: null,
     loanSummary: [],
     withdrawalSummary: null,
     pendingLoans: [],
@@ -45,12 +45,12 @@ export function useHRDashboardData() {
 
         // Fetch all data concurrently (allows partial failures)
         const results = await Promise.allSettled([
-          getOverview(),
-          getContributionTrends(),
-          getLoanSummary(),
-          getWithdrawalSummary(),
-          getPendingLoans(),
-          getPendingWithdrawals(),
+          fetchHROverview(),
+          fetchContributionTrends('all'),
+          fetchLoanSummary(),
+          fetchWithdrawalSummary(),
+          fetchPendingLoans(),
+          fetchPendingWithdrawals(),
         ]);
 
         // Extract successful results and log failures
@@ -110,7 +110,7 @@ export function useHRDashboardData() {
     // Reset state and refetch
     setData({
       overview: null,
-      contributions: [],
+      contributions: null,
       loanSummary: [],
       withdrawalSummary: [],
       pendingLoans: [],

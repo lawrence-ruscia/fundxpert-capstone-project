@@ -26,7 +26,7 @@ export async function getContributionTrendsHandler(
   res: Response
 ) {
   try {
-    const period = (req.query.period as HRContributionPeriod) || 'current_year';
+    const period = (req.query.period as HRContributionPeriod) || 'year';
     const result = await getHRContributions(period);
     res.json(result);
   } catch (err) {
