@@ -29,53 +29,11 @@ import type {
   WithdrawalType,
 } from '../types/withdrawal';
 import { WithdrawalStatusBadge } from './WithdrawalStatusBadge';
-import { useState } from 'react';
-import { useCancelWithdrawal } from '../hooks/useCancelWithdrawal';
-import { ConfirmDialog } from '@/shared/components/confirm-dialog';
-
 export function WithdrawalItem({
   withdrawal,
-  onSuccess,
 }: {
   withdrawal: WithdrawalRequest;
-  onSuccess?: () => void;
 }) {
-  const [showCancelDialog, setShowCancelDialog] = useState(false);
-  const [localWithdrawal, setLocalWithdrawal] = useState(withdrawal);
-  const {
-    cancelWithdrawalRequest,
-    isLoading: isCancelling,
-    error,
-  } = useCancelWithdrawal();
-
-  const handleCancelWithdrawal = async () => {
-    try {
-      await cancelWithdrawalRequest(localWithdrawal.id);
-
-      // Update local state after successful API call
-      const updatedWithdrawal = {
-        ...localWithdrawal,
-        status: 'Cancelled' as WithdrawalStatus,
-      };
-      setLocalWithdrawal(updatedWithdrawal);
-
-      // Close dialog
-      setShowCancelDialog(false);
-
-      // Trigger parent refresh
-      onSuccess?.();
-    } catch (err) {
-      // Error is handled by the hook
-      console.error('Failed to cancel withdrawal:', err);
-    }
-  };
-
-  // Use localWithdrawal instead of withdrawal throughout the component
-  const currentWithdrawal = localWithdrawal;
-
-  // Add this cancel button section before the "View Withdrawal Details" button
-  const canCancel = currentWithdrawal.status === 'Pending';
-
   const getStatusIcon = (status: WithdrawalStatus) => {
     switch (status) {
       case 'Approved':
@@ -318,31 +276,6 @@ export function WithdrawalItem({
 
         {/* Action Button */}
         <div className='flex flex-wrap gap-3 pt-2'>
-          {/* Cancel Button - Only show for pending withdrawals */}
-          {canCancel && (
-            <div className='flex flex-1 gap-2'>
-              <Button
-                variant='destructive'
-                onClick={() => setShowCancelDialog(true)}
-                disabled={isCancelling}
-                className='flex-1'
-                size='lg'
-              >
-                {isCancelling ? (
-                  <>
-                    <div className='mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent' />
-                    Cancelling...
-                  </>
-                ) : (
-                  <>
-                    <XCircle className='mr-2 h-4 w-4' />
-                    Cancel Request
-                  </>
-                )}
-              </Button>
-            </div>
-          )}
-
           <Button
             variant='default'
             size='lg'
@@ -357,16 +290,6 @@ export function WithdrawalItem({
             </Link>
           </Button>
         </div>
-
-        {error && (
-          <Alert className='rounded-lg border-0 border-l-4 border-red-500 bg-red-50 text-red-800 dark:bg-red-900/20'>
-            <XCircle className='h-4 w-4' />
-            <AlertTitle className='font-semibold'>Error</AlertTitle>
-            <AlertDescription className='text-red-800'>
-              {error}
-            </AlertDescription>
-          </Alert>
-        )}
 
         {/* Status-specific alerts */}
         {withdrawal.status === 'Pending' && (
@@ -431,45 +354,6 @@ export function WithdrawalItem({
           </div>
         )}
       </CardContent>
-      {/* Cancel Confirmation Dialog */}
-      <ConfirmDialog
-        open={showCancelDialog}
-        onOpenChange={setShowCancelDialog}
-        title='Cancel Withdrawal Request'
-        desc={
-          <div className='space-y-2'>
-            <p>Are you sure you want to cancel this withdrawal request?</p>
-            <div className='text-muted-foreground text-sm'>
-              <p>
-                <strong>Amount:</strong>{' '}
-                {formatCurrency(Number(currentWithdrawal.vested_amount))}
-              </p>
-              <p>
-                <strong>Method:</strong> {currentWithdrawal.payout_method}
-              </p>
-            </div>
-            <p className='text-destructive text-sm font-medium'>
-              This action cannot be undone. You will need to create a new
-              withdrawal request if you change your mind.
-            </p>
-          </div>
-        }
-        cancelBtnText='Keep Request'
-        confirmText={
-          isCancelling ? (
-            <>
-              <div className='mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent' />
-              Cancelling...
-            </>
-          ) : (
-            'Cancel Withdrawal'
-          )
-        } 
-        destructive={true}
-        handleConfirm={handleCancelWithdrawal}
-        isLoading={isCancelling}
-        disabled={isCancelling}
-      />
     </Card>
   );
 }

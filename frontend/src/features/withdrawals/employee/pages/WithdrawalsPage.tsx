@@ -46,7 +46,6 @@ import { WithdrawalItem } from '../components/WithdrawalItem';
 
 export default function WithdrawalsPage() {
   const [refreshKey, setRefreshKey] = useState(0);
-
   const {
     data: withdrawals,
     loading,
@@ -269,10 +268,7 @@ export default function WithdrawalsPage() {
                           </p>
                         </div>
                       ) : withdrawalToShow ? (
-                        <WithdrawalItem
-                          withdrawal={withdrawalToShow}
-                          onSuccess={() => setRefreshKey(prev => prev + 1)}
-                        />
+                        <WithdrawalItem withdrawal={withdrawalToShow} />
                       ) : (
                         // All withdrawals are completed/cancelled message
                         <div className='py-8 text-center'>

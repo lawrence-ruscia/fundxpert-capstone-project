@@ -173,7 +173,7 @@ export default function LoanDetailPage() {
               </div>
 
               {canCancel && (
-                <div className='flex flex-1 gap-2'>
+                 <div className='flex flex-1 gap-2'>
                   <Button
                     variant='destructive'
                     onClick={() => setShowCancelDialog(true)}
