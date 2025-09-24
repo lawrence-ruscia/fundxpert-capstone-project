@@ -5,6 +5,7 @@ import {
   MIN_LOAN_AMOUNT,
 } from '../config/policy.config.js';
 import type {
+  CancelledLoan,
   Loan,
   LoanEligibility,
   LoanPurposeCategory,
@@ -157,5 +158,29 @@ export async function getLoanDetails(userId: number, loanId: number) {
   return {
     ...loan,
     documents: docs ?? [],
+  };
+}
+
+export async function cancelLoan(
+  userId: number,
+  loanId: number
+): Promise<CancelledLoan> {
+  const res = await pool.query(
+    `UPDATE loans
+     SET status='Cancelled'
+     WHERE id=$1  
+      AND user_id=$2 
+      AND status IN ('Pending','Approved')
+     RETURNING id`,
+    [loanId, userId]
+  );
+
+  if (res.rowCount === 0) {
+    return { success: false }; // nothing cancelled (maybe wrong status)
+  }
+  return {
+    success: true,
+    loanId: res.rows[0].id,
+    newStatus: res.rows[0].status,
   };
 }

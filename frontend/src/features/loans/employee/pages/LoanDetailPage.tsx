@@ -5,7 +5,13 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { CalendarDays, Clock, PhilippinePeso, Target } from 'lucide-react';
+import {
+  CalendarDays,
+  Clock,
+  PhilippinePeso,
+  Target,
+  XCircle,
+} from 'lucide-react';
 import { LoanDocumentUpload } from '../components/LoanDocumentUpload';
 
 import { useLoanDetails } from '../hooks/useLoanDetails';
@@ -14,9 +20,44 @@ import { LoanStatusBadge } from '../components/LoanStatusBadge';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
 import { DataError } from '@/shared/components/DataError';
 import { NetworkError } from '@/shared/components/NetworkError';
+import { formatCurrency } from '@/features/dashboard/employee/utils/formatters';
+import { ConfirmDialog } from '@/shared/components/confirm-dialog';
+import { useCancelLoan } from '../hooks/useCancelLoan';
+import { useState } from 'react';
+import { Button } from '@/components/ui/button';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { useNavigate } from 'react-router-dom';
 
 export default function LoanDetailPage() {
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
   const { loan, loading, error } = useLoanDetails();
+  const navigate = useNavigate();
+  const {
+    cancelLoanRequest,
+    isLoading: isCancelling,
+    error: errorCancel,
+  } = useCancelLoan();
+
+  const handleCancelLoan = async () => {
+    try {
+      if (loan) {
+        await cancelLoanRequest(loan.id);
+
+        // Update local state after successful API call
+
+        // Close dialog
+        setShowCancelDialog(false);
+        navigate(-1);
+      }
+    } catch (err) {
+      // Error is handled by the hook
+      console.error('Failed to cancel withdrawal:', err);
+    }
+  };
+
+  // Add this cancel button section before the "View Withdrawal Details" button
+  const canCancel = loan?.status === 'Pending' || loan?.status === 'Approved';
+
   if (loading) {
     return <LoadingSpinner text={'Loading Loan Details'} />;
   }
@@ -130,8 +171,83 @@ export default function LoanDetailPage() {
                   </p>
                 )}
               </div>
+
+              {canCancel && (
+                <div className='flex flex-1 gap-2'>
+                  <Button
+                    variant='destructive'
+                    onClick={() => setShowCancelDialog(true)}
+                    disabled={isCancelling}
+                    className='flex-1'
+                    size='lg'
+                  >
+                    {isCancelling ? (
+                      <>
+                        <div className='mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent' />
+                        Cancelling...
+                      </>
+                    ) : (
+                      <>
+                        <XCircle className='mr-2 h-4 w-4' />
+                        Cancel Request
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
+              {errorCancel && (
+                <Alert className='rounded-lg border-0 border-l-4 border-red-500 bg-red-50 text-red-800 dark:bg-red-900/20'>
+                  <XCircle className='h-4 w-4' />
+                  <AlertTitle className='font-semibold'>Error</AlertTitle>
+                  <AlertDescription className='text-red-800'>
+                    {errorCancel}
+                  </AlertDescription>
+                </Alert>
+              )}
             </div>
           </CardContent>
+          <ConfirmDialog
+            open={showCancelDialog}
+            onOpenChange={setShowCancelDialog}
+            title='Cancel Loan Request'
+            desc={
+              <div className='space-y-2'>
+                <p>Are you sure you want to cancel this loan request?</p>
+                <div className='text-muted-foreground text-sm'>
+                  <p>
+                    <strong>Loan Amount:</strong>{' '}
+                    {formatCurrency(Number(loan.amount))}
+                  </p>
+                  <p>
+                    <strong>Purpose:</strong> {loan.purpose_category}
+                  </p>
+                  <p>
+                    <strong>Repayment Term:</strong>{' '}
+                    {loan.repayment_term_months} months
+                  </p>
+                </div>
+                <p className='text-destructive text-sm font-medium'>
+                  This action cannot be undone. You will need to submit a new
+                  loan application if you change your mind.
+                </p>
+              </div>
+            }
+            cancelBtnText='Keep Request'
+            confirmText={
+              isCancelling ? (
+                <>
+                  <div className='mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent' />
+                  Cancelling...
+                </>
+              ) : (
+                'Cancel Loan Request'
+              )
+            }
+            destructive={true}
+            handleConfirm={handleCancelLoan}
+            isLoading={isCancelling}
+            disabled={isCancelling}
+          />
         </Card>
 
         {/* Document Upload Section */}

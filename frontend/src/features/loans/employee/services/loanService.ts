@@ -1,4 +1,5 @@
 import type {
+  CancelLoanResponse,
   Loan,
   LoanDocument,
   LoanDocumentResponse,
@@ -91,5 +92,21 @@ export async function applyForLoan(
     throw new Error((await res.json()).error || 'Loan application failed');
   }
 
+  return res.json();
+}
+
+export async function cancelLoan(loanId: number): Promise<CancelLoanResponse> {
+  const res = await fetch(
+    `http://localhost:3000/employee/loan/${loanId}/cancel`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+    }
+  );
+
+  if (!res.ok) {
+    throw new Error((await res.json()).error || 'Loan cancellation failed');
+  }
   return res.json();
 }

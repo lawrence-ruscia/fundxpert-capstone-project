@@ -6,6 +6,7 @@ import {
   getLoanStatus,
   getLoanHistory,
   getLoanById,
+  cancelLoanRequest,
 } from '../controllers/loanController.js';
 
 export const empLoanRouter = Router();
@@ -21,3 +22,8 @@ empLoanRouter.post('/apply', authMiddleware('Employee'), applyLoan);
 empLoanRouter.get('/status', authMiddleware('Employee'), getLoanStatus);
 empLoanRouter.get('/history', authMiddleware('Employee'), getLoanHistory);
 empLoanRouter.get('/:id', authMiddleware('Employee'), getLoanById);
+empLoanRouter.post(
+  '/:id/cancel',
+  authMiddleware('Employee'),
+  cancelLoanRequest
+);

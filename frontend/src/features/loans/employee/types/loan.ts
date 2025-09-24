@@ -58,3 +58,9 @@ export type LoanDocumentResponse = {
 };
 
 export type LoanResponse = Loan & { documents: LoanDocument[] };
+
+export type CancelLoanResponse = {
+  success: boolean;
+  loanId?: number;
+  newStatus?: string;
+};

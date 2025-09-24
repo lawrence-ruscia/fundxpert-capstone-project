@@ -18,7 +18,7 @@ export async function getLoanEligibility(req: Request, res: Response) {
 }
 
 export async function applyLoan(req: Request, res: Response) {
-  try { 
+  try {
     if (!isAuthenticatedRequest(req)) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
@@ -106,5 +106,25 @@ export async function getLoanById(req: Request, res: Response) {
   } catch (err) {
     console.error('❌ Error fetching loan details:', err);
     res.status(500).json({ error: 'Failed to fetch loan details' });
+  }
+}
+
+export async function cancelLoanRequest(req: Request, res: Response) {
+  try {
+    if (!isAuthenticatedRequest(req)) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const userId = req.user.id;
+    const { id } = req.params;
+    const result = await loanService.cancelLoan(userId, Number(id));
+
+    if (!result.success) {
+      return res.status(400).json({ error: 'Cannot cancel loan' });
+    }
+
+    res.json({ success: true, message: 'Withdrawal cancelled' });
+  } catch (err) {
+    res.status(400).json({ error: (err as Error).message });
   }
 }

@@ -52,3 +52,9 @@ export interface LoanDocument {
   file_name: string;
   uploaded_at: Date;
 }
+
+export type CancelledLoan = {
+  success: boolean;
+  loanId?: number;
+  newStatus?: string;
+};

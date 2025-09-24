@@ -464,7 +464,7 @@ export function WithdrawalItem({
           ) : (
             'Cancel Withdrawal'
           )
-        }
+        } 
         destructive={true}
         handleConfirm={handleCancelWithdrawal}
         isLoading={isCancelling}
