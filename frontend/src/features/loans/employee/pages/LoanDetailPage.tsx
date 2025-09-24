@@ -178,7 +178,7 @@ export default function LoanDetailPage() {
                     variant='destructive'
                     onClick={() => setShowCancelDialog(true)}
                     disabled={isCancelling}
-                    className='flex-1'
+                    className='mt-8 flex-1'
                     size='lg'
                   >
                     {isCancelling ? (
