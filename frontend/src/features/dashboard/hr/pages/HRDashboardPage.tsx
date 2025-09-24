@@ -12,10 +12,8 @@ import {
 import { BalanceCard } from '../../employee/components/BalanceCard';
 import { formatCurrency } from '../../employee/utils/formatters';
 import { ContributionTrends } from '../components/ContributionTrends';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { PendingActions } from '../components/PendingActions';
+import { RecentActivity } from '../components/RecentActivity';
 
 export const HRDashboardPage = () => {
   const { data, loading, error } = useHRDashboardData();
@@ -31,7 +29,6 @@ export const HRDashboardPage = () => {
     pendingLoans,
     pendingWithdrawals,
   } = data;
-
   return (
     <div>
       {/* Header */}
@@ -53,7 +50,7 @@ export const HRDashboardPage = () => {
               label='Total Employees'
               value={String(overview?.total_employees)}
               icon={Users}
-              comparison={`${overview?.active_employees} active`}
+              comparison={`${overview?.active_employees} active employees`}
             />
             <BalanceCard
               label='Total Contributions'
@@ -87,204 +84,20 @@ export const HRDashboardPage = () => {
         </div>
 
         {/* Recent Activity */}
-        <section className='space-y-6'>
-          <div className='flex items-center gap-3'>
-            <Clock className='text-primary h-6 w-6' />
-            <h2 className='text-2xl font-semibold'>Recent Activity</h2>
-          </div>
-
-          <div className='grid gap-6 md:grid-cols-2'>
-            {/* Loan Activity */}
-            <Card>
-              <CardHeader className='flex flex-row items-center justify-between space-y-0 pb-4'>
-                <div className='flex items-center gap-2'>
-                  <Wallet className='h-5 w-5' />
-                  <CardTitle className='text-lg'>Loan Activity</CardTitle>
-                </div>
-                <Badge variant='secondary'>{pendingLoans.length} Pending</Badge>
-              </CardHeader>
-              <CardContent className='space-y-4'>
-                <div className='flex justify-between'>
-                  <div className='text-center'>
-                    <p className='text-3xl font-bold text-red-500'>
-                      {pendingLoans.length}
-                    </p>
-                    <p className='text-muted-foreground text-sm'>
-                      Pending Loans
-                    </p>
-                  </div>
-                  <div className='text-center'>
-                    <p className='text-3xl font-bold text-green-500'>
-                      {overview?.approved_loans_this_month ?? 0}
-                    </p>
-                    <p className='text-muted-foreground text-sm'>
-                      Approved This Month
-                    </p>
-                  </div>
-                </div>
-                <Button variant='secondary' className='w-full'>
-                  View All Loans
-                  <ArrowRight className='h-4 w-4' />
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Withdrawal Activity */}
-            <Card>
-              <CardHeader className='flex flex-row items-center justify-between pb-4'>
-                <div className='flex items-center gap-2'>
-                  <BanknoteArrowDown className='h-5 w-5' />
-                  <CardTitle className='text-lg'>Withdrawal Activity</CardTitle>
-                </div>
-                <Badge variant='secondary'>
-                  {pendingWithdrawals.length} Pending
-                </Badge>
-              </CardHeader>
-              <CardContent className='space-y-4'>
-                <div className='flex justify-between'>
-                  <div className='text-center'>
-                    <p className='text-3xl font-bold text-red-500'>
-                      {pendingWithdrawals.length}
-                    </p>
-                    <p className='text-muted-foreground text-sm'>
-                      Pending Withdrawals
-                    </p>
-                  </div>
-                  <div className='text-center'>
-                    <p className='text-3xl font-bold text-green-500'>
-                      {overview?.processsed_withdrawals_this_month ?? 0}
-                    </p>
-                    <p className='text-muted-foreground text-sm'>
-                      Processed This Month
-                    </p>
-                  </div>
-                </div>
-                <Button variant='secondary' className='w-full'>
-                  View All Withdrawals
-                  <ArrowRight className='h-4 w-4' />
-                </Button>
-              </CardContent>
-            </Card>
-          </div>
-        </section>
+        <RecentActivity
+          pendingLoans={pendingLoans}
+          pendingWithdrawals={pendingWithdrawals}
+          approved_loans_this_month={overview?.approved_loans_this_month ?? 0}
+          processsed_withdrawals_this_month={
+            overview?.processsed_withdrawals_this_month ?? 0
+          }
+        />
 
         {/* Pending Actions */}
-        <section className='space-y-6'>
-          <div className='flex items-center gap-3'>
-            <Clock className='text-primary h-6 w-6' />
-            <h2 className='text-2xl font-semibold'>Pending Actions</h2>
-          </div>
-
-          <Card>
-            <CardContent className='p-6'>
-              <Tabs defaultValue='loans' className='w-full'>
-                <div className='overflow-x-auto'>
-                  <TabsList className='inline-flex w-max min-w-full lg:grid lg:w-full lg:grid-cols-2'>
-                    <TabsTrigger
-                      value='loans'
-                      className='flex items-center gap-2'
-                    >
-                      Pending Loan Applications
-                      <Badge variant='secondary' className='ml-1 text-xs'>
-                        {pendingLoans.length}
-                      </Badge>
-                    </TabsTrigger>
-                    <TabsTrigger
-                      value='withdrawals'
-                      className='flex items-center gap-2'
-                    >
-                      Pending Withdrawal Requests
-                      <Badge variant='secondary' className='ml-1 text-xs'>
-                        {pendingWithdrawals.length}
-                      </Badge>
-                    </TabsTrigger>
-                  </TabsList>
-                </div>
-
-                <TabsContent value='loans' className='mt-6 space-y-4'>
-                  {pendingLoans.slice(0, 3).map((loan, index) => (
-                    <div
-                      key={index}
-                      className='flex items-center justify-between rounded-lg border p-4'
-                    >
-                      <div className='space-y-1'>
-                        <h4 className='font-medium'>Loan #{loan.id}</h4>
-                        <div className='flex items-center gap-2'>
-                          <p className='text-muted-foreground text-sm'>
-                            Applied on{' '}
-                            {new Date(loan.created_at).toLocaleString('en-US', {
-                              month: 'long',
-                              day: 'numeric',
-                              year: 'numeric',
-                              hour: 'numeric',
-                              minute: '2-digit',
-                              hour12: true,
-                            })}
-                          </p>
-                          <span className='text-muted-foreground/70 text-xs'>
-                            • EMP-{loan.user_id}
-                          </span>
-                        </div>
-                      </div>
-                      <div className='text-right'>
-                        <p className='text-lg font-semibold'>
-                          {formatCurrency(Number(loan.amount))}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                  <Button variant='secondary' className='w-full'>
-                    View All Pending Loans
-                    <ArrowRight className='h-4 w-4' />
-                  </Button>
-                </TabsContent>
-
-                <TabsContent value='withdrawals' className='mt-6 space-y-4'>
-                  {pendingWithdrawals.slice(0, 3).map((withdrawal, index) => (
-                    <div
-                      key={index}
-                      className='flex items-center justify-between rounded-lg border p-4'
-                    >
-                      <div className='space-y-1'>
-                        <h4 className='font-medium'>
-                          Employee #{withdrawal.user_id}
-                        </h4>
-                        <div className='flex items-center gap-2'>
-                          <p className='text-muted-foreground text-sm'>
-                            Requested on{' '}
-                            {new Date(withdrawal.created_at).toLocaleString(
-                              'en-US',
-                              {
-                                month: 'long',
-                                day: 'numeric',
-                                year: 'numeric',
-                                hour: 'numeric',
-                                minute: '2-digit',
-                                hour12: true,
-                              }
-                            )}
-                          </p>
-                          <span className='text-muted-foreground/70 text-xs'>
-                            • EMP-{withdrawal.user_id}
-                          </span>
-                        </div>
-                      </div>
-                      <div className='text-right'>
-                        <p className='text-lg font-semibold'>
-                          {formatCurrency(Number(withdrawal.total_balance))}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                  <Button variant='secondary' className='w-full'>
-                    View All Pending Withdrawals
-                    <ArrowRight className='h-4 w-4' />
-                  </Button>
-                </TabsContent>
-              </Tabs>
-            </CardContent>
-          </Card>
-        </section>
+        <PendingActions
+          pendingLoans={pendingLoans}
+          pendingWithdrawals={pendingWithdrawals}
+        />
       </div>
     </div>
   );
