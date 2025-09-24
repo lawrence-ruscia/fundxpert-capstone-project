@@ -44,7 +44,7 @@ export const LoginPage = () => {
 
       if ('user' in response) {
         // Fully logged in (no 2FA at all or already completed)
-        login(response.user);
+        login(response.user, response.tokenExpiry);
         navigate('/dashboard', { replace: true });
       }
     } catch (err) {

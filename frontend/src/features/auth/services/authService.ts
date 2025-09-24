@@ -118,7 +118,10 @@ export const authService = {
     return res.json();
   },
 
-  refreshSession: async () => {
+  refreshSession: async (): Promise<{
+    success: string;
+    tokenExpiry: number;
+  }> => {
     const res = await fetch('http://localhost:3000/auth/refresh', {
       method: 'POST',
       credentials: 'include',

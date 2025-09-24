@@ -3,7 +3,7 @@ import * as authService from '../services/authService.js';
 import { pool } from '../config/db.config.js';
 import speakeasy from 'speakeasy';
 import qrcode from 'qrcode';
-import jwt from 'jsonwebtoken';
+import jwt, { type JwtPayload } from 'jsonwebtoken';
 import { isAuthenticatedRequest } from './employeeControllers.js';
 
 export async function register(req: Request, res: Response) {
@@ -122,11 +122,14 @@ export async function verify2FASetup(req: Request, res: Response) {
       userId,
     ]);
 
+    const expiresInMs = 60 * 60 * 1000; // 1h
+    const expiryDate = Date.now() + expiresInMs;
+
     // Generate JWT token right away
     const jwtToken = jwt.sign(
       { id: user.id, role: user.role },
       process.env.JWT_SECRET as string,
-      { expiresIn: '1h' }
+      { expiresIn: expiresInMs / 1000 } // seconds
     );
 
     // Store JWT in httpOnly cookie
@@ -134,7 +137,7 @@ export async function verify2FASetup(req: Request, res: Response) {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 60 * 60 * 1000, // 1h
+      maxAge: expiresInMs,
     });
 
     return res.json({
@@ -143,6 +146,7 @@ export async function verify2FASetup(req: Request, res: Response) {
         name: user.name,
         role: user.role,
       },
+      tokenExpiry: expiryDate,
     });
   } catch (err) {
     console.error('2FA verification error:', err);
@@ -175,17 +179,22 @@ export async function loginWith2FA(req: Request, res: Response) {
       return res.status(400).json({ error: 'Invalid 2FA token.' });
     }
 
+    const expiresInMs = 60 * 60 * 1000; // 1h
+    const expiryDate = Date.now() + expiresInMs;
+
+    // Generate JWT token right away
     const jwtToken = jwt.sign(
       { id: user.id, role: user.role },
       process.env.JWT_SECRET as string,
-      { expiresIn: '1h' }
+      { expiresIn: expiresInMs / 1000 } // seconds
     );
 
+    // Store JWT in httpOnly cookie
     res.cookie('token', jwtToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
-      maxAge: 60 * 60 * 1000,
+      maxAge: expiresInMs,
     });
 
     return res.json({
@@ -195,6 +204,7 @@ export async function loginWith2FA(req: Request, res: Response) {
         name: user.name,
         role: user.role,
       },
+      tokenExpiry: expiryDate,
     });
   } catch (err) {
     console.error('2fa login error: ', err);
@@ -239,11 +249,27 @@ export async function reset2FA(req: Request, res: Response) {
 
 export async function getCurrentUser(req: Request, res: Response) {
   try {
-    const user = req.user;
-    console.log(`USER: ${req.user?.name}`);
+    if (!req.user) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
 
-    res.json({ user });
-  } catch {
+    const token = req.cookies.token;
+    if (!token) return res.status(401).json({ error: 'No token provided' });
+
+    // Decode token just to extract `exp`
+    const decoded = jwt.decode(token) as JwtPayload | null;
+    if (!decoded || !decoded.exp) {
+      return res.status(401).json({ error: 'Invalid token' });
+    }
+
+    const tokenExpiry = decoded.exp * 1000; // convert seconds -> ms
+
+    res.json({
+      user: req.user, // the deserialized user
+      tokenExpiry, // absolute expiry timestamp (ms)
+    });
+  } catch (err) {
+    console.error('getCurrentUser error:', (err as Error).message);
     res.status(401).json({ error: 'Unauthorized' });
   }
 }
@@ -264,20 +290,25 @@ export async function refreshSession(req: Request, res: Response) {
     if (!isAuthenticatedRequest(req))
       return res.status(401).json({ error: 'Not authenticated' });
 
-    // issue new JWT with same payload, new exp
-    const token = jwt.sign(
+    const expiresInMs = 60 * 60 * 1000; // 1h
+    const expiryDate = Date.now() + expiresInMs;
+
+    // Generate JWT token right away
+    const jwtToken = jwt.sign(
       { id: req.user.id, role: req.user.role },
       process.env.JWT_SECRET as string,
-      { expiresIn: '1h' }
+      { expiresIn: expiresInMs / 1000 } // seconds
     );
 
-    res.cookie('token', token, {
+    // Store JWT in httpOnly cookie
+    res.cookie('token', jwtToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'strict',
+      maxAge: expiresInMs,
     });
 
-    res.json({ success: true });
+    res.json({ success: true, tokenExpiry: expiryDate });
   } catch (err) {
     if (err) res.status(500).json({ error: 'Could not refresh session' });
   }

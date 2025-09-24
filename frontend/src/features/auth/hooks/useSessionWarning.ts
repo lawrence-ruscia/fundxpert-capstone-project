@@ -10,23 +10,38 @@ type SessionWarningConfig = {
 };
 
 export function useSessionWarning({
-  sessionDuration = 60 * 60 * 1000, // default: 1h
   warnBefore = 5 * 60 * 1000, // default: 5 min
 }: SessionWarningConfig) {
   const [showModal, setShowModal] = useState(false);
   const [countdown, setCountdown] = useState(0);
-  const { logout } = useAuth();
+  const { tokenExpiry, logout, setTokenExpiry } = useAuth();
   const navigate = useNavigate();
 
   // Timer: show modal before expiry
   useEffect(() => {
-    const warnTimer = setTimeout(() => {
-      setShowModal(true);
-      setCountdown(warnBefore / 1000); // seconds
-    }, sessionDuration - warnBefore);
+    if (!tokenExpiry) return;
 
-    return () => clearTimeout(warnTimer);
-  }, [sessionDuration, warnBefore]);
+    const now = Date.now();
+    const timeLeft = tokenExpiry - now;
+
+    if (timeLeft <= 0) {
+      logout();
+      navigate('/auth/login', { replace: true });
+      return;
+    }
+
+    const warnAt = timeLeft - warnBefore;
+    if (warnAt <= 0) {
+      setShowModal(true);
+      setCountdown(Math.floor(timeLeft / 1000));
+    } else {
+      const timer = setTimeout(() => {
+        setShowModal(true);
+        setCountdown(Math.floor(warnBefore / 1000));
+      }, warnAt);
+      return () => clearTimeout(timer);
+    }
+  }, [tokenExpiry, warnBefore, logout, navigate]);
 
   // Timer: countdown once modal is open
   useEffect(() => {
@@ -50,7 +65,8 @@ export function useSessionWarning({
   // Extend session
   const extendSession = async () => {
     try {
-      await authService.refreshSession();
+      const { tokenExpiry: newExpiry } = await authService.refreshSession();
+      setTokenExpiry(newExpiry);
       setShowModal(false);
       setCountdown(0);
     } catch {

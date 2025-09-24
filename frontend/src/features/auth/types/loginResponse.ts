@@ -1,5 +1,6 @@
 export type UserResponse = {
   user: UserType;
+  tokenExpiry: number;
 };
 
 export type UserType = {

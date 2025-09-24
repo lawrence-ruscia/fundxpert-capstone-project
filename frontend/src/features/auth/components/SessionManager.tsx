@@ -14,14 +14,12 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
-const ONE_HOUR_MS = 60 * 60;
 const FIVE_MIN_MS = 5 * 60;
 const MILLISECONDS = 1000;
 
 export default function SessionManager() {
   const { showModal, countdown, extendSession, forceLogout } =
     useSessionWarning({
-      sessionDuration: ONE_HOUR_MS * MILLISECONDS, // 1h
       warnBefore: FIVE_MIN_MS * MILLISECONDS, // 5min
     });
 

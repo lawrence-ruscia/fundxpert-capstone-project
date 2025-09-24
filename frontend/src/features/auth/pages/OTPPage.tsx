@@ -1,7 +1,7 @@
 import { OTPForm } from '../components/OTPForm';
 import { useNavigate, Navigate } from 'react-router-dom';
-import { authService, type UserResponse } from '../services/authService';
-import type { LoginResponse } from './LoginPage';
+import { authService } from '../services/authService';
+import type { LoginResponse } from '../types/loginResponse';
 import {
   Card,
   CardHeader,
@@ -41,7 +41,7 @@ export const OTPPage = () => {
         sessionStorage.removeItem('twofa_userId');
         sessionStorage.removeItem('twofa_mode');
 
-        login(response.user as UserResponse);
+        login(response.user, response.tokenExpiry);
         // Redirect to dashboard
         console.log('User is: ', response);
         navigate('/dashboard', { replace: true });

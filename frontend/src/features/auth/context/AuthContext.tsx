@@ -6,15 +6,18 @@ type AuthContextType = {
   user: UserType | null;
   loading: boolean;
   error: string | null;
-  login: (user: UserType) => void;
+  login: (user: UserType, expiry: number) => void;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
+  tokenExpiry: number | null;
+  setTokenExpiry: (expiry: number | null) => void;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserType | null>(null);
+  const [tokenExpiry, setTokenExpiry] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -23,8 +26,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     let mounted = true;
     async function init() {
       try {
-        const userData = await authService.fetchCurrentUser();
-        if (mounted) setUser(userData.user);
+        const { user: userData, tokenExpiry } =
+          await authService.fetchCurrentUser();
+        if (mounted) {
+          setUser(userData);
+          setTokenExpiry(tokenExpiry);
+        }
       } catch (err) {
         if (mounted) {
           setUser(null);
@@ -41,8 +48,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  const login = (userData: UserType) => {
+  const login = (userData: UserType, expiry: number) => {
     setUser(userData);
+    setTokenExpiry(expiry);
     setError(null);
   };
 
@@ -53,6 +61,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       console.error('Logout error:', err);
     } finally {
       setUser(null);
+      setTokenExpiry(null);
 
       // Clear client-only data
       sessionStorage.removeItem('twofa_userId');
@@ -62,8 +71,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refreshUser = async () => {
     try {
-      const data = await authService.fetchCurrentUser();
-      setUser(data.user);
+      const { user, tokenExpiry } = await authService.fetchCurrentUser();
+      setUser(user);
+      setTokenExpiry(tokenExpiry);
     } catch (err) {
       setUser(null);
       setError((err as Error).message);
@@ -72,7 +82,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <AuthContext.Provider
-      value={{ user, loading, error, login, logout, refreshUser }}
+      value={{
+        user,
+        loading,
+        error,
+        login,
+        logout,
+        refreshUser,
+        tokenExpiry,
+        setTokenExpiry,
+      }}
     >
       {children}
     </AuthContext.Provider>
