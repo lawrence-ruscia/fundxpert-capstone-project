@@ -27,6 +27,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 export default function LoanDetailPage() {
   const [showCancelDialog, setShowCancelDialog] = useState(false);
@@ -43,8 +44,10 @@ export default function LoanDetailPage() {
       if (loan) {
         await cancelLoanRequest(loan.id);
 
-        // Update local state after successful API call
-
+        toast.success('Loan Request Cancelled', {
+          description: `Your loan application for ${formatCurrency(Number(loan.amount))} has been successfully cancelled.`,
+          duration: 4000,
+        });
         // Close dialog
         setShowCancelDialog(false);
         navigate(-1);
@@ -52,6 +55,11 @@ export default function LoanDetailPage() {
     } catch (err) {
       // Error is handled by the hook
       console.error('Failed to cancel withdrawal:', err);
+
+      toast.success('Loan Request Cancelled', {
+        description: `Your loan application for ${formatCurrency(Number(loan?.amount))} has been successfully cancelled.`,
+        duration: 4000,
+      });
     }
   };
 
@@ -173,7 +181,7 @@ export default function LoanDetailPage() {
               </div>
 
               {canCancel && (
-                 <div className='flex flex-1 gap-2'>
+                <div className='flex flex-1 gap-2'>
                   <Button
                     variant='destructive'
                     onClick={() => setShowCancelDialog(true)}

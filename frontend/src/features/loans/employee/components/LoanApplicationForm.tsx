@@ -29,6 +29,7 @@ import type { LoanPurposeCategory } from '../types/loan';
 import { BalanceCard } from '@/features/dashboard/employee/components/BalanceCard';
 import { formatCurrency } from '@/features/dashboard/employee/utils/formatters';
 import { CurrencyInput } from '@/shared/components/currency-input';
+import { toast } from 'sonner';
 
 const loanSchema = (maxLoan: number) =>
   z
@@ -124,10 +125,26 @@ export const LoanApplicationForm = ({
         co_maker_employee_id: data.co_maker_employee_id ?? null,
       };
       await applyForLoan(payload);
+      // Success toast
+      toast.success('Loan Application Submitted Successfully!', {
+        description: `Your loan request for ${formatCurrency(data.amount)} has been submitted and is now under review.`,
+        duration: 5000,
+      });
+
       onSuccess();
     } catch (error) {
       console.error('Loan application failed:', error);
-      // TODO: Show an error toast here
+      toast.error('Loan Application Failed', {
+        description:
+          error instanceof Error
+            ? error.message
+            : 'Unable to submit your loan application. Please check your details and try again.',
+        duration: 6000,
+        action: {
+          label: 'Retry',
+          onClick: () => onSubmit(data),
+        },
+      });
     }
   };
 
