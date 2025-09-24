@@ -22,6 +22,7 @@ import { empLoanRouter } from './routes/loanRoutes.js';
 import { loanDocumentRouter } from './routes/loanDocumentRoutes.js';
 import { empWithdrawalRouter } from './routes/withdrawalRoutes.js';
 import { withdrawalDocumentRouter } from './routes/withdrawalDocumentRoutes.js';
+import { hrRouter } from './routes/hrRoutes.js';
 
 // Routes
 app.use('/auth', authRouter);
@@ -30,6 +31,8 @@ app.use('/employee/loan', empLoanRouter);
 app.use('/employee/loan', loanDocumentRouter);
 app.use('/employee/withdrawal', empWithdrawalRouter);
 app.use('/employee/withdrawal', withdrawalDocumentRouter);
+
+app.use('/hr', hrRouter);
 
 app.use('/uploads', express.static('uploads')); // serve uploaded files
 
