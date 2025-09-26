@@ -217,10 +217,14 @@ export async function createEmployee(payload: {
 export async function updateEmployee(
   id: number,
   updates: Partial<{
+    name: string;
+    email: string;
+    employee_id: number;
     department_id: number;
     position_id: number;
     salary: number;
     employment_status: 'Active' | 'Resigned' | 'Retired' | 'Terminated';
+    date_hired: string;
   }>
 ): Promise<UserResponse | null> {
   const fields = Object.keys(updates);
@@ -276,7 +280,7 @@ export async function updateEmploymentStatus(
 
 export async function getEmployees(filters?: {
   status?: string;
-  department_id?: number; 
+  department_id?: number;
 }): Promise<UserResponse[]> {
   let query = `
     SELECT u.id, u.employee_id, u.name, u.email, u.role,
@@ -302,6 +306,28 @@ export async function getEmployees(filters?: {
   query += ' ORDER BY u.date_hired DESC';
 
   const { rows } = await pool.query(query, values);
+  return rows;
+}
+
+export async function getDepartments() {
+  const query = `
+  SELECT *
+  FROM departments
+  `;
+
+  const { rows } = await pool.query(query);
+
+  return rows;
+}
+
+export async function getPositions() {
+  const query = `
+  SELECT *
+  FROM positions
+  `;
+
+  const { rows } = await pool.query(query);
+
   return rows;
 }
 

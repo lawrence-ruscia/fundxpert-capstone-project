@@ -12,6 +12,8 @@ import {
   updateEmployee,
   updateEmploymentStatus,
   getEmployeeById,
+  getDepartments,
+  getPositions,
 } from '../services/hrService.js';
 import type { HRContributionPeriod } from '../types/hrTypes.js';
 
@@ -103,6 +105,24 @@ export async function getEmployeesHandler(req: Request, res: Response) {
   try {
     const employees = await getEmployees(req.query);
     res.json(employees);
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+}
+
+export async function getDepartmentsHandler(req: Request, res: Response) {
+  try {
+    const departments = await getDepartments();
+    res.json(departments);
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+}
+
+export async function getPositionsHandler(req: Request, res: Response) {
+  try {
+    const positions = await getPositions();
+    res.json(positions);
   } catch (err) {
     res.status(500).json({ error: (err as Error).message });
   }

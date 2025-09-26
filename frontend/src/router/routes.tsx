@@ -18,6 +18,9 @@ import WithdrawalDetailPage from '@/features/withdrawals/employee/pages/Withdraw
 import { Setup2FAPage } from '@/features/auth/pages/Setup2FAPage';
 import { HRDashboardPage } from '@/features/dashboard/hr/pages/HRDashboardPage';
 import HRLayout from '@/shared/layout/HRLayout';
+import { EmployeeDetailPage } from '@/features/employeeManagement/pages/EmployeeDetailPage';
+import { EmployeeListPage } from '@/features/employeeManagement/pages/EmployeeListPage';
+import { EmployeeFormPage } from '@/features/employeeManagement/pages/EmployeeFormPage';
 
 export const router = createBrowserRouter([
   {
@@ -69,13 +72,27 @@ export const router = createBrowserRouter([
     ],
   },
   {
-    path: '/hr-dashboard',
+    path: '/hr',
     element: (
       <ProtectedRoute allowedRoles={['HR']}>
         <HRLayout />
       </ProtectedRoute>
     ),
-    children: [{ index: true, element: <HRDashboardPage /> }],
+    children: [
+      { index: true, element: <HRDashboardPage /> },
+      {
+        path: '/hr/employees',
+        element: <EmployeeListPage />,
+      },
+      {
+        path: '/hr/employees/create',
+        element: <EmployeeFormPage />,
+      },
+      {
+        path: '/hr/employees/:id',
+        element: <EmployeeDetailPage />,
+      },
+    ],
   },
   {
     path: '/admin-dashboard',

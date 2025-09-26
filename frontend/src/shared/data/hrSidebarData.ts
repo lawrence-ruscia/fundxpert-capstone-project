@@ -22,12 +22,12 @@ export const hrSidebarData: SidebarData = {
       items: [
         {
           title: 'Dashboard',
-          url: '/dashboard',
+          url: '/hr',
           icon: LayoutDashboard,
         },
         {
           title: 'Employees',
-          url: '/dashboard/contributions',
+          url: '/hr/employees',
           icon: Users,
         },
         {

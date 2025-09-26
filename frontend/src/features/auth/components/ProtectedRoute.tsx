@@ -32,7 +32,7 @@ export default function ProtectedRoute({
   if (allowedRoles && !allowedRoles.includes(user.role)) {
     switch (user.role) {
       case 'HR':
-        return <Navigate to='/hr-dashboard' replace />;
+        return <Navigate to='/hr' replace />;
       case 'Admin':
         return <Navigate to='/admin-dashboard' replace />;
       default:

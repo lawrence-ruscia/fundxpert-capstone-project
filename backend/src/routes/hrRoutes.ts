@@ -12,6 +12,8 @@ import {
   resetEmployeePasswordHandler,
   updateEmployeeHandler,
   updateEmploymentStatusHandler,
+  getDepartmentsHandler,
+  getPositionsHandler,
 } from '../controllers/hrController.js';
 import { authMiddleware } from '../middleware/authMiddleware.js';
 
@@ -31,6 +33,8 @@ hrRouter.get('/withdrawals/pending', getPendingWithdrawalsHandler);
 // Employee Management
 hrRouter.post('/employees', authMiddleware('HR'), createEmployeeHandler);
 hrRouter.get('/employees', authMiddleware('HR'), getEmployeesHandler);
+hrRouter.get('/departments', authMiddleware('HR'), getDepartmentsHandler);
+hrRouter.get('/positions', authMiddleware('HR'), getPositionsHandler);
 hrRouter.get('/employees/:id', authMiddleware('HR'), getEmployeeByIdHandler);
 hrRouter.put('/employees/:id', authMiddleware('HR'), updateEmployeeHandler);
 hrRouter.put(
