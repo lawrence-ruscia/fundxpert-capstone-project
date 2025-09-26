@@ -22,7 +22,7 @@ import {
 } from '@/components/ui/select';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { AreaChart } from 'recharts';
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { CartesianGrid, XAxis, YAxis, Area } from 'recharts';
 import type { HRContributionPeriod } from '../types/hrDashboardTypes';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -39,7 +39,7 @@ const chartConfig = {
   },
   total: {
     label: 'Total',
-    color: 'var(--chart-3)',
+    color: 'var(--chart-4)',
   },
 };
 
@@ -299,12 +299,30 @@ export function ContributionTrends() {
                           year: 'numeric',
                         });
                       }}
-                      formatter={(value, name) => [
-                        chartConfig[name as keyof typeof chartConfig]?.label ||
-                          name,
-                        ': ',
-                        `₱${Number(value).toLocaleString()} `,
-                      ]}
+                      formatter={(value, name, item, index) => {
+                        const indicatorColor = item.payload.fill || item.color;
+
+                        return [
+                          <div className='flex items-center gap-2' key={index}>
+                            {/* Colored dot indicator */}
+                            <div
+                              className='h-2.5 w-2.5 shrink-0 rounded-[2px]'
+                              style={{ backgroundColor: indicatorColor }}
+                            />
+
+                            {/* Label and value */}
+                            <div className='flex flex-1 items-center justify-between gap-1'>
+                              <span className='text-muted-foreground'>
+                                {chartConfig[name as keyof typeof chartConfig]
+                                  ?.label || name}
+                              </span>
+                              <span className='text-foreground font-mono font-medium tabular-nums'>
+                                ₱{Number(value).toLocaleString()}
+                              </span>
+                            </div>
+                          </div>,
+                        ];
+                      }}
                       indicator='dot'
                     />
                   }
@@ -329,7 +347,7 @@ export function ContributionTrends() {
                   dataKey='total'
                   type='natural'
                   fill='none'
-                  stroke='var(--chart-3)'
+                  stroke='var(--chart-4)'
                   strokeWidth={2}
                   strokeDasharray='5 5'
                 />

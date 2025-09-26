@@ -319,6 +319,30 @@ export function FundGrowthChart() {
                         year: 'numeric',
                       });
                     }}
+                    formatter={(value, name, item, index) => {
+                      const indicatorColor = item.payload.fill || item.color;
+
+                      return [
+                        <div className='flex items-center gap-2' key={index}>
+                          {/* Colored dot indicator */}
+                          <div
+                            className='h-2.5 w-2.5 shrink-0 rounded-[2px]'
+                            style={{ backgroundColor: indicatorColor }}
+                          />
+
+                          {/* Label and value */}
+                          <div className='flex flex-1 items-center justify-between gap-1'>
+                            <span className='text-muted-foreground'>
+                              {chartConfig[name as keyof typeof chartConfig]
+                                ?.label || name}
+                            </span>
+                            <span className='text-foreground font-mono font-medium tabular-nums'>
+                              ₱{Number(value).toLocaleString()}
+                            </span>
+                          </div>
+                        </div>,
+                      ];
+                    }}
                     indicator='dot'
                   />
                 }
