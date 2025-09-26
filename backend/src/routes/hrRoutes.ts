@@ -6,24 +6,40 @@ import {
   getPendingLoansHandler,
   getPendingWithdrawalsHandler,
   getContributionTrendsHandler,
+  createEmployeeHandler,
+  getEmployeeByIdHandler,
+  getEmployeesHandler,
+  resetEmployeePasswordHandler,
+  updateEmployeeHandler,
+  updateEmploymentStatusHandler,
 } from '../controllers/hrController.js';
 import { authMiddleware } from '../middleware/authMiddleware.js';
 
 export const hrRouter = Router();
 
-// Protect all routes → HR-only
+// Protect all routes
 hrRouter.use(authMiddleware('HR'));
 
-// Dashboard overview
+// Dashboard
 hrRouter.get('/overview', getOverviewHandler);
-
-// Contribution trends
 hrRouter.get('/contributions/trends', getContributionTrendsHandler);
-
-// Loan + Withdrawal summaries
 hrRouter.get('/loans/summary', getLoanSummaryHandler);
 hrRouter.get('/withdrawals/summary', getWithdrawalSummaryHandler);
-
-// Pending lists
 hrRouter.get('/loans/pending', getPendingLoansHandler);
 hrRouter.get('/withdrawals/pending', getPendingWithdrawalsHandler);
+
+// Employee Management
+hrRouter.post('/employees', authMiddleware('HR'), createEmployeeHandler);
+hrRouter.get('/employees', authMiddleware('HR'), getEmployeesHandler);
+hrRouter.get('/employees/:id', authMiddleware('HR'), getEmployeeByIdHandler);
+hrRouter.put('/employees/:id', authMiddleware('HR'), updateEmployeeHandler);
+hrRouter.put(
+  '/employees/:id/reset-password',
+  authMiddleware('HR'),
+  resetEmployeePasswordHandler
+);
+hrRouter.put(
+  '/employees/:id/status',
+  authMiddleware('HR'),
+  updateEmploymentStatusHandler
+);

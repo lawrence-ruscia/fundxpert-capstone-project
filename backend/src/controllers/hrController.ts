@@ -1,11 +1,17 @@
 import type { Request, Response } from 'express';
 import {
+  createEmployee,
+  getEmployees,
   getHRContributions,
   getHRDashboardOverview,
   getLoanSummary,
   getPendingLoans,
   getPendingWithdrawals,
   getWithdrawalSummary,
+  resetEmployeePassword,
+  updateEmployee,
+  updateEmploymentStatus,
+  getEmployeeById,
 } from '../services/hrService.js';
 import type { HRContributionPeriod } from '../types/hrTypes.js';
 
@@ -81,5 +87,78 @@ export async function getPendingWithdrawalsHandler(
   } catch (err) {
     console.error('❌ Error fetching pending withdrawals:', err);
     res.status(500).json({ error: 'Failed to fetch pending withdrawals' });
+  }
+}
+
+export async function createEmployeeHandler(req: Request, res: Response) {
+  try {
+    const employee = await createEmployee(req.body);
+    res.status(201).json(employee);
+  } catch (err) {
+    res.status(400).json({ error: (err as Error).message });
+  }
+}
+
+export async function getEmployeesHandler(req: Request, res: Response) {
+  try {
+    const employees = await getEmployees(req.query);
+    res.json(employees);
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+}
+
+export async function getEmployeeByIdHandler(req: Request, res: Response) {
+  try {
+    const employee = await getEmployeeById(Number(req.params.id));
+    if (!employee) return res.status(404).json({ error: 'Employee not found' });
+    res.json(employee);
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+}
+
+export async function updateEmployeeHandler(req: Request, res: Response) {
+  try {
+    const employee = await updateEmployee(Number(req.params.id), req.body);
+    if (!employee) return res.status(404).json({ error: 'Employee not found' });
+    res.json(employee);
+  } catch (err) {
+    res.status(400).json({ error: (err as Error).message });
+  }
+}
+
+export async function resetEmployeePasswordHandler(
+  req: Request,
+  res: Response
+) {
+  try {
+    const result = await resetEmployeePassword(Number(req.params.id));
+    if (!result) return res.status(404).json({ error: 'Employee not found' });
+
+    // Send temp password back to HR (they will relay securely to employee)
+    res.json({
+      message: 'Temporary password generated',
+      tempPassword: result.temp_password,
+      expiresAt: result.expires_at,
+    });
+  } catch (err) {
+    res.status(500).json({ error: (err as Error).message });
+  }
+}
+
+export async function updateEmploymentStatusHandler(
+  req: Request,
+  res: Response
+) {
+  try {
+    const employee = await updateEmploymentStatus(
+      Number(req.params.id),
+      req.body.status
+    );
+    if (!employee) return res.status(404).json({ error: 'Employee not found' });
+    res.json(employee);
+  } catch (err) {
+    res.status(400).json({ error: (err as Error).message });
   }
 }

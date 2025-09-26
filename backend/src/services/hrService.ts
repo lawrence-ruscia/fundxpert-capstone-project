@@ -3,8 +3,12 @@ import type {
   HRContributionsResponse,
   HrOverviewResponse,
 } from '../types/hrTypes.js';
+import type { UserResponse } from '../types/userResponse.js';
+import bcrypt from 'bcryptjs';
 
 import { getDateRange } from './utils/getEmployeeContributionsUtils.js';
+import { generateTempPassword } from '../utils/generateTempPassword.js';
+import type { EmploymentStatus } from '../types/user.js';
 
 export async function getHRDashboardOverview(): Promise<HrOverviewResponse> {
   const query = `
@@ -168,4 +172,197 @@ export async function getPendingWithdrawals(limit = 20) {
   `;
   const { rows } = await pool.query(query, [limit]);
   return rows;
+}
+
+/**
+ * Employee Account Management
+ */
+export async function createEmployee(payload: {
+  name: string;
+  email: string;
+  employee_id: string;
+  department_id: number;
+  position_id: number;
+  salary: number;
+  date_hired: string;
+}): Promise<UserResponse> {
+  const tempPassword = generateTempPassword();
+  const hash = await bcrypt.hash(tempPassword, 10);
+  const expiresAt = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000); // 5 days
+
+  const query = `
+    INSERT INTO users 
+      (name, email, employee_id, password_hash, role, department_id, position_id, 
+       salary, date_hired, employment_status, temp_password, temp_password_expires)
+    VALUES ($1,$2,$3,$4,'Employee',$5,$6,$7,$8,'Active',true,$9)
+    RETURNING id, name, email, employee_id, role, salary, department_id, position_id, 
+              employment_status, date_hired, temp_password, temp_password_expires;
+  `;
+
+  const { rows } = await pool.query(query, [
+    payload.name,
+    payload.email,
+    payload.employee_id,
+    hash,
+    payload.department_id,
+    payload.position_id,
+    payload.salary,
+    payload.date_hired,
+    expiresAt,
+  ]);
+
+  return rows[0];
+}
+
+export async function updateEmployee(
+  id: number,
+  updates: Partial<{
+    department_id: number;
+    position_id: number;
+    salary: number;
+    employment_status: 'Active' | 'Resigned' | 'Retired' | 'Terminated';
+  }>
+): Promise<UserResponse | null> {
+  const fields = Object.keys(updates);
+  if (fields.length === 0) return null;
+
+  const setClause = fields.map((f, i) => `${f} = $${i + 2}`).join(', ');
+
+  const query = `
+    UPDATE users 
+    SET ${setClause}, updated_at = NOW()
+    WHERE id = $1
+    RETURNING id, name, email, employee_id, department_id, position_id, salary, employment_status, date_hired;
+  `;
+
+  const { rows } = await pool.query(query, [id, ...Object.values(updates)]);
+  return rows[0] || null;
+}
+
+export async function resetEmployeePassword(
+  id: number
+): Promise<{ temp_password: string; expires_at: Date } | null> {
+  const tempPassword = generateTempPassword();
+  const hash = await bcrypt.hash(tempPassword, 10);
+  const expiresAt = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000);
+
+  const query = `
+    UPDATE users 
+    SET password_hash = $2, temp_password = true, temp_password_expires = $3
+    WHERE id = $1
+    RETURNING id;
+  `;
+
+  const { rows } = await pool.query(query, [id, hash, expiresAt]);
+  if (!rows[0]) return null;
+
+  return { temp_password: tempPassword, expires_at: expiresAt };
+}
+
+export async function updateEmploymentStatus(
+  id: number,
+  status: EmploymentStatus
+): Promise<UserResponse | null> {
+  const query = `
+    UPDATE users 
+    SET employment_status = $2, updated_at = NOW()
+    WHERE id = $1
+    RETURNING id, employee_id, name, employment_status, date_hired;
+  `;
+
+  const { rows } = await pool.query(query, [id, status]);
+  return rows[0] || null;
+}
+
+export async function getEmployees(filters?: {
+  status?: string;
+  department_id?: number; 
+}): Promise<UserResponse[]> {
+  let query = `
+    SELECT u.id, u.employee_id, u.name, u.email, u.role,
+           u.salary, u.employment_status, u.date_hired,
+           d.name AS department, p.title AS position
+    FROM users u
+    LEFT JOIN departments d ON u.department_id = d.id
+    LEFT JOIN positions p ON u.position_id = p.id
+    WHERE role = 'Employee'
+  `;
+  const values: unknown[] = [];
+  let i = 1;
+
+  if (filters?.status) {
+    query += ` AND u.employment_status = $${i++}`;
+    values.push(filters.status);
+  }
+  if (filters?.department_id) {
+    query += ` AND u.department_id = $${i++}`;
+    values.push(filters.department_id);
+  }
+
+  query += ' ORDER BY u.date_hired DESC';
+
+  const { rows } = await pool.query(query, values);
+  return rows;
+}
+
+export async function getEmployeeById(id: number) {
+  const query = `
+    WITH contribution_summary AS (
+      SELECT
+        user_id,
+        COALESCE(SUM(employee_amount), 0) AS employee_total,
+        COALESCE(SUM(employer_amount), 0) AS employer_total
+      FROM contributions
+      WHERE user_id = $1
+      GROUP BY user_id
+    ),
+    active_loan AS (
+      SELECT id, amount, status, created_at
+      FROM loans
+      WHERE user_id = $1 AND status IN ('Pending','Approved','Active')
+      LIMIT 1
+    ),
+    withdrawal_request AS (
+      SELECT id, request_type, status, created_at
+      FROM withdrawal_requests
+      WHERE user_id = $1
+      ORDER BY created_at DESC
+      LIMIT 1
+    )
+    SELECT
+      u.id,
+      u.employee_id,
+      u.name,
+      u.email,
+      u.salary,
+      u.date_hired,
+      u.employment_status,
+      d.name AS department,
+      p.title AS position,
+
+      cs.employee_total,
+      cs.employer_total,
+      (cs.employee_total + cs.employer_total) AS total_balance,
+
+      al.id AS loan_id,
+      al.amount AS loan_amount,
+      al.status AS loan_status,
+      al.created_at AS loan_created_at,
+
+      wr.id AS withdrawal_id,
+      wr.request_type AS withdrawal_type,
+      wr.status AS withdrawal_status,
+      wr.created_at AS withdrawal_created_at
+
+    FROM users u
+    LEFT JOIN departments d ON d.id = u.department_id
+    LEFT JOIN positions p ON p.id = u.position_id
+    LEFT JOIN contribution_summary cs ON cs.user_id = u.id
+    LEFT JOIN active_loan al ON al.id IS NOT NULL
+    LEFT JOIN withdrawal_request wr ON wr.id IS NOT NULL
+    WHERE u.id = $1;
+  `;
+
+  const { rows } = await pool.query(query, [id]);
+  return rows[0] || null;
 }
