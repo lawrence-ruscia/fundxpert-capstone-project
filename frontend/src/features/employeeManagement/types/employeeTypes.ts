@@ -9,8 +9,6 @@ export type HREmployeeRecord = {
   salary: number;
   employment_status: EmploymentStatus;
   date_hired: string;
-
-  // TODO: add more departments and positions
   department: string;
   position: string;
 };

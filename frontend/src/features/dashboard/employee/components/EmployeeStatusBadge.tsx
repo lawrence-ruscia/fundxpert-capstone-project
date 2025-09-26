@@ -15,7 +15,7 @@ const employmentStatusConfig: Record<EmploymentStatus, EmploymentStatusConfig> =
       className:
         'bg-green-500 hover:bg-green-600 text-white dark:bg-green-600 dark:hover:bg-green-700',
       variant: 'secondary',
-    },
+    }, 
     Resigned: {
       icon: UserMinus,
       className:

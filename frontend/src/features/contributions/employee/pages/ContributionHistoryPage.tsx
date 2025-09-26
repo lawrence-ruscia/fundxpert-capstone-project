@@ -112,12 +112,7 @@ export default function ContributionHistoryPage() {
   }, [validatedData.contributions]);
 
   // Table states
-  const [sorting, setSorting] = useState<SortingState>([
-    {
-      id: 'monthYear',
-      desc: false,
-    },
-  ]);
+  const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState({});
   const [pagination, setPagination] = useState({

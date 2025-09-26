@@ -21,6 +21,7 @@ import HRLayout from '@/shared/layout/HRLayout';
 import { EmployeeDetailPage } from '@/features/employeeManagement/pages/EmployeeDetailPage';
 import { EmployeeListPage } from '@/features/employeeManagement/pages/EmployeeListPage';
 import { EmployeeFormPage } from '@/features/employeeManagement/pages/EmployeeFormPage';
+import { EmployeesProvider } from '@/features/employeeManagement/components/EmployeesProvider';
 
 export const router = createBrowserRouter([
   {
