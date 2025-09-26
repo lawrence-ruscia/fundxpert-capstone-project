@@ -1,83 +1,69 @@
+import { api } from '@/shared/api/api';
 export const fetchHROverview = async () => {
-  const res = await fetch('http://localhost:3000/hr/overview', {
-    method: 'GET',
-    credentials: 'include',
-  });
-
-  if (!res.ok) {
-    throw new Error('Failed to fetch hr overview');
+  try {
+    const { data } = await api.get('/hr/overview');
+    return data;
+  } catch (err) {
+    throw new Error((err as Error).message || 'Failed to fetch hr overview');
   }
-
-  return res.json();
 };
 
 export const fetchContributionTrends = async (period: string = 'all') => {
-  const url = new URL('http://localhost:3000/hr/contributions/trends');
+  try {
+    const { data } = await api.get('/hr/contributions/trends', {
+      params: {
+        period,
+      },
+    });
 
-  if (period) {
-    url.searchParams.set('period', period.toString());
+    return data;
+  } catch (err) {
+    throw new Error(
+      (err as Error).message || 'Failed to fetch hr contributions trends'
+    );
   }
-
-  const res = await fetch(url.toString(), {
-    method: 'GET',
-    credentials: 'include',
-  });
-
-  if (!res.ok) {
-    throw new Error('Failed to fetch hr contributions trends');
-  }
-
-  return res.json();
 };
 
 export const fetchLoanSummary = async () => {
-  const res = await fetch('http://localhost:3000/hr/loans/summary', {
-    method: 'GET',
-    credentials: 'include',
-  });
-
-  if (!res.ok) {
-    throw new Error('Failed to fetch hr loans summary');
+  try {
+    const { data } = await api.get('/hr/loans/summary');
+    return data;
+  } catch (err) {
+    throw new Error(
+      (err as Error).message || 'Failed to fetch hr loans summary'
+    );
   }
-
-  return res.json();
 };
 
 export const fetchWithdrawalSummary = async () => {
-  const res = await fetch('http://localhost:3000/hr/withdrawals/summary', {
-    method: 'GET',
-    credentials: 'include',
-  });
-
-  if (!res.ok) {
-    throw new Error('Failed to fetch hr withdrawals summary');
+  try {
+    const { data } = await api.get('/hr/withdrawals/summary');
+    return data;
+  } catch (err) {
+    throw new Error(
+      (err as Error).message || 'Failed to fetch hr withdrawals summary'
+    );
   }
-
-  return res.json();
 };
 
 export const fetchPendingLoans = async () => {
-  const res = await fetch('http://localhost:3000/hr/loans/pending', {
-    method: 'GET',
-    credentials: 'include',
-  });
-
-  if (!res.ok) {
-    throw new Error('Failed to fetch hr loans pending');
+  try {
+    const { data } = await api.get('/hr/loans/pending');
+    return data;
+  } catch (err) {
+    throw new Error(
+      (err as Error).message || 'Failed to fetch hr loans pending'
+    );
   }
-
-  return res.json();
 };
 
 export const fetchPendingWithdrawals = async () => {
-  const res = await fetch('http://localhost:3000/hr/withdrawals/pending', {
-    method: 'GET',
-    credentials: 'include',
-  });
-
-  if (!res.ok) {
-    throw new Error('Failed to fetch hr withdrawals pending');
+  try {
+    const { data } = await api.get('/hr/withdrawals/pending');
+    return data;
+  } catch (err) {
+    throw new Error(
+      (err as Error).message || 'Failed to fetch hr withdrawals pending'
+    );
   }
-
-  return res.json();
 };
