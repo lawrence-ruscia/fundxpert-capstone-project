@@ -1,13 +1,26 @@
 export type Contribution = {
   id: number;
-  userId: number;
-  contributionDate: string;
-  employeeAmount: number;
-  employerAmount: number;
+  user_id: number;
+  contribution_date: string;
+  employee_amount: number;
+  employer_amount: number;
+  created_by: number;
+  created_at: string;
+  updated_by?: number;
+  updated_at?: string;
+  is_adjusted: boolean;
   notes?: string;
 };
 
-export type ContributionPayload = Omit<Contribution, 'id'>;
+export type ContributionPayload = Omit<
+  Contribution,
+  | 'id'
+  | 'created_by'
+  | 'created_at'
+  | 'updated_by'
+  | 'updated_at'
+  | 'is_adjusted'
+>;
 
 export type SearchEmployeesResponse = SearchEmployeesRecord[];
 

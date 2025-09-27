@@ -5,11 +5,11 @@ import type { Contribution } from '../types/contribution.js';
  * Record a new contribution
  */
 export async function recordContribution(payload: {
-  userId: number;
-  contributionDate: string; // YYYY-MM-DD
-  employeeAmount: number;
-  employerAmount: number;
-  createdBy: number; // HR ID
+  user_id: number;
+  contribution_date: string; // YYYY-MM-DD
+  employee_amount: number;
+  employer_amount: number;
+  created_by: number; // HR ID
   notes?: string;
 }): Promise<Contribution> {
   const query = `
@@ -20,11 +20,11 @@ export async function recordContribution(payload: {
   `;
 
   const { rows } = await pool.query(query, [
-    payload.userId,
-    payload.contributionDate,
-    payload.employeeAmount,
-    payload.employerAmount,
-    payload.createdBy,
+    payload.user_id,
+    payload.contribution_date,
+    payload.employee_amount,
+    payload.employer_amount,
+    payload.created_by,
     payload.notes || null,
   ]);
 
@@ -39,9 +39,9 @@ export async function recordContribution(payload: {
 export async function updateContribution(
   contributionId: number,
   updates: {
-    employeeAmount: number;
-    employerAmount: number;
-    updatedBy: number; // HR ID
+    employee_amount: number;
+    employer_amount: number;
+    updated_by: number; // HR ID
     notes?: string;
   }
 ): Promise<Contribution> {
@@ -56,7 +56,7 @@ export async function updateContribution(
        SET is_adjusted = true, updated_by = $1, updated_at = NOW()
        WHERE id = $2
        RETURNING *`,
-      [updates.updatedBy, contributionId]
+      [updates.updated_by, contributionId]
     );
 
     console.log();
@@ -76,9 +76,9 @@ export async function updateContribution(
       [
         oldRecord.user_id,
         oldRecord.contribution_date,
-        updates.employeeAmount,
-        updates.employerAmount,
-        updates.updatedBy,
+        updates.employee_amount,
+        updates.employer_amount,
+        updates.updated_by,
         updates.notes || 'Correction of previous entry',
       ]
     );
@@ -114,7 +114,7 @@ export async function getContributionsByEmployee(
  * Get all contributions
  */
 export async function getAllContributions(
-  employeeId?: number,
+  userId?: number,
   startDate?: string,
   endDate?: string
 ): Promise<Contribution[]> {
@@ -122,8 +122,8 @@ export async function getAllContributions(
   const params: unknown[] = [];
   const conditions: string[] = [];
 
-  if (employeeId) {
-    params.push(employeeId);
+  if (userId) {
+    params.push(userId);
     conditions.push(`user_id = $${params.length}`);
   }
 
@@ -151,7 +151,7 @@ export async function getAllContributions(
 }
 
 export async function getContributionsById(
-  contributionId: number
+  contribution_id: number
 ): Promise<Contribution> {
   const query = `
     SELECT * FROM 
@@ -159,17 +159,17 @@ export async function getContributionsById(
     WHERE id=$1
   `;
 
-  const { rows } = await pool.query(query, [contributionId]);
+  const { rows } = await pool.query(query, [contribution_id]);
 
   const contributions = rows[0];
   return {
     ...contributions,
-    employeeAmount: Number(contributions.employee_amount),
-    employerAmount: Number(contributions.employer_amount),
+    employee_amount: Number(contributions.employee_amount),
+    employer_amount: Number(contributions.employer_amount),
   };
 }
 
-export async function findEmployeeByEmployeeId(employeeId: string) {
+export async function findEmployeeByEmployeeId(employee_id: string) {
   const { rows } = await pool.query(
     `
     SELECT 
@@ -183,7 +183,7 @@ export async function findEmployeeByEmployeeId(employeeId: string) {
     LEFT JOIN positions p ON p.id = u.position_id
     WHERE u.employee_id = $1
     `,
-    [employeeId]
+    [employee_id]
   );
 
   return rows[0] || null;
@@ -210,7 +210,7 @@ export async function searchEmployees(query: string) {
   return rows;
 }
 
-export async function getEmployeeByContributionId(contributionId: number) {
+export async function getEmployeeByContributionId(contribution_id: number) {
   const query = `
    SELECT 
   u.id,
@@ -243,6 +243,8 @@ export async function getEmployeeByContributionId(contributionId: number) {
   LIMIT 1;
   `;
 
-  const { rows } = await pool.query(query, [contributionId]);
+  const { rows } = await pool.query(query, [contribution_id]);
   return rows[0] || null;
 }
+
+

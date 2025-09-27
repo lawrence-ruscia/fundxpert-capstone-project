@@ -29,17 +29,22 @@ export async function recordContributionController(
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
-    const { userId, contributionDate, employeeAmount, employerAmount, notes } =
-      req.body;
+    const {
+      user_id,
+      contribution_date,
+      employee_amount,
+      employer_amount,
+      notes,
+    } = req.body;
 
-    const createdBy = req.user.id; // HR user from authMiddleware
+    const created_by = req.user.id; // HR user from authMiddleware
 
     const contribution = await recordContribution({
-      userId,
-      contributionDate,
-      employeeAmount,
-      employerAmount,
-      createdBy,
+      user_id,
+      contribution_date,
+      employee_amount,
+      employer_amount,
+      created_by,
       notes,
     });
 
@@ -63,15 +68,14 @@ export async function updateContributionController(
       return res.status(401).json({ error: 'Unauthorized' });
     }
     const { id } = req.params;
-    const { employeeAmount, employerAmount, notes } = req.body;
+    const { employee_amount, employer_amount, notes } = req.body;
 
-    const updatedBy = req.user.id;
-    console.log('Updated by', updatedBy);
+    const updated_by = req.user.id;
 
     const updated = await updateContribution(Number(id), {
-      employeeAmount,
-      employerAmount,
-      updatedBy,
+      employee_amount,
+      employer_amount,
+      updated_by,
       notes,
     });
 
@@ -109,7 +113,13 @@ export async function getAllContributionsController(
   res: Response
 ) {
   try {
-    const contributions = await getAllContributions();
+    const { userId, startDate, endDate } = req.params;
+
+    const contributions = await getAllContributions(
+      Number(userId),
+      startDate,
+      endDate
+    );
     res.json(contributions);
   } catch (err) {
     console.error('❌ getAllContributions error:', err);

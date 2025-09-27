@@ -17,10 +17,10 @@ export const useRecordContribution = (
     setError(null);
     try {
       await hrContributionsService.recordContribution({
-        userId: payload.user_id,
-        contributionDate: payload.contribution_date,
-        employeeAmount: payload.employee_amount,
-        employerAmount: payload.employer_amount,
+        user_id: payload.user_id,
+        contribution_date: payload.contribution_date,
+        employee_amount: payload.employee_amount,
+        employer_amount: payload.employer_amount,
         notes: payload?.notes,
       });
       setSuccess(true);

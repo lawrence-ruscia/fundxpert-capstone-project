@@ -61,7 +61,7 @@ const safeParseAmount = (val: string | number | undefined | null): number => {
 
 // Zod schema for form validation
 const updateContributionSchema = z.object({
-  employeeAmount: z
+  employee_amount: z
     .union([z.string(), z.number()])
     .refine(val => val !== '' && val !== null && val !== undefined, {
       message: 'Please enter a valid employee contribution amount',
@@ -79,7 +79,7 @@ const updateContributionSchema = z.object({
         message: 'Please enter a valid employee contribution amount',
       }
     ),
-  employerAmount: z
+  employer_amount: z
     .union([z.string(), z.number()])
     .refine(val => val !== '' && val !== null && val !== undefined, {
       message: 'Please enter a valid employer contribution amount',
@@ -111,8 +111,8 @@ const updateContributionSchema = z.object({
 // Output schema for API submission
 const updateContributionOutputSchema = updateContributionSchema.transform(
   data => ({
-    employeeAmount: safeParseAmount(data.employeeAmount),
-    employerAmount: safeParseAmount(data.employerAmount),
+    employee_amount: safeParseAmount(data.employee_amount),
+    employer_amount: safeParseAmount(data.employer_amount),
     notes: data.notes || '',
   })
 );
@@ -136,8 +136,8 @@ export default function UpdateContributionForm() {
   const form = useForm<UpdateContributionFormData>({
     resolver: zodResolver(updateContributionSchema),
     defaultValues: {
-      employeeAmount: '',
-      employerAmount: '',
+      employee_amount: '',
+      employer_amount: '',
       notes: '',
     },
   });
@@ -189,8 +189,8 @@ export default function UpdateContributionForm() {
         setEmployee(employeeRes);
         // Step 3: Populate form (now safe with validated data and camelCase from service)
         form.reset({
-          employeeAmount: contributionsRes.employeeAmount?.toString() || '',
-          employerAmount: contributionsRes.employerAmount?.toString() || '',
+          employee_amount: contributionsRes.employee_amount?.toString() || '',
+          employer_amount: contributionsRes.employer_amount?.toString() || '',
           notes: contributionsRes.notes || '',
         });
       } catch (err: unknown) {
@@ -247,14 +247,14 @@ export default function UpdateContributionForm() {
     return employee + employer;
   };
 
-  const watchedEmployeeAmount = form.watch('employeeAmount');
-  const watchedEmployerAmount = form.watch('employerAmount');
+  const watchedEmployeeAmount = form.watch('employee_amount');
+  const watchedEmployerAmount = form.watch('employer_amount');
   const currentTotal = calculateTotal(
     watchedEmployeeAmount || '',
     watchedEmployerAmount || ''
   );
   const originalTotal =
-    (contribution?.employeeAmount || 0) + (contribution?.employerAmount || 0);
+    (contribution?.employee_amount || 0) + (contribution?.employer_amount || 0);
 
   if (loading) {
     return (
@@ -352,9 +352,9 @@ export default function UpdateContributionForm() {
                           </div>
                           <div className='flex items-center gap-1'>
                             <Calendar className='h-3 w-3' />
-                            {contribution.contributionDate
+                            {contribution.contribution_date
                               ? new Date(
-                                  contribution.contributionDate
+                                  contribution.contribution_date
                                 ).toLocaleDateString()
                               : 'N/A'}
                           </div>
@@ -389,7 +389,7 @@ export default function UpdateContributionForm() {
                         </p>
                         <p className='font-medium'>
                           ₱
-                          {contribution.employeeAmount?.toLocaleString() ||
+                          {contribution.employee_amount?.toLocaleString() ||
                             '0.00'}
                         </p>
                       </div>
@@ -399,7 +399,7 @@ export default function UpdateContributionForm() {
                         </p>
                         <p className='font-medium'>
                           ₱
-                          {contribution.employerAmount?.toLocaleString() ||
+                          {contribution.employer_amount?.toLocaleString() ||
                             '0.00'}
                         </p>
                       </div>
@@ -421,7 +421,7 @@ export default function UpdateContributionForm() {
                       </FormLabel>
                       <FormControl>
                         <Controller
-                          name='employeeAmount'
+                          name='employee_amount'
                           control={form.control}
                           render={({
                             field: { onChange, value, name, ref },
@@ -449,7 +449,7 @@ export default function UpdateContributionForm() {
                       </FormLabel>
                       <FormControl>
                         <Controller
-                          name='employerAmount'
+                          name='employer_amount'
                           control={form.control}
                           render={({
                             field: { onChange, value, name, ref },

@@ -44,7 +44,7 @@ export const hrContributionsService = {
   async getEmployeeContributions(userId: number) {
     const { data } = await api.get(`/hr/contributions/employee/${userId}`);
     return data;
-  },
+  },  
 
   async getAllContributions(params?: { start?: string; end?: string }) {
     const { data } = await api.get('/hr/contributions', { params });
