@@ -153,7 +153,10 @@ export async function resetEmployeePasswordHandler(
   res: Response
 ) {
   try {
-    const result = await resetEmployeePassword(Number(req.params.id));
+    const result = await resetEmployeePassword(
+      Number(req.params.id),
+      req.body.generatedTempPassword
+    );
     if (!result) return res.status(404).json({ error: 'Employee not found' });
 
     // Send temp password back to HR (they will relay securely to employee)

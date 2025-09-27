@@ -79,10 +79,10 @@ export const updateEmployee = async (
 
 export const resetEmployeePassword = async (
   id: number,
-  generatedPassword: string
+  generatedTempPassword: string
 ): Promise<HRResetPassResponse> => {
   const { data } = await api.put(`/hr/employees/${id}/reset-password`, {
-    generatedPassword,
+    generatedTempPassword,
   });
   return data;
 };
