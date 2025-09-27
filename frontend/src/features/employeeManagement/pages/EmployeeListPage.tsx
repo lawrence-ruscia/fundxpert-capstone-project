@@ -31,6 +31,11 @@ export const EmployeeListPage = () => {
     error: empMetaError,
   } = useEmployeeForm();
 
+  console.log(
+    'DATE_HIRED: ',
+    data?.map(e => e.date_hired)
+  );
+
   // Get pagination values from URL or use defaults
   const pageIndex = parseInt(searchParams.get('page') || '1', 10) - 1; // URL is 1-based, table is 0-based
   const pageSize = parseInt(searchParams.get('size') || '10', 10);

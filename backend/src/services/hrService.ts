@@ -186,11 +186,12 @@ export async function createEmployee(payload: {
   salary: number;
   date_hired: string;
 }): Promise<UserResponse> {
-  const tempPassword = generateTempPassword();
-  const hash = await bcrypt.hash(tempPassword, 10);
-  const expiresAt = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000); // 5 days
+  try {
+    const tempPassword = generateTempPassword();
+    const hash = await bcrypt.hash(tempPassword, 10);
+    const expiresAt = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000); // 5 days
 
-  const query = `
+    const query = `
     INSERT INTO users 
       (name, email, employee_id, password_hash, role, department_id, position_id, 
        salary, date_hired, employment_status, temp_password, temp_password_expires)
@@ -199,19 +200,31 @@ export async function createEmployee(payload: {
               employment_status, date_hired, temp_password, temp_password_expires;
   `;
 
-  const { rows } = await pool.query(query, [
-    payload.name,
-    payload.email,
-    payload.employee_id,
-    hash,
-    payload.department_id,
-    payload.position_id,
-    payload.salary,
-    payload.date_hired,
-    expiresAt,
-  ]);
+    const { rows } = await pool.query(query, [
+      payload.name,
+      payload.email,
+      payload.employee_id,
+      hash,
+      payload.department_id,
+      payload.position_id,
+      payload.salary,
+      payload.date_hired,
+      expiresAt,
+    ]);
 
-  return rows[0];
+    return rows[0];
+  } catch (err: unknown) {
+    if (err.code === '23505') {
+      // unique_violation
+      if (err.detail.includes('employee_id')) {
+        throw new Error('Employee ID must be unique.');
+      }
+      if (err.detail.includes('email')) {
+        throw new Error('Email must be unique.');
+      }
+    }
+    throw err;
+  }
 }
 
 export async function updateEmployee(
@@ -227,20 +240,33 @@ export async function updateEmployee(
     date_hired: string;
   }>
 ): Promise<UserResponse | null> {
-  const fields = Object.keys(updates);
-  if (fields.length === 0) return null;
+  try {
+    const fields = Object.keys(updates);
+    if (fields.length === 0) return null;
 
-  const setClause = fields.map((f, i) => `${f} = $${i + 2}`).join(', ');
+    const setClause = fields.map((f, i) => `${f} = $${i + 2}`).join(', ');
 
-  const query = `
+    const query = `
     UPDATE users 
     SET ${setClause}, updated_at = NOW()
     WHERE id = $1
     RETURNING id, name, email, employee_id, department_id, position_id, salary, employment_status, date_hired;
   `;
 
-  const { rows } = await pool.query(query, [id, ...Object.values(updates)]);
-  return rows[0] || null;
+    const { rows } = await pool.query(query, [id, ...Object.values(updates)]);
+    return rows[0] || null;
+  } catch (err: unknown) {
+    if (err.code === '23505') {
+      // unique_violation
+      if (err.detail.includes('employee_id')) {
+        throw new Error('Employee ID must be unique.');
+      }
+      if (err.detail.includes('email')) {
+        throw new Error('Email must be unique.');
+      }
+    }
+    throw err;
+  }
 }
 
 export async function resetEmployeePassword(

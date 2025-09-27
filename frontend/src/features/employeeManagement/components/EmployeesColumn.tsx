@@ -9,6 +9,9 @@ import { DataTableRowActions } from './DataTableRowActions';
 import { callTypes } from '../data/data';
 import type { EmploymentStatus } from '@/features/dashboard/employee/types/employeeOverview';
 
+const formatDisplayDate = (dateString: Date) => {
+  return dateString.toLocaleDateString('en-us');
+};
 export const employeesColumns: ColumnDef<HREmployeeRecord>[] = [
   {
     id: 'select',
@@ -128,7 +131,7 @@ export const employeesColumns: ColumnDef<HREmployeeRecord>[] = [
     ),
     cell: ({ row }) => (
       <div className='w-fit text-nowrap'>
-        {new Date(row.getValue('date_hired')).toISOString().split('T')[0]}
+        {formatDisplayDate(new Date(row.getValue('date_hired')))}
       </div>
     ),
   },

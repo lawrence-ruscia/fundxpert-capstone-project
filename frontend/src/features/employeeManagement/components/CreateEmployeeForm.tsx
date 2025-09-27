@@ -1,25 +1,87 @@
-import { useState } from 'react';
+import { z } from 'zod';
+import { Controller, useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { useNavigate } from 'react-router-dom';
-import { useEmployeeForm } from '../hooks/useEmployeeForm';
+import { useState } from 'react';
 import { toast } from 'sonner';
-import { id } from 'zod/v4/locales';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  AlertCircle,
+  User,
+  Briefcase,
+  DollarSign,
+  Calendar,
+  Mail,
+  Hash,
+} from 'lucide-react';
+import { useEmployeeForm } from '../hooks/useEmployeeForm';
 import { createEmployee } from '../services/hrService';
+import { CurrencyInput } from '@/shared/components/currency-input';
 
-type UpdateEmployeeFields = Partial<{
-  name: string;
-  email: string;
-  employee_id: number;
-  department_id: number;
-  position_id: number;
-  salary: number;
-  employment_status: 'Active' | 'Resigned' | 'Retired' | 'Terminated';
-  date_hired: string;
-}>;
+// Input schema for form validation (keeps strings for form inputs)
+const createEmployeeInputSchema = z.object({
+  name: z
+    .string()
+    .min(2, 'Name must be at least 2 characters')
+    .max(100, 'Name cannot exceed 100 characters'),
+  email: z
+    .email('Invalid email address')
+    .refine(val => val.endsWith('@metrobank.com.ph'), {
+      message: 'Email must use the @metrobank.com.ph domain',
+    }),
+  employee_id: z
+    .string()
+    .regex(/^\d{2}-\d{5}$/, 'Employee ID must follow the format NN-NNNNN'),
+  department_id: z.string().min(1, 'Please select a department'),
+  position_id: z.string().min(1, 'Please select a position'),
+  salary: z.union([z.string(), z.number()]).refine(val => {
+    if (val === '' || val === null || val === undefined) return false;
+    const numVal =
+      typeof val === 'string' ? parseFloat(val.replace(/[^\d.-]/g, '')) : val;
+    return !isNaN(numVal) && numVal > 0;
+  }, 'Please enter a valid salary amount'),
+  date_hired: z
+    .string()
+    .min(1, 'Date hired is required')
+    .refine(date => !isNaN(Date.parse(date)), 'Please select a valid date'),
+});
+
+// Output schema for API submission (transforms to correct types)
+const createEmployeeOutputSchema = createEmployeeInputSchema.transform(
+  data => ({
+    ...data,
+    department_id: parseInt(data.department_id, 10),
+    position_id: parseInt(data.position_id, 10),
+    salary:
+      typeof data.salary === 'string'
+        ? parseFloat(data.salary.replace(/[^\d.-]/g, ''))
+        : data.salary,
+    date_hired: data.date_hired,
+  })
+);
+
+type CreateEmployeeFormData = z.infer<typeof createEmployeeInputSchema>;
+type CreateEmployeeOutputData = z.infer<typeof createEmployeeOutputSchema>;
 
 export const CreateEmployeeForm = () => {
-  const [employee, setEmployee] = useState<UpdateEmployeeFields | null>(null);
-
-  const [creating, setCreating] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
 
   const {
@@ -27,156 +89,411 @@ export const CreateEmployeeForm = () => {
     loading: optionsLoading,
     error: optionsError,
   } = useEmployeeForm();
-  // departments - {id: name}
-  // positions - {id: title}
-  const departments = optionsData.departments;
-  const positions = optionsData.positions;
 
-  const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
-    setEmployee({ ...employee, [e.target.name]: e.target.value });
-  };
+  const form = useForm<CreateEmployeeFormData>({
+    resolver: zodResolver(createEmployeeInputSchema),
+    defaultValues: {
+      name: '',
+      email: '',
+      employee_id: '',
+      department_id: '',
+      position_id: '',
+      salary: '',
+      date_hired: new Date().toISOString().split('T')[0],
+    },
+  });
 
-  const handleCreate = async () => {
+  const onSubmit = async (data: CreateEmployeeFormData) => {
     try {
-      setCreating(true);
+      setIsSubmitting(true);
+
+      // Transform the form data to the correct types for API submission
+      const transformedData: CreateEmployeeOutputData =
+        createEmployeeOutputSchema.parse(data);
+
       await createEmployee({
-        name: employee.name,
-        email: employee.email,
-        employee_id: employee.employee_id,
-        department_id: employee.department_id,
-        position_id: employee.position_id,
-        salary: Number(employee.salary),
-        employment_status: employee.employment_status,
-        date_hired: new Date(employee.date_hired ?? Date.now()),
+        name: transformedData.name,
+        email: transformedData.email,
+        employee_id: transformedData.employee_id,
+        department_id: transformedData.department_id,
+        position_id: transformedData.position_id,
+        salary: transformedData.salary,
+        date_hired: transformedData.date_hired,
       });
       navigate('/hr/employees');
-      toast.success(`Employee ${employee.employee_id} updated successfully`);
+      toast.success(`Employee ${data.employee_id} created successfully`);
     } catch (err) {
       console.error(err);
-      toast.error('Failed to update employee');
+      toast.error((err as Error).message || 'Failed to create employee');
     } finally {
-      setCreating(false);
+      setIsSubmitting(false);
     }
   };
 
+  if (optionsLoading) {
+    return (
+      <div className='flex min-h-[400px] items-center justify-center'>
+        <Card className='mx-auto max-w-md'>
+          <CardContent className='flex items-center justify-center py-12'>
+            <div className='flex flex-col items-center gap-4'>
+              <div className='border-primary h-8 w-8 animate-spin rounded-full border-b-2' />
+              <span className='text-muted-foreground text-sm'>
+                Loading form options...
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (optionsError) {
+    return (
+      <div className='flex min-h-[400px] items-center justify-center'>
+        <Card className='mx-auto max-w-md'>
+          <CardContent className='py-12 text-center'>
+            <AlertCircle className='text-destructive mx-auto mb-4 h-12 w-12' />
+            <p className='text-destructive mb-6 text-sm font-medium'>
+              {optionsError}
+            </p>
+            <Button onClick={() => window.location.reload()}>Retry</Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
-    <div className='max-w-xl space-y-4 rounded-lg p-6 shadow'>
-      <h2 className='text-lg font-semibold'>Create Employee</h2>
-
-      {/* Basic Info */}
-      <div>
-        <label className='block text-sm'>Name</label>
-        <input
-          name='name'
-          onChange={handleChange}
-          className='w-full rounded border p-2'
-        />
+    <div className='container px-4'>
+      <div className='mb-8'>
+        <h1 className='text-3xl font-bold tracking-tight'>Create Employee</h1>
+        <p className='text-muted-foreground mt-2'>
+          Add a new employee to the system with their basic information and job
+          details
+        </p>
       </div>
 
-      <div>
-        <label className='block text-sm'>Email</label>
-        <input
-          type='email'
-          name='email'
-          onChange={handleChange}
-          className='w-full rounded border p-2'
-        />
-      </div>
+      <div className='grid gap-8 lg:grid-cols-3'>
+        {/* Main Form */}
+        <div className='lg:col-span-2'>
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
+              {/* Personal Information Section */}
+              <Card>
+                <CardHeader className='pb-4'>
+                  <CardTitle className='flex items-center gap-2 text-lg'>
+                    <div className='bg-primary/10 rounded-lg p-2'>
+                      <User className='text-primary h-5 w-5' />
+                    </div>
+                    Personal Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className='space-y-6'>
+                  <FormField
+                    control={form.control}
+                    name='name'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className='text-base font-medium'>
+                          Full Name{' '}
+                          <span className='text-muted-foreground'>*</span>
+                        </FormLabel>
+                        <FormControl>
+                          <div className='relative'>
+                            <User className='text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2' />
+                            <Input
+                              placeholder='Enter employee full name'
+                              className='h-12 pl-10 text-base'
+                              {...field}
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
 
-      <div>
-        <label className='block text-sm'>Employee ID</label>
-        <input
-          name='employee_id'
-          onChange={handleChange}
-          className='w-full rounded border p-2'
-        />
-      </div>
+                  <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
+                    <FormField
+                      control={form.control}
+                      name='email'
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className='text-base font-medium'>
+                            Email Address{' '}
+                            <span className='text-muted-foreground'>*</span>
+                          </FormLabel>
+                          <FormControl>
+                            <div className='relative'>
+                              <Mail className='text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2' />
+                              <Input
+                                type='email'
+                                placeholder='employee@metrobank.com.ph'
+                                className='h-12 pl-10 text-base'
+                                {...field}
+                              />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-      {/* Job Info */}
-      <div>
-        <label className='block text-sm'>Department</label>
-        {!optionsLoading && optionsData.departments && (
-          <select
-            name='department_id'
-            onChange={handleChange}
-            className='w-full rounded border p-2'
-          >
-            {departments?.map(d => (
-              <option value={d.id}>{d.name}</option>
-            ))}
-          </select>
-        )}
-      </div>
+                    <FormField
+                      control={form.control}
+                      name='employee_id'
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className='text-base font-medium'>
+                            Employee ID{' '}
+                            <span className='text-muted-foreground'>*</span>
+                          </FormLabel>
+                          <FormControl>
+                            <div className='relative'>
+                              <Hash className='text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2' />
+                              <Input
+                                placeholder='XX-XXXXX'
+                                className='h-12 pl-10 text-base'
+                                {...field}
+                              />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
 
-      <div>
-        <label className='block text-sm'>Position</label>
-        {!optionsLoading && optionsData.positions && (
-          <select
-            name='positions_id'
-            onChange={handleChange}
-            className='w-full rounded border p-2'
-          >
-            {positions?.map(d => (
-              <option value={d.id}>{d.title}</option>
-            ))}
-          </select>
-        )}
-      </div>
+              {/* Job Information Section */}
+              <Card>
+                <CardHeader className='pb-4'>
+                  <CardTitle className='flex items-center gap-2 text-lg'>
+                    <div className='bg-primary/10 rounded-lg p-2'>
+                      <Briefcase className='text-primary h-5 w-5' />
+                    </div>
+                    Job Information
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className='space-y-6'>
+                  <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
+                    <FormField
+                      control={form.control}
+                      name='department_id'
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className='text-base font-medium'>
+                            Department{' '}
+                            <span className='text-muted-foreground'>*</span>
+                          </FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value || ''}
+                          >
+                            <FormControl>
+                              <SelectTrigger className='h-12 w-full text-base'>
+                                <SelectValue placeholder='Select department' />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {optionsData.departments?.map(dept => (
+                                <SelectItem
+                                  key={dept.id}
+                                  value={dept.id.toString()}
+                                  className='text-base'
+                                >
+                                  {dept.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
 
-      <div>
-        <label className='block text-sm'>Salary</label>
-        <input
-          type='number'
-          name='salary'
-          onChange={handleChange}
-          className='w-full rounded border p-2'
-        />
-      </div>
+                    <FormField
+                      control={form.control}
+                      name='position_id'
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className='text-base font-medium'>
+                            Position{' '}
+                            <span className='text-muted-foreground'>*</span>
+                          </FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value || ''}
+                          >
+                            <FormControl>
+                              <SelectTrigger className='h-12 w-full text-base'>
+                                <SelectValue placeholder='Select position' />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {optionsData.positions?.map(pos => (
+                                <SelectItem
+                                  key={pos.id}
+                                  value={pos.id.toString()}
+                                  className='text-base'
+                                >
+                                  {pos.title}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
 
-      {/* Employment Status */}
-      <div>
-        <label className='block text-sm'>Employment Status</label>
-        <select
-          name='employment_status'
-          value='Active'
-          onChange={handleChange}
-          className='w-full rounded border p-2'
-        >
-          <option value='Active'>Active</option>
-          <option value='Resigned'>Resigned</option>
-          <option value='Retired'>Retired</option>
-          <option value='Terminated'>Terminated</option>
-        </select>
-      </div>
+                  <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
+                    <FormItem className='relative py-2'>
+                      <FormLabel className='text-base font-medium'>
+                        Monthly Salary{' '}
+                        <span className='text-muted-foreground'>*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Controller
+                          name='salary'
+                          control={form.control}
+                          render={({
+                            field: { onChange, value, name, ref },
+                            fieldState: { error },
+                          }) => (
+                            <CurrencyInput
+                              ref={ref}
+                              name={name}
+                              value={value ?? ''}
+                              onValueChange={newValue => {
+                                onChange(newValue);
+                              }}
+                              className={`text-base ${error ? 'border-destructive' : ''}`}
+                              placeholder='Enter monthly salary'
+                              min={0}
+                            />
+                          )}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
 
-      <div>
-        <label className='block text-sm'>Date Hired</label>
-        <input
-          type='date'
-          name='date_hired'
-          onChange={handleChange}
-          className='w-full rounded border p-2'
-        />
-      </div>
+                    <FormField
+                      control={form.control}
+                      name='date_hired'
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className='text-base font-medium'>
+                            Date Hired{' '}
+                            <span className='text-muted-foreground'>*</span>
+                          </FormLabel>
+                          <FormControl>
+                            <div className='relative'>
+                              <Calendar className='text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2' />
+                              <Input
+                                type='date'
+                                className='h-12 pl-10 text-base'
+                                {...field}
+                              />
+                            </div>
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </CardContent>
+              </Card>
 
-      {/* Actions */}
-      <div className='mt-6 flex justify-between'>
-        <button
-          onClick={() => navigate('/hr/employees', { replace: true })}
-          className='rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700'
-        >
-          Cancel
-        </button>
+              {/* Form Actions */}
+              <div className='flex flex-col gap-4 sm:flex-row sm:justify-end'>
+                <Button
+                  type='button'
+                  variant='outline'
+                  onClick={() => navigate('/hr/employees')}
+                  className='h-12 px-8 text-base sm:w-auto'
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type='submit'
+                  disabled={isSubmitting}
+                  className='h-12 px-8 text-base sm:w-auto'
+                >
+                  {isSubmitting ? (
+                    <>
+                      <div className='mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white' />
+                      Creating Employee...
+                    </>
+                  ) : (
+                    'Create Employee'
+                  )}
+                </Button>
+              </div>
+            </form>
+          </Form>
+        </div>
 
-        <button
-          onClick={handleCreate}
-          disabled={creating}
-          className='rounded bg-blue-600 px-4 py-2 text-white hover:bg-blue-700'
-        >
-          {creating ? 'Creating...' : 'Create Employee'}
-        </button>
+        {/* Side Panel */}
+        <div className='lg:col-span-1'>
+          <Card className='sticky top-6'>
+            <CardHeader>
+              <CardTitle className='text-lg'>Form Guidelines</CardTitle>
+            </CardHeader>
+            <CardContent className='space-y-4'>
+              <div className='space-y-3'>
+                <div className='flex items-start gap-3 text-sm'>
+                  <User className='text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0' />
+                  <div>
+                    <p className='font-medium'>Full Name</p>
+                    <p className='text-muted-foreground text-xs'>
+                      Enter the employee's complete legal name
+                    </p>
+                  </div>
+                </div>
+
+                <div className='flex items-start gap-3 text-sm'>
+                  <Mail className='text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0' />
+                  <div>
+                    <p className='font-medium'>Email</p>
+                    <p className='text-muted-foreground text-xs'>
+                      Must use @metrobank.com.ph domain
+                    </p>
+                  </div>
+                </div>
+
+                <div className='flex items-start gap-3 text-sm'>
+                  <Hash className='text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0' />
+                  <div>
+                    <p className='font-medium'>Employee ID</p>
+                    <p className='text-muted-foreground text-xs'>
+                      Format: XX-XXXXX (e.g., 12-34567)
+                    </p>
+                  </div>
+                </div>
+
+                <div className='flex items-start gap-3 text-sm'>
+                  <DollarSign className='text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0' />
+                  <div>
+                    <p className='font-medium'>Salary</p>
+                    <p className='text-muted-foreground text-xs'>
+                      Monthly salary with automatic formatting
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className='border-t pt-4'>
+                <p className='text-muted-foreground text-xs'>
+                  All fields marked with * are required. Make sure to
+                  double-check all information before submitting.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

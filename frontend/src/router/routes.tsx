@@ -86,7 +86,7 @@ export const router = createBrowserRouter([
         element: <EmployeeListPage />,
       },
       {
-        path: '/hr/employees/create',
+        path: '/hr/employees/add',
         element: <EmployeeFormPage />,
       },
       {
