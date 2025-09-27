@@ -9,16 +9,30 @@ import {
   exportContributionsPDFController,
   findEmployeeByEmployeeIdController,
   searchEmployeesController,
+  getContributionsByIdController,
+  getEmployeeByContributionIdController,
 } from '../controllers/hrContributionsController.js';
 import { authMiddleware } from '../middleware/authMiddleware.js';
 
 export const hrContributionsRouter = Router();
 
 // HR only
+hrContributionsRouter.get(
+  '/lookup/:id',
+  authMiddleware('HR'),
+  getContributionsByIdController
+);
+
 hrContributionsRouter.post(
   '/',
   authMiddleware('HR'),
   recordContributionController
+);
+
+hrContributionsRouter.get(
+  '/:id/employee',
+  authMiddleware('HR'),
+  getEmployeeByContributionIdController
 );
 
 hrContributionsRouter.put(

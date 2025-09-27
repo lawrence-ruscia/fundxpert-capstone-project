@@ -6,6 +6,8 @@ import {
   getAllContributions,
   findEmployeeByEmployeeId,
   searchEmployees,
+  getContributionsById,
+  getEmployeeByContributionId,
 } from '../services/hrContributionsService.js';
 import { isAuthenticatedRequest } from './employeeControllers.js';
 import { Parser as Json2CsvParser } from 'json2csv';
@@ -64,6 +66,7 @@ export async function updateContributionController(
     const { employeeAmount, employerAmount, notes } = req.body;
 
     const updatedBy = req.user.id;
+    console.log('Updated by', updatedBy);
 
     const updated = await updateContribution(Number(id), {
       employeeAmount,
@@ -111,6 +114,46 @@ export async function getAllContributionsController(
   } catch (err) {
     console.error('❌ getAllContributions error:', err);
     res.status(500).json({ error: 'Failed to fetch contributions' });
+  }
+}
+
+export async function getContributionsByIdController(
+  req: Request,
+  res: Response
+) {
+  try {
+    const { id } = req.params;
+    console.log(id);
+    const contributions = await getContributionsById(Number(id));
+    res.json(contributions);
+  } catch (err) {
+    console.error('❌ getContributionsById error:', err);
+    res.status(500).json({ error: 'Failed to fetch contributions' });
+  }
+}
+
+/**
+ * GET /hr/contributions/:id/employee
+ * Get employee info by contribution ID
+ */
+export async function getEmployeeByContributionIdController(
+  req: Request,
+  res: Response
+) {
+  try {
+    const { id } = req.params;
+    const employee = await getEmployeeByContributionId(Number(id));
+
+    if (!employee) {
+      return res
+        .status(404)
+        .json({ error: 'Contribution or employee not found' });
+    }
+
+    res.json(employee);
+  } catch (err) {
+    console.error('❌ getEmployeeByContributionId error:', err);
+    res.status(500).json({ error: 'Failed to fetch employee info' });
   }
 }
 

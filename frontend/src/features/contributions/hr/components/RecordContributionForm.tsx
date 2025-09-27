@@ -42,6 +42,7 @@ import {
   Hash,
   Save,
   X,
+  ArrowLeft,
 } from 'lucide-react';
 import { CurrencyInput } from '@/shared/components/currency-input';
 import { useNavigate } from 'react-router-dom';
@@ -217,6 +218,14 @@ export default function RecordContributionForm() {
   return (
     <div className='container px-4'>
       <div className='mb-8'>
+        <Button
+          variant='ghost'
+          size='sm'
+          onClick={() => navigate('/hr/contributions', { replace: true })}
+          className='p-2'
+        >
+          <ArrowLeft className='h-4 w-4' />
+        </Button>
         <h1 className='text-3xl font-bold tracking-tight'>
           Record Contribution
         </h1>

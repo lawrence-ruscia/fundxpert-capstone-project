@@ -18,3 +18,20 @@ export type SearchEmployeesRecord = {
   department: string;
   position: string;
 };
+
+export type EmployeeByContributionId = {
+  id: number;
+  employee_id: string;
+  name: string;
+  email: string;
+  department: string;
+  position: string;
+  salary: number;
+  employment_status: string;
+  date_hired: string;
+  contribution_id: number;
+  contribution_date: string;
+  employee_amount: number;
+  employer_amount: number;
+  total_amount: number;
+};

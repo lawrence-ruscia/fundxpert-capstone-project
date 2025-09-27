@@ -13,6 +13,14 @@ export const hrContributionsService = {
     return res.json();
   },
 
+  async getEmployeeByContributionId(contributionId: number) {
+    const { data } = await api.get(
+      `/hr/contributions/${contributionId}/employee`
+    );
+
+    return data;
+  },
+
   async searchEmployees(query: string) {
     const data = await api.get(
       `/hr/contributions/employees/search?q=${encodeURIComponent(query)}`
@@ -24,7 +32,6 @@ export const hrContributionsService = {
   },
 
   async recordContribution(payload: ContributionPayload) {
-    console.log('Payload: ', payload);
     const { data } = await api.post('/hr/contributions/', payload);
     return data;
   },
@@ -41,6 +48,12 @@ export const hrContributionsService = {
 
   async getAllContributions(params?: { start?: string; end?: string }) {
     const { data } = await api.get('/hr/contributions', { params });
+    return data;
+  },
+
+  async getContributionsById(id: number): Promise<Contribution> {
+    const { data } = await api.get(`/hr/contributions/lookup/${id}`);
+    console.log('Data: ', data);
     return data;
   },
 

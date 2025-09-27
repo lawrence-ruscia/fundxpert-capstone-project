@@ -150,6 +150,25 @@ export async function getAllContributions(
   });
 }
 
+export async function getContributionsById(
+  contributionId: number
+): Promise<Contribution> {
+  const query = `
+    SELECT * FROM 
+    contributions
+    WHERE id=$1
+  `;
+
+  const { rows } = await pool.query(query, [contributionId]);
+
+  const contributions = rows[0];
+  return {
+    ...contributions,
+    employeeAmount: Number(contributions.employee_amount),
+    employerAmount: Number(contributions.employer_amount),
+  };
+}
+
 export async function findEmployeeByEmployeeId(employeeId: string) {
   const { rows } = await pool.query(
     `
@@ -189,4 +208,41 @@ export async function searchEmployees(query: string) {
 
   const { rows } = await pool.query(sql, [`%${query}%`]);
   return rows;
+}
+
+export async function getEmployeeByContributionId(contributionId: number) {
+  const query = `
+   SELECT 
+  u.id,
+  u.employee_id,
+  u.name,
+  u.email,
+  u.department_id,
+  COALESCE(d.name, 'N/A') AS department,
+  u.position_id,
+  COALESCE(p.title, 'N/A') AS position,
+  u.salary,
+  u.employment_status,
+  u.date_hired,
+  c.id AS contribution_id,
+  c.contribution_date,
+  c.employee_amount,
+  c.employer_amount,
+  (c.employee_amount + c.employer_amount) AS total_amount,
+  
+  -- Optional: Include audit fields from contributions
+  c.created_by,
+  c.created_at,
+  c.is_adjusted,
+  c.notes
+  FROM contributions c
+  INNER JOIN users u ON u.id = c.user_id
+  LEFT JOIN departments d ON d.id = u.department_id
+  LEFT JOIN positions p ON p.id = u.position_id
+  WHERE c.id = $1
+  LIMIT 1;
+  `;
+
+  const { rows } = await pool.query(query, [contributionId]);
+  return rows[0] || null;
 }
