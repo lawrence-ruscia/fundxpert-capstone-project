@@ -63,12 +63,13 @@ export const updateEmployee = async (
   payload: Partial<{
     name: string;
     email: string;
-    employee_id: number;
+    employee_id: string;
     department_id: number;
     position_id: number;
     salary: number;
     employment_status: EmploymentStatus;
     date_hired: Date;
+    generatedTempPassword: string;
   }>
 ): Promise<HRUpdateEmployeeResponse> => {
   const { data } = await api.put(`/hr/employees/${id}`, payload);
@@ -76,9 +77,12 @@ export const updateEmployee = async (
 };
 
 export const resetEmployeePassword = async (
-  id: number
+  id: number,
+  generatedPassword: string
 ): Promise<HRResetPassResponse> => {
-  const { data } = await api.put(`/hr/employees/${id}/reset-password`);
+  const { data } = await api.put(`/hr/employees/${id}/reset-password`, {
+    generatedPassword,
+  });
   return data;
 };
 

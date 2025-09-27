@@ -238,22 +238,45 @@ export async function updateEmployee(
     salary: number;
     employment_status: 'Active' | 'Resigned' | 'Retired' | 'Terminated';
     date_hired: string;
+    generatedTempPassword: string;
   }>
 ): Promise<UserResponse | null> {
   try {
-    const fields = Object.keys(updates);
+    const fields: string[] = [];
+    const values: unknown[] = [id];
+
+    // Build SET clause dynamically
+    let index = 2;
+    for (const [key, value] of Object.entries(updates)) {
+      if (key === 'generatedTempPassword' && value) {
+        // If resetting password, hash it + set temp flags
+        const hash = await bcrypt.hash(value, 10);
+        const expiresAt = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000); // 5 days
+        fields.push(`password_hash = $${index}`);
+        values.push(hash);
+        index++;
+
+        fields.push(`temp_password = true`);
+        fields.push(`temp_password_expires = $${index}`);
+        values.push(expiresAt);
+        index++;
+      } else {
+        fields.push(`${key} = $${index}`);
+        values.push(value);
+        index++;
+      }
+    }
+
     if (fields.length === 0) return null;
 
-    const setClause = fields.map((f, i) => `${f} = $${i + 2}`).join(', ');
-
     const query = `
-    UPDATE users 
-    SET ${setClause}, updated_at = NOW()
-    WHERE id = $1
-    RETURNING id, name, email, employee_id, department_id, position_id, salary, employment_status, date_hired;
-  `;
+      UPDATE users 
+      SET ${fields.join(', ')}, updated_at = NOW()
+      WHERE id = $1
+      RETURNING id, name, email, employee_id, department_id, position_id, salary, employment_status, date_hired;
+    `;
 
-    const { rows } = await pool.query(query, [id, ...Object.values(updates)]);
+    const { rows } = await pool.query(query, values);
     return rows[0] || null;
   } catch (err: unknown) {
     if (err.code === '23505') {
@@ -270,10 +293,10 @@ export async function updateEmployee(
 }
 
 export async function resetEmployeePassword(
-  id: number
+  id: number,
+  generatedPassword: string
 ): Promise<{ temp_password: string; expires_at: Date } | null> {
-  const tempPassword = generateTempPassword();
-  const hash = await bcrypt.hash(tempPassword, 10);
+  const hash = await bcrypt.hash(generatedPassword, 10);
   const expiresAt = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000);
 
   const query = `
@@ -286,7 +309,7 @@ export async function resetEmployeePassword(
   const { rows } = await pool.query(query, [id, hash, expiresAt]);
   if (!rows[0]) return null;
 
-  return { temp_password: tempPassword, expires_at: expiresAt };
+  return { temp_password: generatedPassword, expires_at: expiresAt };
 }
 
 export async function updateEmploymentStatus(
@@ -386,6 +409,8 @@ export async function getEmployeeById(id: number) {
       u.employee_id,
       u.name,
       u.email,
+      u.department_id,
+      u.position_id,
       u.salary,
       u.date_hired,
       u.employment_status,

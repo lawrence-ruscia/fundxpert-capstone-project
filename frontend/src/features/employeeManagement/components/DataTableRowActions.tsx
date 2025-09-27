@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useEmployees } from './EmployeesProvider.js';
 import type { HREmployeeRecord } from '../types/employeeTypes';
+import { useNavigate } from 'react-router-dom';
 
 type DataTableRowActionsProps = {
   row: Row<HREmployeeRecord>;
@@ -19,6 +20,7 @@ type DataTableRowActionsProps = {
 
 export function DataTableRowActions({ row }: DataTableRowActionsProps) {
   const { setOpen, setCurrentRow } = useEmployees();
+  const navigate = useNavigate();
   return (
     <>
       <DropdownMenu modal={false}>
@@ -36,6 +38,7 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
             onClick={() => {
               setCurrentRow(row.original);
               setOpen('edit');
+              navigate(`/hr/employees/${row.original.id}`);
             }}
           >
             Edit

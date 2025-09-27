@@ -5,6 +5,8 @@ export type HREmployeeRecord = {
   employee_id: number;
   name: string;
   email: string;
+  department_id: number;
+  position_id: number;
   role: 'Employee';
   salary: number;
   employment_status: EmploymentStatus;
