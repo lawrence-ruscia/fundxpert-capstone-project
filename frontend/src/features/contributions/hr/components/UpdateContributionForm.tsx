@@ -329,7 +329,7 @@ export default function UpdateContributionForm() {
                 </CardHeader>
                 <CardContent>
                   <div className='bg-muted/50 rounded-lg border p-4'>
-                    <div className='flex items-center gap-3'>
+                    <div className='flex flex-wrap items-center gap-3'>
                       <div className='bg-primary/10 rounded-lg p-2'>
                         <User className='text-primary h-5 w-5' />
                       </div>
@@ -337,7 +337,7 @@ export default function UpdateContributionForm() {
                         <h3 className='text-base font-medium'>
                           {employee?.name || 'Unknown Employee'}
                         </h3>
-                        <div className='text-muted-foreground mt-1 flex items-center gap-4 text-sm'>
+                        <div className='text-muted-foreground mt-1 flex flex-wrap items-center gap-4 text-sm'>
                           <div className='flex items-center gap-1'>
                             <Hash className='h-3 w-3' />
                             {employee?.employee_id || 'N/A'}
@@ -491,7 +491,7 @@ export default function UpdateContributionForm() {
 
               {/* Notes Section */}
               <Card>
-                <CardHeader className='pb-4'>
+                <CardHeader>
                   <CardTitle className='flex items-center gap-2 text-lg'>
                     <div className='bg-primary/10 rounded-lg p-2'>
                       <FileText className='text-primary h-5 w-5' />
