@@ -149,3 +149,44 @@ export async function getAllContributions(
     };
   });
 }
+
+export async function findEmployeeByEmployeeId(employeeId: string) {
+  const { rows } = await pool.query(
+    `
+    SELECT 
+      u.id, 
+      u.employee_id, 
+      u.name, 
+      d.name AS department, 
+      p.title AS position
+    FROM users u
+    LEFT JOIN departments d ON d.id = u.department_id
+    LEFT JOIN positions p ON p.id = u.position_id
+    WHERE u.employee_id = $1
+    `,
+    [employeeId]
+  );
+
+  return rows[0] || null;
+}
+
+export async function searchEmployees(query: string) {
+  const sql = `
+    SELECT 
+      u.id,
+      u.employee_id,
+      u.name,
+      d.name AS department,
+      p.title AS position
+    FROM users u
+    LEFT JOIN departments d ON u.department_id = d.id
+    LEFT JOIN positions p ON u.position_id = p.id
+    WHERE u.role = 'Employee'
+      AND (u.name ILIKE $1 OR u.employee_id ILIKE $1)
+    ORDER BY u.name
+    LIMIT 10;
+  `;
+
+  const { rows } = await pool.query(sql, [`%${query}%`]);
+  return rows;
+}

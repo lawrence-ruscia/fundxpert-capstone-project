@@ -4,6 +4,8 @@ import {
   updateContribution,
   getContributionsByEmployee,
   getAllContributions,
+  findEmployeeByEmployeeId,
+  searchEmployees,
 } from '../services/hrContributionsService.js';
 import { isAuthenticatedRequest } from './employeeControllers.js';
 import { Parser as Json2CsvParser } from 'json2csv';
@@ -723,5 +725,41 @@ export async function exportContributionsPDFController(
       error: 'Failed to export PDF',
       message: err instanceof Error ? err.message : 'Unknown error occurred',
     });
+  }
+}
+
+export async function findEmployeeByEmployeeIdController(
+  req: Request,
+  res: Response
+) {
+  try {
+    const { employeeId } = req.params;
+    const employee = await findEmployeeByEmployeeId(employeeId ?? '');
+
+    if (!employee) {
+      return res.status(404).json({ error: 'Employee not found' });
+    }
+
+    res.json(employee);
+  } catch (err) {
+    console.error('❌ Error looking up employee:', err);
+    res.status(500).json({ error: 'Failed to lookup employee' });
+  }
+}
+
+export async function searchEmployeesController(req: Request, res: Response) {
+  try {
+    const q = (req.query.q as string) || '';
+    if (q.length < 2) {
+      return res
+        .status(400)
+        .json({ error: 'Query must be at least 2 characters' });
+    }
+
+    const employees = await searchEmployees(q);
+    res.json(employees);
+  } catch (err) {
+    console.error('❌ Error searching employees:', err);
+    res.status(500).json({ error: 'Failed to search employees' });
   }
 }

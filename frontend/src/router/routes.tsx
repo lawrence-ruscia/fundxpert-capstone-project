@@ -109,10 +109,10 @@ export const router = createBrowserRouter([
         path: '/hr/employees/:id/contributions',
         element: <EmployeeContributionsPage />,
       },
-      // {
-      //   path: '/hr/contributions/:id/edit',
-      //   element: <UpdateContributionForm />,
-      // },
+      {
+        path: '/hr/contributions/:id/edit',
+        element: <UpdateContributionForm />,
+      },
     ],
   },
   {

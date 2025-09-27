@@ -21,7 +21,6 @@ export default function EmployeeContributionsPage() {
   return (
     <div>
       <h1>Employee {id} Contributions</h1>
-
       <ul>
         {contributions.map(c => (
           <li key={c.id}>

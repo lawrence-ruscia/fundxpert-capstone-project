@@ -1,9 +1,31 @@
 import { api } from '@/shared/api/api';
-import type { ContributionPayload } from '../types/hrContribution';
+import type {
+  Contribution,
+  ContributionPayload,
+} from '../types/hrContribution';
 
 export const hrContributionsService = {
+  async findEmployeeByEmployeeId(employeeId: string) {
+    const res = await fetch(`/hr/employees/lookup/${employeeId}`, {
+      credentials: 'include',
+    });
+    if (!res.ok) throw new Error('Employee not found');
+    return res.json();
+  },
+
+  async searchEmployees(query: string) {
+    const data = await api.get(
+      `/hr/contributions/employees/search?q=${encodeURIComponent(query)}`
+    );
+
+    console.log(data);
+
+    return data;
+  },
+
   async recordContribution(payload: ContributionPayload) {
-    const { data } = await api.post('/hr/contributions', payload);
+    console.log('Payload: ', payload);
+    const { data } = await api.post('/hr/contributions/', payload);
     return data;
   },
 

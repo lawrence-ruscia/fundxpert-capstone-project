@@ -1,16 +1,10 @@
 import { useState, useEffect } from 'react';
 import { hrContributionsService } from '../services/hrContributionService';
 import type { Contribution } from '../types/hrContribution';
+import { useParams } from 'react-router-dom';
 
-type Props = {
-  contributionId: number;
-  onUpdated?: (c: Contribution) => void;
-};
-
-export default function UpdateContributionForm({
-  contributionId,
-  onUpdated,
-}: Props) {
+export default function UpdateContributionForm() {
+  const { contributionId } = useParams();
   const [contribution, setContribution] = useState<Contribution | null>(null);
   const [form, setForm] = useState({
     employee_amount: '',
@@ -37,9 +31,10 @@ export default function UpdateContributionForm({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!contribution) return;
+    if (!contributionId) return;
 
     const updated = await hrContributionsService.updateContribution(
-      contributionId,
+      Number(contributionId),
       {
         employee_amount: Number(form.employee_amount),
         employer_amount: Number(form.employer_amount),
@@ -47,7 +42,6 @@ export default function UpdateContributionForm({
       }
     );
 
-    if (onUpdated) onUpdated(updated);
     alert('Contribution updated!');
   };
 

@@ -67,7 +67,10 @@ export default function ContributionListPage() {
                 to={`/hr/employees/${c.user_id}/contributions`}
                 className='flex justify-between gap-5'
               >
-                <tr key={c.id} className='flex w-full justify-between border-2'>
+                <tr
+                  key={c.user_id}
+                  className='flex w-full justify-between border-2'
+                >
                   <td>{c.id}</td>
                   <td>{c.user_id}</td>
                   <td>{new Date(c.contribution_date).toLocaleDateString()}</td>
@@ -75,6 +78,12 @@ export default function ContributionListPage() {
                   <td>{c.employer_amount.toFixed(2)}</td>
                   <td>{c.notes}</td>
                 </tr>
+              </Link>
+              <Link
+                key={c.contribution_date}
+                to={`/hr/contributions/${c.id}/edit`}
+              >
+                Edit Contribution
               </Link>
             </tr>
           ))}
