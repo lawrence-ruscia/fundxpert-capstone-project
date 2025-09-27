@@ -14,6 +14,7 @@ import {
   updateEmploymentStatusHandler,
   getDepartmentsHandler,
   getPositionsHandler,
+  deleteEmployeeHandler,
 } from '../controllers/hrController.js';
 import { authMiddleware } from '../middleware/authMiddleware.js';
 
@@ -37,6 +38,8 @@ hrRouter.get('/departments', authMiddleware('HR'), getDepartmentsHandler);
 hrRouter.get('/positions', authMiddleware('HR'), getPositionsHandler);
 hrRouter.get('/employees/:id', authMiddleware('HR'), getEmployeeByIdHandler);
 hrRouter.put('/employees/:id', authMiddleware('HR'), updateEmployeeHandler);
+hrRouter.delete('/employees/:id', authMiddleware('HR'), deleteEmployeeHandler);
+
 hrRouter.put(
   '/employees/:id/reset-password',
   authMiddleware('HR'),

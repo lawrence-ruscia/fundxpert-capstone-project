@@ -77,6 +77,13 @@ export const updateEmployee = async (
   return data;
 };
 
+export const deleteEmployeeById = async (
+  id: number
+): Promise<HREmployeeRecord> => {
+  const { data } = await api.delete(`/hr/employees/${id}`);
+  return data;
+};
+
 export const resetEmployeePassword = async (
   id: number,
   generatedTempPassword: string

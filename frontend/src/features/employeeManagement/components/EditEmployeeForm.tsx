@@ -38,11 +38,13 @@ import {
   Eye,
   EyeOff,
   Copy,
+  Trash2,
 } from 'lucide-react';
 import { CurrencyInput } from '@/shared/components/currency-input';
 
 // Import the password generator (you'll need to add this to your utils)
 import { generateTempPassword } from '@/utils/generateTempPassword.js';
+import { EmployeeDeleteDialog } from './EmployeeDeleteDialog.js';
 
 type EmployeeEditFormProps = {
   id: number;
@@ -118,6 +120,7 @@ export const EditEmployeeForm = ({ id }: EmployeeEditFormProps) => {
   const [resettingPassword, setResettingPassword] = useState(false);
   const [showTempPassword, setShowTempPassword] = useState(false);
   const [tempPasswordGenerated, setTempPasswordGenerated] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const navigate = useNavigate();
 
   const {
@@ -674,30 +677,41 @@ export const EditEmployeeForm = ({ id }: EmployeeEditFormProps) => {
 
               {/* Form Actions */}
               <div className='flex flex-col gap-4 sm:flex-row sm:justify-between'>
-                <Button
-                  type='button'
-                  variant='destructive'
-                  onClick={handleResetPassword}
-                  disabled={resettingPassword || !isResetPasswordEnabled}
-                  className='h-12 px-6 text-base sm:w-auto'
-                  title={
-                    !isResetPasswordEnabled
-                      ? 'Please generate a temporary password first'
-                      : ''
-                  }
-                >
-                  {resettingPassword ? (
-                    <>
-                      <div className='mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white' />
-                      Resetting...
-                    </>
-                  ) : (
-                    <>
-                      <Shield className='mr-2 h-4 w-4' />
-                      Reset Password
-                    </>
-                  )}
-                </Button>
+                <div className='flex flex-col gap-4 sm:flex-row'>
+                  <Button
+                    type='button'
+                    variant='destructive'
+                    onClick={() => setDeleteDialogOpen(true)}
+                    className='h-12 px-6 text-base sm:w-auto'
+                  >
+                    <Trash2 className='mr-2 h-4 w-4' />
+                    Delete Employee
+                  </Button>
+                  <Button
+                    type='button'
+                    variant='secondary'
+                    onClick={handleResetPassword}
+                    disabled={resettingPassword || !isResetPasswordEnabled}
+                    className='h-12 px-6 text-base sm:w-auto'
+                    title={
+                      !isResetPasswordEnabled
+                        ? 'Please generate a temporary password first'
+                        : ''
+                    }
+                  >
+                    {resettingPassword ? (
+                      <>
+                        <div className='mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white' />
+                        Resetting...
+                      </>
+                    ) : (
+                      <>
+                        <Shield className='mr-2 h-4 w-4' />
+                        Reset Password
+                      </>
+                    )}
+                  </Button>
+                </div>
 
                 <div className='flex flex-col gap-4 sm:flex-row'>
                   <Button
@@ -781,6 +795,12 @@ export const EditEmployeeForm = ({ id }: EmployeeEditFormProps) => {
           </Card>
         </div>
       </div>
+      {/* Delete Employee Dialog */}
+      <EmployeeDeleteDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        id={id}
+      />
     </div>
   );
 };

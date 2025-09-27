@@ -2,7 +2,7 @@ import type { EmploymentStatus } from '@/features/dashboard/employee/types/emplo
 
 export type HREmployeeRecord = {
   id: number;
-  employee_id: number;
+  employee_id: string;
   name: string;
   email: string;
   department_id: number;

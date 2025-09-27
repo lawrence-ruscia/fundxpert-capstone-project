@@ -291,6 +291,24 @@ export async function updateEmployee(
   }
 }
 
+export async function deleteEmployee(
+  id: number
+): Promise<{ success: boolean }> {
+  try {
+    const query = `
+      DELETE FROM users
+      WHERE id = $1
+      RETURNING id;
+    `;
+
+    const { rows } = await pool.query(query, [id]);
+    return { success: rows.length > 0 };
+  } catch (err) {
+    console.error('Error permanently deleting employee:', err);
+    throw new Error('Failed to permanently delete employee');
+  }
+}
+
 export async function resetEmployeePassword(
   id: number,
   generatedPassword: string

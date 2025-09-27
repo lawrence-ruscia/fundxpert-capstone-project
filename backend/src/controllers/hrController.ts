@@ -14,6 +14,7 @@ import {
   getEmployeeById,
   getDepartments,
   getPositions,
+  deleteEmployee,
 } from '../services/hrService.js';
 import type { HRContributionPeriod } from '../types/hrTypes.js';
 
@@ -141,6 +142,16 @@ export async function getEmployeeByIdHandler(req: Request, res: Response) {
 export async function updateEmployeeHandler(req: Request, res: Response) {
   try {
     const employee = await updateEmployee(Number(req.params.id), req.body);
+    if (!employee) return res.status(404).json({ error: 'Employee not found' });
+    res.json(employee);
+  } catch (err) {
+    res.status(400).json({ error: (err as Error).message });
+  }
+}
+
+export async function deleteEmployeeHandler(req: Request, res: Response) {
+  try {
+    const employee = await deleteEmployee(Number(req.params.id));
     if (!employee) return res.status(404).json({ error: 'Employee not found' });
     res.json(employee);
   } catch (err) {
