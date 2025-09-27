@@ -7,8 +7,7 @@ export const EmployeeDetailPage = () => {
   if (!id) return <p>Invalid Employee</p>;
 
   return (
-    <div className='p-6'>
-      <h1 className='mb-4 text-xl font-bold'>Edit Employee #{id}</h1>
+    <div className=''>
       <EditEmployeeForm id={parseInt(id)} />
     </div>
   );

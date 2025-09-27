@@ -35,6 +35,7 @@ import {
   Eye,
   EyeOff,
   Copy,
+  ArrowLeft,
 } from 'lucide-react';
 import { useEmployeeForm } from '../hooks/useEmployeeForm';
 import { createEmployee } from '../services/hrService';
@@ -208,6 +209,14 @@ export const CreateEmployeeForm = () => {
   return (
     <div className='container px-4'>
       <div className='mb-8'>
+        <Button
+          variant='ghost'
+          size='sm'
+          onClick={() => navigate('/hr/employees', { replace: true })}
+          className='p-2'
+        >
+          <ArrowLeft className='h-4 w-4' />
+        </Button>
         <h1 className='text-3xl font-bold tracking-tight'>Create Employee</h1>
         <p className='text-muted-foreground mt-2'>
           Add a new employee to the system with their basic information and job
@@ -469,7 +478,7 @@ export const CreateEmployeeForm = () => {
                           Temporary Password{' '}
                           <span className='text-muted-foreground'>*</span>
                         </FormLabel>
-                        <div className='flex gap-2'>
+                        <div className='flex flex-wrap gap-2'>
                           <FormControl>
                             <div className='relative flex-1'>
                               <Shield className='text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2' />
@@ -522,7 +531,7 @@ export const CreateEmployeeForm = () => {
                             type='button'
                             variant='outline'
                             onClick={handleGenerateTempPassword}
-                            className='h-12 px-4'
+                            className='h-12 w-full px-4 sm:w-auto'
                           >
                             <RefreshCw className='mr-2 h-4 w-4' />
                             Generate

@@ -284,17 +284,16 @@ export const EditEmployeeForm = ({ id }: EmployeeEditFormProps) => {
   return (
     <div className='container px-4'>
       <div className='mb-8'>
-        <div className='mb-2 flex items-center gap-3'>
-          <Button
-            variant='ghost'
-            size='sm'
-            onClick={() => navigate('/hr/employees')}
-            className='p-2'
-          >
-            <ArrowLeft className='h-4 w-4' />
-          </Button>
-          <h1 className='text-3xl font-bold tracking-tight'>Edit Employee</h1>
-        </div>
+        <Button
+          variant='ghost'
+          size='sm'
+          onClick={() => navigate('/hr/employees', { replace: true })}
+          className='p-2'
+        >
+          <ArrowLeft className='h-4 w-4' />
+        </Button>
+
+        <h1 className='text-3xl font-bold tracking-tight'>Edit Employee</h1>
         <p className='text-muted-foreground'>
           Update employee information and job details
         </p>
@@ -597,7 +596,7 @@ export const EditEmployeeForm = ({ id }: EmployeeEditFormProps) => {
                         <FormLabel className='text-base font-medium'>
                           Temporary Password
                         </FormLabel>
-                        <div className='flex gap-2'>
+                        <div className='flex flex-wrap gap-2'>
                           <FormControl>
                             <div className='relative flex-1'>
                               <Shield className='text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2' />
@@ -650,7 +649,7 @@ export const EditEmployeeForm = ({ id }: EmployeeEditFormProps) => {
                             type='button'
                             variant='outline'
                             onClick={handleGenerateTempPassword}
-                            className='h-12 px-4'
+                            className='h-12 w-full px-4 sm:w-auto'
                           >
                             <RefreshCw className='mr-2 h-4 w-4' />
                             Generate
