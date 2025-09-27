@@ -30,10 +30,18 @@ import {
   Calendar,
   Mail,
   Hash,
+  Shield,
+  RefreshCw,
+  Eye,
+  EyeOff,
+  Copy,
 } from 'lucide-react';
 import { useEmployeeForm } from '../hooks/useEmployeeForm';
 import { createEmployee } from '../services/hrService';
 import { CurrencyInput } from '@/shared/components/currency-input';
+
+// Import the password generator (you'll need to add this to your utils)
+import { generateTempPassword } from '@/utils/generateTempPassword.js';
 
 // Input schema for form validation (keeps strings for form inputs)
 const createEmployeeInputSchema = z.object({
@@ -61,6 +69,9 @@ const createEmployeeInputSchema = z.object({
     .string()
     .min(1, 'Date hired is required')
     .refine(date => !isNaN(Date.parse(date)), 'Please select a valid date'),
+  generateTempPassword: z
+    .string()
+    .min(1, 'Please generate a temporary password for the new employee'), // Required temporary password field
 });
 
 // Output schema for API submission (transforms to correct types)
@@ -82,6 +93,8 @@ type CreateEmployeeOutputData = z.infer<typeof createEmployeeOutputSchema>;
 
 export const CreateEmployeeForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showTempPassword, setShowTempPassword] = useState(false);
+  const [tempPasswordGenerated, setTempPasswordGenerated] = useState(false);
   const navigate = useNavigate();
 
   const {
@@ -100,10 +113,19 @@ export const CreateEmployeeForm = () => {
       position_id: '',
       salary: '',
       date_hired: new Date().toISOString().split('T')[0],
+      generateTempPassword: '',
     },
   });
 
   const onSubmit = async (data: CreateEmployeeFormData) => {
+    // Check if temporary password is generated
+    if (!data.generateTempPassword || data.generateTempPassword.trim() === '') {
+      toast.error(
+        'Please generate a temporary password before creating the employee'
+      );
+      return;
+    }
+
     try {
       setIsSubmitting(true);
 
@@ -119,6 +141,7 @@ export const CreateEmployeeForm = () => {
         position_id: transformedData.position_id,
         salary: transformedData.salary,
         date_hired: transformedData.date_hired,
+        generatedTempPassword: data.generateTempPassword, // Send temp password (required)
       });
       navigate('/hr/employees');
       toast.success(`Employee ${data.employee_id} created successfully`);
@@ -127,6 +150,25 @@ export const CreateEmployeeForm = () => {
       toast.error((err as Error).message || 'Failed to create employee');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleGenerateTempPassword = () => {
+    const tempPassword = generateTempPassword(12);
+    form.setValue('generateTempPassword', tempPassword);
+    setTempPasswordGenerated(true);
+    toast.success('Temporary password generated! Remember to save the form.');
+  };
+
+  const copyTempPasswordToClipboard = async () => {
+    const tempPassword = form.getValues('generateTempPassword');
+    if (tempPassword) {
+      try {
+        await navigator.clipboard.writeText(tempPassword);
+        toast.success('Temporary password copied to clipboard');
+      } catch (err) {
+        toast.error('Failed to copy to clipboard');
+      }
     }
   };
 
@@ -407,6 +449,104 @@ export const CreateEmployeeForm = () => {
                 </CardContent>
               </Card>
 
+              {/* Security Section */}
+              <Card>
+                <CardHeader className='pb-4'>
+                  <CardTitle className='flex items-center gap-2 text-lg'>
+                    <div className='bg-primary/10 rounded-lg p-2'>
+                      <Shield className='text-primary h-5 w-5' />
+                    </div>
+                    Security Settings
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className='space-y-6'>
+                  <FormField
+                    control={form.control}
+                    name='generateTempPassword'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className='text-base font-medium'>
+                          Temporary Password{' '}
+                          <span className='text-muted-foreground'>*</span>
+                        </FormLabel>
+                        <div className='flex gap-2'>
+                          <FormControl>
+                            <div className='relative flex-1'>
+                              <Shield className='text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2' />
+                              <Input
+                                type={showTempPassword ? 'text' : 'password'}
+                                placeholder='Click generate to create temporary password'
+                                className='h-12 pr-20 pl-10 font-mono text-base'
+                                readOnly
+                                {...field}
+                              />
+                              <div className='absolute top-1/2 right-2 flex -translate-y-1/2 gap-1'>
+                                {field.value && (
+                                  <Button
+                                    type='button'
+                                    variant='ghost'
+                                    size='sm'
+                                    className='h-8 w-8 p-0'
+                                    onClick={copyTempPasswordToClipboard}
+                                    title='Copy to clipboard'
+                                  >
+                                    <Copy className='h-3 w-3' />
+                                  </Button>
+                                )}
+                                {field.value && (
+                                  <Button
+                                    type='button'
+                                    variant='ghost'
+                                    size='sm'
+                                    className='h-8 w-8 p-0'
+                                    onClick={() =>
+                                      setShowTempPassword(!showTempPassword)
+                                    }
+                                    title={
+                                      showTempPassword
+                                        ? 'Hide password'
+                                        : 'Show password'
+                                    }
+                                  >
+                                    {showTempPassword ? (
+                                      <EyeOff className='h-3 w-3' />
+                                    ) : (
+                                      <Eye className='h-3 w-3' />
+                                    )}
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+                          </FormControl>
+                          <Button
+                            type='button'
+                            variant='outline'
+                            onClick={handleGenerateTempPassword}
+                            className='h-12 px-4'
+                          >
+                            <RefreshCw className='mr-2 h-4 w-4' />
+                            Generate
+                          </Button>
+                        </div>
+                        <p className='text-muted-foreground mt-2 text-xs'>
+                          Generate a secure temporary password for the new
+                          employee. This password is required to create the
+                          employee account.
+                        </p>
+                        {tempPasswordGenerated && (
+                          <div className='mt-2 rounded border border-green-200 bg-green-50 p-2 text-xs text-green-600'>
+                            Temporary password generated successfully. Remember
+                            to save the form to create the employee with this
+                            password.
+                          </div>
+                        )}
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </CardContent>
+              </Card>
+
               {/* Form Actions */}
               <div className='flex flex-col gap-4 sm:flex-row sm:justify-end'>
                 <Button
@@ -483,12 +623,24 @@ export const CreateEmployeeForm = () => {
                     </p>
                   </div>
                 </div>
+
+                <div className='flex items-start gap-3 text-sm'>
+                  <Shield className='text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0' />
+                  <div>
+                    <p className='font-medium'>Temporary Password</p>
+                    <p className='text-muted-foreground text-xs'>
+                      Required: Generate a secure 12-character password for the
+                      new employee
+                    </p>
+                  </div>
+                </div>
               </div>
 
               <div className='border-t pt-4'>
                 <p className='text-muted-foreground text-xs'>
-                  All fields marked with * are required. Make sure to
-                  double-check all information before submitting.
+                  All fields marked with * are required. Generate a temporary
+                  password to provide initial login credentials for the new
+                  employee.
                 </p>
               </div>
             </CardContent>

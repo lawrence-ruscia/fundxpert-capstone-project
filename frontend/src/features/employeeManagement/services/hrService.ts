@@ -18,6 +18,7 @@ export const createEmployee = async (payload: {
   position_id: number;
   salary: number;
   date_hired: string;
+  generatedTempPassword: string;
 }): Promise<HRCreateEmployeeResponse> => {
   const { data } = await api.post('/hr/employees', payload);
   return data;

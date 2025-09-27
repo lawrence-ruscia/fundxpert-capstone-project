@@ -7,7 +7,6 @@ import type { UserResponse } from '../types/userResponse.js';
 import bcrypt from 'bcryptjs';
 
 import { getDateRange } from './utils/getEmployeeContributionsUtils.js';
-import { generateTempPassword } from '../utils/generateTempPassword.js';
 import type { EmploymentStatus } from '../types/user.js';
 
 export async function getHRDashboardOverview(): Promise<HrOverviewResponse> {
@@ -185,10 +184,10 @@ export async function createEmployee(payload: {
   position_id: number;
   salary: number;
   date_hired: string;
+  generatedTempPassword: string;
 }): Promise<UserResponse> {
   try {
-    const tempPassword = generateTempPassword();
-    const hash = await bcrypt.hash(tempPassword, 10);
+    const hash = await bcrypt.hash(payload.generatedTempPassword, 10);
     const expiresAt = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000); // 5 days
 
     const query = `
