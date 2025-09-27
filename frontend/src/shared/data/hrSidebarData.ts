@@ -32,7 +32,7 @@ export const hrSidebarData: SidebarData = {
         },
         {
           title: 'Contributions',
-          url: '/dashboard/contributions',
+          url: '/hr/contributions',
           icon: PiggyBank,
         },
 

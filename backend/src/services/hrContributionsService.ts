@@ -141,5 +141,11 @@ export async function getAllContributions(
   query += ` ORDER BY contribution_date DESC`;
 
   const { rows } = await pool.query(query, params);
-  return rows;
+  return rows.map(c => {
+    return {
+      ...c,
+      employee_amount: Number(c.employee_amount),
+      employer_amount: Number(c.employer_amount),
+    };
+  });
 }
