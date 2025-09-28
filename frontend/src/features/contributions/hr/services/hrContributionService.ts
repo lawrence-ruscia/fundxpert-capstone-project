@@ -96,7 +96,6 @@ export const hrContributionsService = {
     id: number,
     params?: { startDate?: string; endDate?: string }
   ) {
-    console.log('Start Date: ', params?.startDate);
     const res = await api.get(`/hr/contributions/employees/${id}/export/pdf`, {
       responseType: 'blob',
       params: {
@@ -104,6 +103,24 @@ export const hrContributionsService = {
         end: params?.endDate,
       },
     });
+
+    return res.data;
+  },
+
+  async exportEmpContributionExcel(
+    id: number,
+    params?: { startDate?: string; endDate?: string }
+  ) {
+    const res = await api.get(
+      `/hr/contributions/employees/${id}/export/excel`,
+      {
+        responseType: 'blob',
+        params: {
+          start: params?.startDate,
+          end: params?.endDate,
+        },
+      }
+    );
 
     return res.data;
   },

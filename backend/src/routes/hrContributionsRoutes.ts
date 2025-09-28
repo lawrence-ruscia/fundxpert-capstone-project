@@ -13,6 +13,7 @@ import {
   getEmployeeByContributionIdController,
   getEmployeeContributionSummary,
   exportEmployeeContributionsPDFController,
+  exportEmployeeContributionsExcelController,
 } from '../controllers/hrContributionsController.js';
 import { authMiddleware } from '../middleware/authMiddleware.js';
 
@@ -76,6 +77,12 @@ hrContributionsRouter.get(
   '/employees/:id/export/pdf',
   authMiddleware('HR'),
   exportEmployeeContributionsPDFController
+);
+
+hrContributionsRouter.get(
+  '/employees/:id/export/excel',
+  authMiddleware('HR'),
+  exportEmployeeContributionsExcelController
 );
 
 hrContributionsRouter.get(

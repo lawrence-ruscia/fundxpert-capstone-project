@@ -5,3 +5,5 @@ export const PASSWORD_EXPIRY_DAYS = 90; // expire after 90 days
 export const PASSWORD_HISTORY_LIMIT = 3; // prevent reuse of last 3
 
 export const TEMP_PASSWORD_EXPIRY_DAYS = 5;
+
+export const SHEET_PASSWORD = 'readonly123';

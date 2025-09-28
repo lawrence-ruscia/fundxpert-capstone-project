@@ -22,7 +22,14 @@ export function useContributionsExport(
         let blob;
 
         if (type === 'csv') blob = await hrContributionsService.exportCSV();
-        if (type === 'xlsx') blob = await hrContributionsService.exportExcel();
+        if (type === 'xlsx')
+          blob = await hrContributionsService.exportEmpContributionExcel(
+            userId,
+            {
+              startDate: dateRange.start,
+              endDate: dateRange.end,
+            }
+          );
         if (type === 'pdf') {
           blob = await hrContributionsService.exportEmpContributionPDF(userId, {
             startDate: dateRange.start,
@@ -38,8 +45,7 @@ export function useContributionsExport(
         const url = window.URL.createObjectURL(new Blob([blob]));
         const link = document.createElement('a');
         link.href = url;
-        const lastName = employee?.name.split(' ')[2];
-        link.download = `employee_${lastName}_contributions${dateRangeStr}_${new Date().toISOString().split('T')[0]}.${type}`;
+        link.download = `employee_${employee?.name.toLowerCase()}_contributions${dateRangeStr}_${new Date().toISOString().split('T')[0]}.${type}`;
         link.click();
 
         window.URL.revokeObjectURL(url);

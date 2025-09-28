@@ -16,6 +16,7 @@ import ExcelJS from 'exceljs';
 import PDFDocument from 'pdfkit';
 import { getEmployeeById } from '../services/hrService.js';
 import path from 'path';
+import { SHEET_PASSWORD } from '../config/security.config.js';
 
 /**
  * POST /hr/contributions
@@ -244,19 +245,24 @@ export async function exportContributionsExcelController(
       end
     );
 
+    const employee = await getEmployeeById(Number(employee_id));
+
     const workbook = new ExcelJS.Workbook();
     workbook.creator = 'FundXpert';
     workbook.lastModifiedBy = 'FundXpert';
     workbook.created = new Date();
     workbook.modified = new Date();
-    workbook.properties.subject = 'Provident Fund Contributions Report';
+    workbook.properties.subject =
+      'Employee Provident Fund Contributions Report';
 
     //  Cover Sheet
     const cover = workbook.addWorksheet('Report Info');
-    cover.addRow(['Provident Fund Contributions Report']);
+    cover.addRow(['Employee Provident Fund Contributions Report']);
     cover.addRow([`Generated at: ${new Date().toLocaleString()}`]);
-    if (employee_id) cover.addRow([`Employee ID: ${employee_id}`]);
+    if (employee_id)
+      cover.addRow([`Employee: ${employee.name} (${employee_id})`]);
     if (start && end) cover.addRow([`Period: ${start} → ${end}`]);
+    cover.addRow([`Total Records: ${contributions.length}`]);
     cover.addRow(['System: FundXpert']);
 
     // Style
@@ -313,6 +319,131 @@ export async function exportContributionsExcelController(
     // Format currency columns
     sheet.getColumn('employee_amount').numFmt = '#,##0.00';
     sheet.getColumn('employer_amount').numFmt = '#,##0.00';
+
+    // Protect sheet (read-only);
+    await sheet.protect(SHEET_PASSWORD, {
+      selectLockedCells: true,
+      selectUnlockedCells: true,
+    });
+
+    // Stream to response
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    );
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename=contributions_report.xlsx'
+    );
+
+    await workbook.xlsx.write(res);
+    res.end();
+  } catch (err) {
+    console.error('❌ Excel export error:', err);
+    res.status(500).json({ error: 'Failed to export Excel' });
+  }
+}
+
+/**
+ * GET /hr/contributions/export/excel
+ */
+export async function exportEmployeeContributionsExcelController(
+  req: Request,
+  res: Response
+) {
+  try {
+    const { id: employee_id } = req.params;
+    const { start, end } = req.query as {
+      start?: string;
+      end?: string;
+    };
+
+    const contributions = await getAllContributions(
+      Number(employee_id),
+      start,
+      end
+    );
+
+    const employee = await getEmployeeById(Number(employee_id));
+
+    const workbook = new ExcelJS.Workbook();
+    workbook.creator = 'FundXpert';
+    workbook.lastModifiedBy = 'FundXpert';
+    workbook.created = new Date();
+    workbook.modified = new Date();
+    workbook.properties.subject = 'Provident Fund Contributions Report';
+
+    //  Cover Sheet
+    const cover = workbook.addWorksheet('Report Info');
+    cover.addRow(['Provident Fund Contributions Report']);
+    cover.addRow([`Generated at: ${new Date().toLocaleString()}`]);
+    cover.addRow([`Employee: ${employee.name} (${employee.employee_id})`]);
+    if (start && end) cover.addRow([`Period: ${start} → ${end}`]);
+    cover.addRow(['System: FundXpert']);
+
+    // Style
+    cover.getRow(1).font = { bold: true, size: 14 };
+    cover.getRow(2).font = { italic: true, size: 10 };
+
+    //  Contributions Sheet
+    const sheet = workbook.addWorksheet('Contributions');
+    sheet.columns = [
+      { header: 'ID', key: 'id', width: 8 },
+      { header: 'Date', key: 'contribution_date', width: 15 },
+      { header: 'Employee Amount', key: 'employee_amount', width: 18 },
+      { header: 'Employer Amount', key: 'employer_amount', width: 18 },
+      { header: 'Total', key: 'total', width: 18 },
+      { header: 'Status', key: 'status', width: 18 },
+      { header: 'Notes', key: 'notes', width: 30 },
+    ];
+
+    // Freeze header row
+    sheet.views = [{ state: 'frozen', ySplit: 1 }];
+
+    // Add data
+    contributions.forEach(c => {
+      const employeeAmount = Number(c.employee_amount);
+      const employerAmount = Number(c.employer_amount);
+      sheet.addRow({
+        id: c.id,
+        user_id: c.user_id,
+        contribution_date: new Date(c.contribution_date)
+          .toISOString()
+          .split('T')[0],
+        employee_amount: Number(c.employee_amount),
+        employer_amount: Number(c.employer_amount),
+        total: employeeAmount + employerAmount,
+        status: c.is_adjusted ? 'Adjusted' : 'Original',
+        notes: c.notes ?? '',
+      });
+    });
+
+    // Totals row
+    const totalEmployee = contributions.reduce(
+      (sum, c) => sum + Number(c.employee_amount),
+      0
+    );
+    const totalEmployer = contributions.reduce(
+      (sum, c) => sum + Number(c.employer_amount),
+      0
+    );
+    const grandTotal = totalEmployee + totalEmployer;
+    const totalRow = sheet.addRow({
+      id: '',
+      user_id: '',
+      contribution_date: 'TOTAL',
+      employee_amount: totalEmployee,
+      employer_amount: totalEmployer,
+      total: grandTotal,
+      status: '',
+      notes: '',
+    });
+    totalRow.font = { bold: true };
+
+    // Format currency columns
+    sheet.getColumn('employee_amount').numFmt = '"P"#,##0.00';
+    sheet.getColumn('employer_amount').numFmt = '"P"#,##0.00';
+    sheet.getColumn('total').numFmt = '"P"#,##0.00';
 
     // Protect sheet (read-only)
     const sheetPassword = 'readonly123';
@@ -976,14 +1107,14 @@ export async function exportEmployeeContributionsPDFController(
     // Table with fixed column widths to prevent squishing
     const tableWidth = 515;
     const columnWidths = {
-      id: 50,
-      date: 70,
-      employeeAmount: 80,
-      employerAmount: 80,
-      total: 90,
-      notes: 125,
+      id: 40,
+      date: 65,
+      employeeAmount: 75,
+      employerAmount: 75,
+      total: 80,
+      status: 60,
+      notes: 120,
     };
-
     const columnPositions = {
       id: 40,
       date: 40 + columnWidths.id,
@@ -996,13 +1127,21 @@ export async function exportEmployeeContributionsPDFController(
         columnWidths.date +
         columnWidths.employeeAmount +
         columnWidths.employerAmount,
-      notes:
+      status:
         40 +
         columnWidths.id +
         columnWidths.date +
         columnWidths.employeeAmount +
         columnWidths.employerAmount +
         columnWidths.total,
+      notes:
+        40 +
+        columnWidths.id +
+        columnWidths.date +
+        columnWidths.employeeAmount +
+        columnWidths.employerAmount +
+        columnWidths.total +
+        columnWidths.status,
     };
 
     // Table header
@@ -1033,9 +1172,13 @@ export async function exportEmployeeContributionsPDFController(
         width: columnWidths.total - 10,
         align: 'center',
       })
+      .text('Status', columnPositions.status + 5, currentY, {
+        width: columnWidths.status - 10,
+        align: 'center',
+      })
       .text('Notes', columnPositions.notes + 5, currentY, {
         width: columnWidths.notes - 10,
-        align: 'left',
+        align: 'center',
       });
 
     currentY += 30;
@@ -1082,9 +1225,15 @@ export async function exportEmployeeContributionsPDFController(
             width: columnWidths.total - 10,
             align: 'center',
           })
+          .text(
+            contribution.is_adjusted ? 'Adjusted' : 'Original',
+            columnPositions.status + 2,
+            currentY,
+            { width: columnWidths.status, align: 'center' }
+          )
           .text('Notes', columnPositions.notes + 5, currentY, {
             width: columnWidths.notes - 10,
-            align: 'left',
+            align: 'center',
           });
         currentY += 30;
       }
@@ -1131,10 +1280,21 @@ export async function exportEmployeeContributionsPDFController(
           textY,
           { width: columnWidths.total - 4, align: 'center' }
         )
-        .text(contribution.notes || '-', columnPositions.notes + 5, textY, {
-          width: columnWidths.notes - 10,
-          align: 'left',
-        });
+        .text(
+          contribution.is_adjusted ? 'Adjusted' : 'Original',
+          columnPositions.status + 2,
+          textY,
+          { width: columnWidths.status - 4, align: 'center' }
+        )
+        .text(
+          truncateText(contribution.notes || '', 50),
+          columnPositions.notes + 5,
+          textY,
+          {
+            width: columnWidths.notes - 10,
+            align: 'center',
+          }
+        );
 
       totalEmployee += Number(contribution.employee_amount);
       totalEmployer += Number(contribution.employer_amount);
@@ -1298,3 +1458,9 @@ export async function getEmployeeContributionSummary(
     res.status(500).json({ error: 'Failed to fetch contribution summary' });
   }
 }
+const truncateText = (text: string, maxLength: number) => {
+  if (!text) return '-';
+  return text.length > maxLength
+    ? text.substring(0, maxLength - 3) + '...'
+    : text;
+};
