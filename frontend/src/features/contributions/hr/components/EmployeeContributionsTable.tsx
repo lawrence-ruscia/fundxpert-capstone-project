@@ -27,6 +27,7 @@ export const EmployeeContributionsTable = ({
         table={table}
         searchPlaceholder='Search by contribution date...'
         searchKey='contribution_date'
+        includeSearch={false}
         filters={[
           {
             columnId: 'is_adjusted',
@@ -35,6 +36,13 @@ export const EmployeeContributionsTable = ({
               { label: 'Original Contributions', value: false },
               { label: 'Adjusted/Corrected', value: true },
             ],
+          },
+
+          {
+            columnId: 'contribution_date',
+            title: 'Date Range',
+            type: 'date-range', // Add this type to distinguish from regular select filters
+            options: [], // Empty since this will be a date picker
           },
         ]}
       />

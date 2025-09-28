@@ -4,14 +4,19 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { DataTableFacetedFilter } from '../../features/employeeManagement/components/DataTableFacetedFilter';
 import { DataTableViewOptions } from '../../features/employeeManagement/components/ViewOptions';
+import { DataTableDateRangeFilter } from './DataTableDateRangeFilter';
+
+type FilterType = 'select' | 'date-range';
 
 type DataTableToolbarProps<TData> = {
   table: Table<TData>;
   searchPlaceholder?: string;
   searchKey?: string;
+  includeSearch?: boolean;
   filters?: {
     columnId: string;
     title: string;
+    type?: FilterType;
     options: {
       label: string;
       value: string;
@@ -23,6 +28,7 @@ type DataTableToolbarProps<TData> = {
 export function DataTableToolbar<TData>({
   table,
   searchPlaceholder = 'Filter...',
+  includeSearch = true,
   searchKey,
   filters = [],
 }: DataTableToolbarProps<TData>) {
@@ -32,7 +38,7 @@ export function DataTableToolbar<TData>({
   return (
     <div className='flex items-center justify-between'>
       <div className='flex flex-1 flex-col-reverse items-start gap-y-2 sm:flex-row sm:items-center sm:space-x-2'>
-        {searchKey ? (
+        {includeSearch && searchKey && (
           <Input
             placeholder={searchPlaceholder}
             value={
@@ -41,20 +47,25 @@ export function DataTableToolbar<TData>({
             onChange={event =>
               table.getColumn(searchKey)?.setFilterValue(event.target.value)
             }
-            className='h-8 w-[150px] lg:w-[250px]'
-          />
-        ) : (
-          <Input
-            placeholder={searchPlaceholder}
-            value={table.getState().globalFilter ?? ''}
-            onChange={event => table.setGlobalFilter(event.target.value)}
-            className='h-8 w-[150px] lg:w-[250px]'
+            className='h-8 w-full lg:w-[250px]'
           />
         )}
         <div className='flex gap-x-2'>
           {filters.map(filter => {
             const column = table.getColumn(filter.columnId);
             if (!column) return null;
+
+            // Handle date range filter
+            if (filter.type === 'date-range') {
+              return (
+                <DataTableDateRangeFilter
+                  key={filter.columnId}
+                  column={column}
+                  title={filter.title}
+                />
+              );
+            }
+
             return (
               <DataTableFacetedFilter
                 key={filter.columnId}
@@ -79,6 +90,7 @@ export function DataTableToolbar<TData>({
           </Button>
         )}
       </div>
+
       <DataTableViewOptions table={table} />
     </div>
   );

@@ -45,6 +45,35 @@ export const contributionsColumns: ColumnDef<Contribution>[] = [
       const contributionDate = new Date(row.getValue(id) as string);
       const formattedDate = formatDisplayDate(contributionDate);
 
+      // Handle date range filter (object with start/end)
+      if (
+        typeof value === 'object' &&
+        value !== null &&
+        !Array.isArray(value)
+      ) {
+        const { start, end } = value;
+        const rowDate = new Date(
+          contributionDate.getFullYear(),
+          contributionDate.getMonth(),
+          contributionDate.getDate()
+        );
+
+        if (start && end) {
+          const startDate = new Date(start);
+          const endDate = new Date(end);
+          const result = rowDate >= startDate && rowDate <= endDate;
+
+          return result;
+        } else if (start) {
+          const startDate = new Date(start);
+          return rowDate >= startDate;
+        } else if (end) {
+          const endDate = new Date(end);
+          return rowDate <= endDate;
+        }
+        return true;
+      }
+
       // Handle year-based filters from dropdown
       if (/^\d{4}$/.test(value)) {
         return contributionDate.getFullYear().toString() === value;

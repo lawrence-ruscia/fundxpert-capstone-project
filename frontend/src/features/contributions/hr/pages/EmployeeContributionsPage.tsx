@@ -20,6 +20,7 @@ import {
   Briefcase,
   Building,
   Building2,
+  Download,
   FileText,
   Hash,
   Percent,
@@ -32,9 +33,15 @@ import { EmploymentStatusBadge } from '@/features/dashboard/employee/components/
 import { useEmployeeContributionsData } from '../hooks/useEmployeeContributionsData';
 import { BalanceCard } from '@/features/dashboard/employee/components/BalanceCard';
 import { formatCurrency } from '@/features/dashboard/employee/utils/formatters';
+import { ExportDropdown } from '@/shared/components/ExportDropdown';
+import { hrContributionsService } from '../services/hrContributionService';
 
 // TODO: Make this Employee Summary, add loans, withdrawals
 export default function EmployeeContributionsPage() {
+  const [dateRange, setDateRange] = useState<{
+    start?: string;
+    end?: string;
+  }>({});
   const { id: userId } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const { data, loading, error, refetch } = useEmployeeContributionsData(
@@ -95,6 +102,27 @@ export default function EmployeeContributionsPage() {
     });
   }, [searchParams]);
 
+  // Get date filters from column filters
+  useEffect(() => {
+    console.log('All column filters:', columnFilters); // Debug all filters
+
+    const dateFilter = columnFilters.find(
+      filter => filter.id === 'contribution_date'
+    );
+    console.log('Date filter found:', dateFilter); // Debug the specific filter
+
+    if (dateFilter?.value && typeof dateFilter.value === 'object') {
+      console.log('Setting date range:', dateFilter.value); // Debug the value being set
+      setDateRange(dateFilter.value as { start?: string; end?: string });
+    } else {
+      console.log(
+        'No date range filter or wrong type:',
+        typeof dateFilter?.value
+      );
+      setDateRange({});
+    }
+  }, [columnFilters]);
+
   const table = useReactTable({
     data: contributions ?? [],
     columns: contributionsColumns,
@@ -113,6 +141,41 @@ export default function EmployeeContributionsPage() {
       pagination,
     },
   });
+
+  const handleExport = async (type: 'csv' | 'xlsx' | 'pdf') => {
+    try {
+      let blob;
+
+      if (type === 'csv') blob = await hrContributionsService.exportCSV();
+      if (type === 'xlsx') blob = await hrContributionsService.exportExcel();
+      if (type === 'pdf')
+        blob = await hrContributionsService.exportEmpContributionPDF(
+          Number(userId),
+          {
+            startDate: dateRange.start,
+            endDate: dateRange.end,
+          }
+        );
+
+      const dateRangeStr =
+        dateRange.start && dateRange.end
+          ? `_${dateRange.start}_to_${dateRange.end}`
+          : '';
+
+      const url = window.URL.createObjectURL(new Blob([blob]));
+      const link = document.createElement('a');
+      link.href = url;
+      const lastName = employee?.name.split(' ')[2];
+      link.download = `employee_${lastName}_contributions${dateRangeStr}_${new Date().toISOString().split('T')[0]}.${type}`;
+      link.click();
+
+      // Cleanup
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      // Handle error (show toast, etc.)
+      console.error('Export failed:', error);
+    }
+  };
 
   if (loading) {
     return <LoadingSpinner text={'Loading Employee Contributions...'} />;
@@ -253,16 +316,19 @@ export default function EmployeeContributionsPage() {
         )}
 
         <Card>
-          <CardHeader className='mb-4 flex items-center gap-2 font-semibold'>
-            <div className='bg-primary/10 rounded-lg p-2'>
-              <FileText className='h-5 w-5' />
+          <CardHeader className='mb-4 flex flex-wrap items-center justify-between gap-4 font-semibold'>
+            <div className='flex items-center gap-2'>
+              <div className='bg-primary/10 rounded-lg p-2'>
+                <FileText className='h-5 w-5' />
+              </div>
+              <CardTitle className='text-lg'>
+                Contribution History
+                <p className='text-muted-foreground text-sm'>
+                  Detailed breakdown of all contributions for this employee
+                </p>
+              </CardTitle>
             </div>
-            <CardTitle className='text-lg'>
-              Contribution History
-              <p className='text-muted-foreground text-sm'>
-                Detailed breakdown of all contributions for this employee
-              </p>
-            </CardTitle>
+            <ExportDropdown onExport={handleExport} />
           </CardHeader>
           <CardContent>
             <div className='overflow-auto'>

@@ -828,7 +828,7 @@ export async function exportEmployeeContributionsPDFController(
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader(
       'Content-Disposition',
-      `attachment; filename=employee_${employee.employee_id}_contributions_${new Date().toISOString().split('T')[0]}.pdf`
+      `attachment; filename=employee_${employee.name.split(' ')[0]}_contributions_${new Date().toISOString().split('T')[0]}.pdf`
     );
     doc.pipe(res);
 
