@@ -10,6 +10,7 @@ const formatDisplayDate = (dateString: Date) => {
   return dateString.toLocaleDateString('en-us', {
     year: 'numeric',
     month: 'short',
+    day: '2-digit',
   });
 };
 
@@ -43,6 +44,7 @@ export const contributionsColumns: ColumnDef<Contribution>[] = [
     ),
     filterFn: (row, id, value) => {
       const contributionDate = new Date(row.getValue(id) as string);
+
       const formattedDate = formatDisplayDate(contributionDate);
 
       // Handle date range filter (object with start/end)

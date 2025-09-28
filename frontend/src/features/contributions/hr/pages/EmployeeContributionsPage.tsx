@@ -1,4 +1,4 @@
-import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
 import { NetworkError } from '@/shared/components/NetworkError';
 import {
@@ -10,7 +10,7 @@ import {
   getSortedRowModel,
   getFilteredRowModel,
 } from '@tanstack/react-table';
-import { useState, useCallback, useEffect } from 'react';
+import { useState } from 'react';
 import { contributionsColumns } from '../components/EmployeeContributionsColumn';
 import { EmployeeContributionsTable } from '../components/EmployeeContributionsTable';
 import { EmployeeContributionsProvider } from '../components/EmployeeContributionsProvider';
@@ -20,7 +20,6 @@ import {
   Briefcase,
   Building,
   Building2,
-  Download,
   FileText,
   Hash,
   Percent,
@@ -34,94 +33,40 @@ import { useEmployeeContributionsData } from '../hooks/useEmployeeContributionsD
 import { BalanceCard } from '@/features/dashboard/employee/components/BalanceCard';
 import { formatCurrency } from '@/features/dashboard/employee/utils/formatters';
 import { ExportDropdown } from '@/shared/components/ExportDropdown';
-import { hrContributionsService } from '../services/hrContributionService';
+import { useTablePagination } from '@/shared/hooks/useTablePagination';
+import { useDateRangeFilter } from '@/shared/hooks/useDateRangeFilter';
+import { useContributionsExport } from '../hooks/useContributionsExport';
 
 // TODO: Make this Employee Summary, add loans, withdrawals
 export default function EmployeeContributionsPage() {
-  const [dateRange, setDateRange] = useState<{
-    start?: string;
-    end?: string;
-  }>({});
   const { id: userId } = useParams();
-  const [searchParams, setSearchParams] = useSearchParams();
+
   const { data, loading, error, refetch } = useEmployeeContributionsData(
     Number(userId)
   );
   const navigate = useNavigate();
 
-  const employee = data?.employee;
-  const contributions = data?.contributions;
-  const summary = data?.summary;
-
-  // Get pagination values from URL or use defaults
-  const pageIndex = parseInt(searchParams.get('page') || '1', 10) - 1; // URL is 1-based, table is 0-based
-  const pageSize = parseInt(searchParams.get('size') || '10', 10);
-
   // Table states
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState({});
-  const [pagination, setPagination] = useState({
-    pageIndex: Math.max(0, pageIndex), // Ensure non-negative
-    pageSize: [10, 20, 30, 40, 50].includes(pageSize) ? pageSize : 10, // Validate page size
-  });
+
+  // Date range from filters
+  const dateRange = useDateRangeFilter(columnFilters);
 
   // Sync pagination changes to URL
-  const handlePaginationChange = useCallback(
-    (updater: unknown) => {
-      const newPagination =
-        typeof updater === 'function' ? updater(pagination) : updater;
+  const { pagination, handlePaginationChange } = useTablePagination();
 
-      setPagination(newPagination);
-
-      // Update URL with new pagination values
-      const newSearchParams = new URLSearchParams(searchParams);
-      newSearchParams.set('page', (newPagination.pageIndex + 1).toString()); // Convert to 1-based
-      newSearchParams.set('size', newPagination.pageSize.toString());
-
-      setSearchParams(newSearchParams);
-    },
-    [pagination, searchParams, setSearchParams]
+  // Export functionality
+  const { handleExport } = useContributionsExport(
+    Number(userId),
+    dateRange,
+    data?.employee
   );
 
-  // Sync URL changes back to table state
-  useEffect(() => {
-    const urlPageIndex = parseInt(searchParams.get('page') || '1', 10) - 1;
-    const urlPageSize = parseInt(searchParams.get('size') || '10', 10);
-
-    setPagination(prev => {
-      const newPageIndex = Math.max(0, urlPageIndex);
-      const newPageSize = [10, 20, 30, 40, 50].includes(urlPageSize)
-        ? urlPageSize
-        : 10;
-
-      if (prev.pageIndex !== newPageIndex || prev.pageSize !== newPageSize) {
-        return { pageIndex: newPageIndex, pageSize: newPageSize };
-      }
-      return prev;
-    });
-  }, [searchParams]);
-
-  // Get date filters from column filters
-  useEffect(() => {
-    console.log('All column filters:', columnFilters); // Debug all filters
-
-    const dateFilter = columnFilters.find(
-      filter => filter.id === 'contribution_date'
-    );
-    console.log('Date filter found:', dateFilter); // Debug the specific filter
-
-    if (dateFilter?.value && typeof dateFilter.value === 'object') {
-      console.log('Setting date range:', dateFilter.value); // Debug the value being set
-      setDateRange(dateFilter.value as { start?: string; end?: string });
-    } else {
-      console.log(
-        'No date range filter or wrong type:',
-        typeof dateFilter?.value
-      );
-      setDateRange({});
-    }
-  }, [columnFilters]);
+  const employee = data?.employee;
+  const contributions = data?.contributions;
+  const summary = data?.summary;
 
   const table = useReactTable({
     data: contributions ?? [],
@@ -141,41 +86,6 @@ export default function EmployeeContributionsPage() {
       pagination,
     },
   });
-
-  const handleExport = async (type: 'csv' | 'xlsx' | 'pdf') => {
-    try {
-      let blob;
-
-      if (type === 'csv') blob = await hrContributionsService.exportCSV();
-      if (type === 'xlsx') blob = await hrContributionsService.exportExcel();
-      if (type === 'pdf')
-        blob = await hrContributionsService.exportEmpContributionPDF(
-          Number(userId),
-          {
-            startDate: dateRange.start,
-            endDate: dateRange.end,
-          }
-        );
-
-      const dateRangeStr =
-        dateRange.start && dateRange.end
-          ? `_${dateRange.start}_to_${dateRange.end}`
-          : '';
-
-      const url = window.URL.createObjectURL(new Blob([blob]));
-      const link = document.createElement('a');
-      link.href = url;
-      const lastName = employee?.name.split(' ')[2];
-      link.download = `employee_${lastName}_contributions${dateRangeStr}_${new Date().toISOString().split('T')[0]}.${type}`;
-      link.click();
-
-      // Cleanup
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      // Handle error (show toast, etc.)
-      console.error('Export failed:', error);
-    }
-  };
 
   if (loading) {
     return <LoadingSpinner text={'Loading Employee Contributions...'} />;

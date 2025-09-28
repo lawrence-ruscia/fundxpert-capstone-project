@@ -8,19 +8,25 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 interface DataTableDateRangeFilterProps<TData> {
   column: any;
   title: string;
 }
 
-const formatDate = date => {
+const formatDate = (date: Date): string => {
   const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-indexed
+  const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
-
   return `${year}-${month}-${day}`;
+};
+
+// Helper function to safely parse date strings
+const parseDate = (dateString?: string): Date | undefined => {
+  if (!dateString) return undefined;
+  const date = new Date(dateString + 'T00:00:00'); // Add time to avoid timezone issues
+  return isNaN(date.getTime()) ? undefined : date;
 };
 
 export function DataTableDateRangeFilter<TData>({
@@ -30,24 +36,39 @@ export function DataTableDateRangeFilter<TData>({
   const [startOpen, setStartOpen] = useState(false);
   const [endOpen, setEndOpen] = useState(false);
 
+  // Local state to track selected dates
+  const [selectedDates, setSelectedDates] = useState<{
+    start?: Date;
+    end?: Date;
+  }>({});
+
   const filterValue = column?.getFilterValue() as
     | { start?: string; end?: string }
     | undefined;
 
   const hasFilter = filterValue && (filterValue.start || filterValue.end);
 
-  // Convert string dates to Date objects for the calendar
-  const startDate = filterValue?.start
-    ? new Date(filterValue.start)
-    : undefined;
-  const endDate = filterValue?.end ? new Date(filterValue.end) : undefined;
+  // Sync filter value to local state when filter changes
+  useEffect(() => {
+    setSelectedDates({
+      start: parseDate(filterValue?.start),
+      end: parseDate(filterValue?.end),
+    });
+  }, [filterValue?.start, filterValue?.end]);
 
   // Handle date selection from calendar
   const handleDateSelect = (date: Date | undefined, type: 'start' | 'end') => {
     if (!date) return;
 
-    const dateString = formatDate(date); // Format as YYYY-MM-DD
+    const dateString = formatDate(date);
 
+    // Update local state immediately
+    setSelectedDates(prev => ({
+      ...prev,
+      [type]: date,
+    }));
+
+    // Update column filter
     column?.setFilterValue({
       ...filterValue,
       [type]: dateString,
@@ -56,6 +77,12 @@ export function DataTableDateRangeFilter<TData>({
     // Close the popover after selection
     if (type === 'start') setStartOpen(false);
     if (type === 'end') setEndOpen(false);
+  };
+
+  // Clear function that resets both filter and local state
+  const handleClear = () => {
+    setSelectedDates({});
+    column?.setFilterValue(undefined);
   };
 
   return (
@@ -96,8 +123,8 @@ export function DataTableDateRangeFilter<TData>({
                     variant='outline'
                     className='h-9 justify-between text-sm font-normal'
                   >
-                    {startDate
-                      ? startDate.toLocaleDateString()
+                    {selectedDates.start
+                      ? selectedDates.start.toLocaleDateString()
                       : 'Select start'}
                     <ChevronDown className='h-4 w-4' />
                   </Button>
@@ -107,11 +134,15 @@ export function DataTableDateRangeFilter<TData>({
                   align='start'
                 >
                   <CalendarComponent
+                    key={`start-${selectedDates.start?.getTime() || 'none'}`}
                     mode='single'
-                    selected={startDate}
+                    selected={selectedDates.start}
                     captionLayout='dropdown'
                     onSelect={date => handleDateSelect(date, 'start')}
-                    disabled={date => endDate && date > endDate}
+                    disabled={date =>
+                      selectedDates.end && date > selectedDates.end
+                    }
+                    autoFocus
                   />
                 </PopoverContent>
               </Popover>
@@ -126,7 +157,9 @@ export function DataTableDateRangeFilter<TData>({
                     variant='outline'
                     className='h-9 justify-between text-sm font-normal'
                   >
-                    {endDate ? endDate.toLocaleDateString() : 'Select end'}
+                    {selectedDates.end
+                      ? selectedDates.end.toLocaleDateString()
+                      : 'Select end'}
                     <ChevronDown className='h-4 w-4' />
                   </Button>
                 </PopoverTrigger>
@@ -136,10 +169,13 @@ export function DataTableDateRangeFilter<TData>({
                 >
                   <CalendarComponent
                     mode='single'
-                    selected={endDate}
+                    selected={selectedDates.end}
                     captionLayout='dropdown'
                     onSelect={date => handleDateSelect(date, 'end')}
-                    disabled={date => startDate && date < startDate}
+                    disabled={date =>
+                      selectedDates.start && date < selectedDates.start
+                    }
+                    autoFocus
                   />
                 </PopoverContent>
               </Popover>
@@ -150,7 +186,7 @@ export function DataTableDateRangeFilter<TData>({
             <Button
               variant='outline'
               size='sm'
-              onClick={() => column?.setFilterValue(undefined)}
+              onClick={handleClear}
               disabled={!hasFilter}
             >
               Clear
