@@ -21,7 +21,11 @@ export function useContributionsExport(
       try {
         let blob;
 
-        if (type === 'csv') blob = await hrContributionsService.exportCSV();
+        if (type === 'csv')
+          blob = await hrContributionsService.exportEmpContributionCSV(userId, {
+            startDate: dateRange.start,
+            endDate: dateRange.end,
+          });
         if (type === 'xlsx')
           blob = await hrContributionsService.exportEmpContributionExcel(
             userId,

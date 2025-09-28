@@ -4,7 +4,6 @@ import {
   updateContributionController,
   getEmployeeContributionsController,
   getAllContributionsController,
-  exportContributionsCSVController,
   exportContributionsExcelController,
   exportContributionsPDFController,
   findEmployeeByEmployeeIdController,
@@ -14,6 +13,7 @@ import {
   getEmployeeContributionSummary,
   exportEmployeeContributionsPDFController,
   exportEmployeeContributionsExcelController,
+  exportEmployeeContributionsCSVController,
 } from '../controllers/hrContributionsController.js';
 import { authMiddleware } from '../middleware/authMiddleware.js';
 
@@ -57,11 +57,6 @@ hrContributionsRouter.get(
 );
 
 hrContributionsRouter.get(
-  '/export/csv',
-  authMiddleware('HR'),
-  exportContributionsCSVController
-);
-hrContributionsRouter.get(
   '/export/excel',
   authMiddleware('HR'),
   exportContributionsExcelController
@@ -83,6 +78,12 @@ hrContributionsRouter.get(
   '/employees/:id/export/excel',
   authMiddleware('HR'),
   exportEmployeeContributionsExcelController
+);
+
+hrContributionsRouter.get(
+  '/employees/:id/export/csv',
+  authMiddleware('HR'),
+  exportEmployeeContributionsCSVController
 );
 
 hrContributionsRouter.get(

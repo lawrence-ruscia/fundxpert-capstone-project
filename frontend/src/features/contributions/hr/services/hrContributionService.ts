@@ -124,4 +124,19 @@ export const hrContributionsService = {
 
     return res.data;
   },
+
+  async exportEmpContributionCSV(
+    id: number,
+    params?: { startDate?: string; endDate?: string }
+  ) {
+    const res = await api.get(`/hr/contributions/employees/${id}/export/csv`, {
+      responseType: 'blob',
+      params: {
+        start: params?.startDate,
+        end: params?.endDate,
+      },
+    });
+
+    return res.data;
+  },
 };
