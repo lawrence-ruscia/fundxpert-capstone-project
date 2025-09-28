@@ -1,5 +1,5 @@
 import { ChevronsUpDown, LogOut, QrCode } from 'lucide-react';
-import useDialogState from '@/hooks/useDialogState';
+import useDialogState from '@/shared/hooks/useDialogState';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
   DropdownMenu,

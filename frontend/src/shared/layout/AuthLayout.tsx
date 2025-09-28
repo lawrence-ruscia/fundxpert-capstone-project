@@ -1,4 +1,4 @@
-import { useBreakpoint } from '@/hooks/useBreakpoint';
+import { useBreakpoint } from '@/shared/hooks/useBreakpoint';
 import background from '@/assets/login-background.png';
 import backgroundSmall from '@/assets/login-background-small.png';
 import Logo from '@/components/ui/logo';

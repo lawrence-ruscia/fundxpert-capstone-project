@@ -1,4 +1,4 @@
-import { useApi } from '@/hooks/useApi';
+import { useApi } from '@/shared/hooks/useApi';
 import { fetchContributionTrends } from '../services/hrDashboardService';
 import type {
   HRContributionPeriod,

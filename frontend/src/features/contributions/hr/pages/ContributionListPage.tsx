@@ -1,6 +1,6 @@
 import type { Contribution } from '../types/hrContribution';
 import { hrContributionsService } from '../services/hrContributionService.js';
-import { useApi } from '@/hooks/useApi';
+import { useApi } from '@/shared/hooks/useApi.js';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner.js';
 import { DataError } from '@/shared/components/DataError.js';
 import { Link, useNavigate } from 'react-router-dom';

@@ -7,7 +7,7 @@ import { ConfirmDialog } from '@/shared/components/confirm-dialog';
 import { toast } from 'sonner';
 import type { HREmployeeRecord } from '../types/employeeTypes';
 import { deleteEmployeeById, getEmployeeById } from '../services/hrService';
-import { useApi } from '@/hooks/useApi';
+import { useApi } from '@/shared/hooks/useApi';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
 import { DataError } from '@/shared/components/DataError';
 import { useNavigate } from 'react-router-dom';

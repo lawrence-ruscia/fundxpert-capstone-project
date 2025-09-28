@@ -4,8 +4,8 @@ export type Contribution = {
   contribution_date: string;
   employee_amount: number;
   employer_amount: number;
-  created_by: number;
   created_at: string;
+  created_by: number;
   updated_by?: number;
   updated_at?: string;
   is_adjusted: boolean;
@@ -47,4 +47,13 @@ export type EmployeeByContributionId = {
   employee_amount: number;
   employer_amount: number;
   total_amount: number;
+};
+
+export type ContributionSummary = {
+  total_contributions: number;
+  total_employee: number;
+  total_employer: number;
+  average_monthly: number;
+  last_contribution: string | null;
+  contribution_count: number;
 };

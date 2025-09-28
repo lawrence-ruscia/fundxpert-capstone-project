@@ -2,8 +2,8 @@ import { X } from 'lucide-react';
 import { type Table } from '@tanstack/react-table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { DataTableFacetedFilter } from './DataTableFacetedFilter';
-import { DataTableViewOptions } from './ViewOptions';
+import { DataTableFacetedFilter } from '../../features/employeeManagement/components/DataTableFacetedFilter';
+import { DataTableViewOptions } from '../../features/employeeManagement/components/ViewOptions';
 
 type DataTableToolbarProps<TData> = {
   table: Table<TData>;

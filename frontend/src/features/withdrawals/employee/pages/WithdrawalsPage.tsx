@@ -6,7 +6,7 @@ import type {
   WithdrawalEligibility,
   WithdrawalRequest,
 } from '../types/withdrawal';
-import { useApi } from '@/hooks/useApi';
+import { useApi } from '@/shared/hooks/useApi';
 import { WithdrawalApplicationForm } from '../components/WithdrawalApplicationForm';
 import { useState } from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';

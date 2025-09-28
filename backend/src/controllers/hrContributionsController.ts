@@ -2,12 +2,13 @@ import type { Request, Response } from 'express';
 import {
   recordContribution,
   updateContribution,
-  getContributionsByEmployee,
+  getEmployeeContributions,
   getAllContributions,
   findEmployeeByEmployeeId,
   searchEmployees,
   getContributionsById,
   getEmployeeByContributionId,
+  getContributionSummary,
 } from '../services/hrContributionsService.js';
 import { isAuthenticatedRequest } from './employeeControllers.js';
 import { Parser as Json2CsvParser } from 'json2csv';
@@ -96,7 +97,7 @@ export async function getEmployeeContributionsController(
 ) {
   try {
     const { userId } = req.params;
-    const contributions = await getContributionsByEmployee(Number(userId));
+    const contributions = await getEmployeeContributions(Number(userId));
     res.json(contributions);
   } catch (err) {
     console.error('❌ getEmployeeContributions error:', err);
@@ -113,11 +114,12 @@ export async function getAllContributionsController(
   res: Response
 ) {
   try {
-    const { userId, startDate, endDate } = req.params;
+    const { userId, startDate, endDate } = req.query;
 
+    console.log('From getAllContributions: ', startDate);
     const contributions = await getAllContributions(
       Number(userId),
-      startDate,
+      startDate ?? '',
       endDate
     );
     res.json(contributions);
@@ -133,7 +135,6 @@ export async function getContributionsByIdController(
 ) {
   try {
     const { id } = req.params;
-    console.log(id);
     const contributions = await getContributionsById(Number(id));
     res.json(contributions);
   } catch (err) {
@@ -814,5 +815,24 @@ export async function searchEmployeesController(req: Request, res: Response) {
   } catch (err) {
     console.error('❌ Error searching employees:', err);
     res.status(500).json({ error: 'Failed to search employees' });
+  }
+}
+
+export async function getEmployeeContributionSummary(
+  req: Request,
+  res: Response
+) {
+  try {
+    const { id } = req.params; // employee id
+    const summary = await getContributionSummary(Number(id));
+
+    if (!summary) {
+      return res.status(404).json({ error: 'No contributions found' });
+    }
+
+    res.json(summary);
+  } catch (err) {
+    console.error('Error fetching contribution summary:', err);
+    res.status(500).json({ error: 'Failed to fetch contribution summary' });
   }
 }

@@ -2,6 +2,7 @@ import { api } from '@/shared/api/api';
 import type {
   Contribution,
   ContributionPayload,
+  ContributionSummary,
 } from '../types/hrContribution';
 
 export const hrContributionsService = {
@@ -44,9 +45,22 @@ export const hrContributionsService = {
   async getEmployeeContributions(userId: number) {
     const { data } = await api.get(`/hr/contributions/employee/${userId}`);
     return data;
-  },  
+  },
 
-  async getAllContributions(params?: { start?: string; end?: string }) {
+  async getEmployeeContributionsSummary(
+    userId: number
+  ): Promise<ContributionSummary> {
+    const { data } = await api.get(
+      `/hr/contributions/employees/${userId}/summary`
+    );
+    return data;
+  },
+
+  async getAllContributions(params?: {
+    userId?: number;
+    startDate?: string;
+    endDate?: string;
+  }): Promise<Contribution[]> {
     const { data } = await api.get('/hr/contributions', { params });
     return data;
   },

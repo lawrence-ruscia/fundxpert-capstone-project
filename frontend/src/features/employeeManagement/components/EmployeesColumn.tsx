@@ -1,7 +1,6 @@
 import { type ColumnDef } from '@tanstack/react-table';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
 import { DataTableColumnHeader } from '@/shared/components/DataTableColummHeader';
 import { LongText } from '@/shared/components/LongText';
 import type { HREmployeeRecord } from '../types/employeeTypes';

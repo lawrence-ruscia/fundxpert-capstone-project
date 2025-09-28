@@ -10,48 +10,31 @@ import { columns } from '@/features/contributions/employee/components/data-colum
 
 import { type Table as TableType, flexRender } from '@tanstack/react-table';
 import { cn } from '@/lib/utils';
-import type { HREmployeeRecord } from '../types/employeeTypes';
 import { DataTableToolbar } from '@/shared/components/DataTableToolbar';
 import { DataTablePagination } from '@/shared/components/Pagination';
+import type { Contribution } from '../types/hrContribution';
 
-type EmployeesTableProps = {
-  table: TableType<HREmployeeRecord>;
-  metadata: unknown;
+type ContributionsTableProps = {
+  table: TableType<Contribution>;
 };
-export const EmployeesTable = ({ table, metadata }: EmployeesTableProps) => {
-  console.log('EmployeesTable Debug Info:');
-  console.log('- Table object:', table);
-  console.log('- Row count:', table.getRowCount());
-  console.log('- Rows:', table.getRowModel().rows);
-  console.log('- Columns:', table.getAllColumns());
-  console.log('- Header groups:', table.getHeaderGroups());
 
+export const EmployeeContributionsTable = ({
+  table,
+}: ContributionsTableProps) => {
   return (
     <div className='space-y-4 max-sm:has-[div[role="toolbar"]]:mb-16'>
       <DataTableToolbar
         table={table}
-        searchPlaceholder='Filter employees...'
-        searchKey='name'
+        searchPlaceholder='Search by contribution date...'
+        searchKey='contribution_date'
         filters={[
           {
-            columnId: 'employment_status',
-            title: 'Status',
+            columnId: 'is_adjusted',
+            title: 'Record Status',
             options: [
-              { label: 'Active', value: 'Active' },
-              { label: 'Retired', value: 'Retired' },
-              { label: 'Resigned', value: 'Resigned' },
-              { label: 'Terminated', value: 'Terminated' },
+              { label: 'Original Contributions', value: false },
+              { label: 'Adjusted/Corrected', value: true },
             ],
-          },
-          {
-            columnId: 'department',
-            title: 'Department',
-            options: metadata?.departments,
-          },
-          {
-            columnId: 'position',
-            title: 'Position',
-            options: metadata?.positions,
           },
         ]}
       />

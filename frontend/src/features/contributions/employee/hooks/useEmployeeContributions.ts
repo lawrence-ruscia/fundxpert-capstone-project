@@ -3,7 +3,7 @@ import type {
   ContributionPeriod,
   EmployeeContributionsResponse,
 } from '../types/employeeContributions';
-import { useApi } from '@/hooks/useApi';
+import { useApi } from '@/shared/hooks/useApi';
 
 export const useEmployeeContributions = (period?: ContributionPeriod) => {
   return useApi<EmployeeContributionsResponse>(

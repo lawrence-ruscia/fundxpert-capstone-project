@@ -11,3 +11,12 @@ export type Contribution = {
   is_adjusted: boolean;
   notes?: string;
 };
+
+export type ContributionSummary = {
+  total_contributions: number;
+  total_employee: number;
+  total_employer: number;
+  average_monthly: number;
+  last_contribution: string | null;
+  contribution_count: number;
+};

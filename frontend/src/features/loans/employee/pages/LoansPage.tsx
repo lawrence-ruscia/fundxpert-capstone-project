@@ -1,6 +1,6 @@
 import { fetchEmployeeLoans } from '../services/loanService';
 import type { Loan } from '../types/loan';
-import { useApi } from '@/hooks/useApi';
+import { useApi } from '@/shared/hooks/useApi';
 import { LoanApplicationForm } from '../components/LoanApplicationForm';
 import { useState } from 'react';
 import { useEmployeeOverview } from '@/features/dashboard/employee/hooks/useEmployeeOverview';

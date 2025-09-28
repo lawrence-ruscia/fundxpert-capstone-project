@@ -11,6 +11,7 @@ import {
   searchEmployeesController,
   getContributionsByIdController,
   getEmployeeByContributionIdController,
+  getEmployeeContributionSummary,
 } from '../controllers/hrContributionsController.js';
 import { authMiddleware } from '../middleware/authMiddleware.js';
 
@@ -80,4 +81,10 @@ hrContributionsRouter.get(
   '/employees/search',
   authMiddleware('HR'),
   searchEmployeesController
+);
+
+hrContributionsRouter.get(
+  '/employees/:id/summary',
+  authMiddleware('HR'),
+  getEmployeeContributionSummary
 );

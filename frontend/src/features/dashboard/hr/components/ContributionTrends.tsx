@@ -25,7 +25,7 @@ import { AreaChart } from 'recharts';
 import { useState, useMemo } from 'react';
 import { CartesianGrid, XAxis, YAxis, Area } from 'recharts';
 import type { HRContributionPeriod } from '../types/hrDashboardTypes';
-import { useIsMobile } from '@/hooks/use-mobile';
+import { useIsMobile } from '@/shared/hooks/use-mobile';
 import { useContributionTrends } from '../hooks/useContributionTrends';
 
 const chartConfig = {

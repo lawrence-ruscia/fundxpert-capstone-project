@@ -14,7 +14,7 @@ import {
 } from '@tanstack/react-table';
 import { employeesColumns } from '../components/EmployeesColumn';
 import { getEmployees } from '../services/hrService';
-import { useApi } from '@/hooks/useApi';
+import { useApi } from '@/shared/hooks/useApi';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
 import { NetworkError } from '@/shared/components/NetworkError';
 import { EmployeesTable } from '../components/EmployeesTable';

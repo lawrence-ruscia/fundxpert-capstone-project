@@ -1,4 +1,4 @@
-import useDialogState from '@/hooks/useDialogState';
+import useDialogState from '@/shared/hooks/useDialogState';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import {

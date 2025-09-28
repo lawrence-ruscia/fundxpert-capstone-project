@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import useDialogState from '@/hooks/useDialogState';
+import useDialogState from '@/shared/hooks/useDialogState';
 import type { HREmployeeRecord } from '../types/employeeTypes';
 
 type EmployeesDialogType = 'add' | 'edit' | 'delete';

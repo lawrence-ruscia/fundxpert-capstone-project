@@ -1,5 +1,8 @@
 import { pool } from '../config/db.config.js';
-import type { Contribution } from '../types/contribution.js';
+import type {
+  Contribution,
+  ContributionSummary,
+} from '../types/contribution.js';
 
 /**
  * Record a new contribution
@@ -96,7 +99,7 @@ export async function updateContribution(
 /**
  * Get contribution history for an employee
  */
-export async function getContributionsByEmployee(
+export async function getEmployeeContributions(
   userId: number
 ): Promise<Contribution[]> {
   const query = `
@@ -114,9 +117,9 @@ export async function getContributionsByEmployee(
  * Get all contributions
  */
 export async function getAllContributions(
-  userId?: number,
-  startDate?: string,
-  endDate?: string
+  userId?: number | null,
+  startDate?: string | null,
+  endDate?: string | null
 ): Promise<Contribution[]> {
   let query = `SELECT * FROM contributions`;
   const params: unknown[] = [];
@@ -127,11 +130,14 @@ export async function getAllContributions(
     conditions.push(`user_id = $${params.length}`);
   }
 
-  if (startDate && endDate) {
-    params.push(startDate, endDate);
-    conditions.push(
-      `contribution_date BETWEEN $${params.length - 1} AND $${params.length}`
-    );
+  if (startDate) {
+    params.push(startDate);
+    conditions.push(`contribution_date >= $${params.length}`);
+  }
+
+  if (endDate) {
+    params.push(endDate);
+    conditions.push(`contribution_date <= $${params.length}`);
   }
 
   if (conditions.length > 0) {
@@ -247,4 +253,34 @@ export async function getEmployeeByContributionId(contribution_id: number) {
   return rows[0] || null;
 }
 
+export async function getContributionSummary(
+  userId: number
+): Promise<ContributionSummary> {
+  const query = `
+    WITH summary AS (
+      SELECT
+        COALESCE(SUM(employee_amount + employer_amount), 0) AS total_contributions,
+        COALESCE(SUM(employee_amount), 0) AS total_employee,
+        COALESCE(SUM(employer_amount), 0) AS total_employer,
+        COUNT(*) AS contribution_count,
+        MAX(contribution_date) AS last_contribution
+      FROM contributions
+      WHERE user_id = $1
+    )
+    SELECT
+      total_contributions,
+      total_employee,
+      total_employer,
+      contribution_count,
+      last_contribution,
+      CASE 
+        WHEN contribution_count > 0 
+        THEN ROUND(total_contributions::numeric / contribution_count, 2)
+        ELSE 0
+      END AS average_monthly
+    FROM summary;
+  `;
 
+  const { rows } = await pool.query(query, [userId]);
+  return rows[0];
+}
