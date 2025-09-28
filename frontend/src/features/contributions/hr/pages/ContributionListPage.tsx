@@ -26,7 +26,8 @@ export default function ContributionListPage() {
     let blob;
     if (type === 'csv') blob = await hrContributionsService.exportCSV();
     if (type === 'excel') blob = await hrContributionsService.exportExcel();
-    if (type === 'pdf') blob = await hrContributionsService.exportPDF();
+    if (type === 'pdf')
+      blob = await hrContributionsService.exportEmpContributionPDF(31);
 
     const url = window.URL.createObjectURL(new Blob([blob]));
     const link = document.createElement('a');

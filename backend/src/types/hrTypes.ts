@@ -71,3 +71,18 @@ export type HRWithdrawalPendingResponse = {
   total_balance: number;
   created_at: string;
 };
+
+export type HREmployeeRecord = {
+  id: number;
+  employee_id: string;
+  name: string;
+  email: string;
+  department_id: number;
+  position_id: number;
+  role: 'Employee';
+  salary: number;
+  employment_status: string;
+  date_hired: string;
+  department: string;
+  position: string;
+};

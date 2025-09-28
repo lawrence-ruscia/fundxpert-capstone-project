@@ -91,4 +91,13 @@ export const hrContributionsService = {
     });
     return res.data;
   },
+
+  async exportEmpContributionPDF(id: number) {
+    const res = await api.get(`/hr/contributions/employees/${id}/export/pdf`, {
+      responseType: 'blob',
+    });
+
+    console.log(`EXPORT STATUS ${res.status}`);
+    return res.data;
+  },
 };
