@@ -1,4 +1,4 @@
-import { Ellipsis } from 'lucide-react';
+import { Ellipsis, User } from 'lucide-react';
 import { type Row } from '@tanstack/react-table';
 import { Trash2, UserPen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -34,6 +34,19 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align='end' className='w-[160px]'>
+          <DropdownMenuItem
+            onClick={() => {
+              setCurrentRow(row.original);
+              setOpen('view');
+              navigate(`/hr/employees/${row.original.id}/contributions`);
+            }}
+          >
+            View
+            <DropdownMenuShortcut>
+              <User size={16} />
+            </DropdownMenuShortcut>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={() => {
               setCurrentRow(row.original);

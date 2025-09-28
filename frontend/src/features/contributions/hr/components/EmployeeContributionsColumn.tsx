@@ -168,7 +168,7 @@ export const contributionsColumns: ColumnDef<Contribution>[] = [
       const notes = row.getValue('notes') as string;
       return (
         <div className='flex items-center gap-x-2'>
-          <span className='max-w-48 truncate text-sm text-gray-600'>
+          <span className='text-muted-foreground max-w-48 truncate text-sm'>
             {notes || '-'}
           </span>
         </div>

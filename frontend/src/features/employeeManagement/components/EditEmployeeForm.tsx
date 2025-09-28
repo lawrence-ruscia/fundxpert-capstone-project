@@ -296,7 +296,7 @@ export const EditEmployeeForm = ({ id }: EmployeeEditFormProps) => {
           <ArrowLeft className='h-4 w-4' />
         </Button>
 
-        <h1 className='text-3xl font-bold tracking-tight'>Edit Employee</h1>
+        <h1 className='text-2xl font-bold tracking-tight'>Edit Employee</h1>
         <p className='text-muted-foreground'>
           Update employee information and job details
         </p>

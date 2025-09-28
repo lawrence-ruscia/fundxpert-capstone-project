@@ -127,23 +127,21 @@ export const EmployeeListPage = () => {
 
   return (
     <EmployeesProvider>
-      <Main>
-        <div className='mb-2 flex flex-wrap items-center justify-between space-y-2'>
-          <div>
-            <h2 className='text-2xl font-bold tracking-tight'>Employee List</h2>
-            <p className='text-muted-foreground'>
-              Manage employee records and account details.
-            </p>
-          </div>
-          <EmployeesPrimaryButtons />
+      <div className='mb-2 flex flex-wrap items-center justify-between space-y-2'>
+        <div>
+          <h2 className='text-2xl font-bold tracking-tight'>Employee List</h2>
+          <p className='text-muted-foreground'>
+            Manage employee records and account details.
+          </p>
         </div>
-        <div className='-mx-4 flex-1 overflow-auto px-4 py-1 lg:flex-row lg:space-y-0 lg:space-x-12'>
-          <EmployeesTable
-            table={table as Table<HREmployeeRecord>}
-            metadata={{ departments, positions }}
-          />
-        </div>
-      </Main>
+        <EmployeesPrimaryButtons />
+      </div>
+      <div className='-mx-4 flex-1 overflow-auto px-4 py-1 lg:flex-row lg:space-y-0 lg:space-x-12'>
+        <EmployeesTable
+          table={table as Table<HREmployeeRecord>}
+          metadata={{ departments, positions }}
+        />
+      </div>
     </EmployeesProvider>
   );
 };

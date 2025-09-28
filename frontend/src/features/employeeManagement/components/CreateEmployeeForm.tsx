@@ -217,8 +217,8 @@ export const CreateEmployeeForm = () => {
         >
           <ArrowLeft className='h-4 w-4' />
         </Button>
-        <h1 className='text-3xl font-bold tracking-tight'>Create Employee</h1>
-        <p className='text-muted-foreground mt-2'>
+        <h1 className='text-2xl font-bold tracking-tight'>Create Employee</h1>
+        <p className='text-muted-foreground'>
           Add a new employee to the system with their basic information and job
           details
         </p>

@@ -1,4 +1,4 @@
-import { useParams, useSearchParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
 import { NetworkError } from '@/shared/components/NetworkError';
 import {
@@ -33,12 +33,14 @@ import { useEmployeeContributionsData } from '../hooks/useEmployeeContributionsD
 import { BalanceCard } from '@/features/dashboard/employee/components/BalanceCard';
 import { formatCurrency } from '@/features/dashboard/employee/utils/formatters';
 
+// TODO: Make this Employee Summary, add loans, withdrawals
 export default function EmployeeContributionsPage() {
   const { id: userId } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const { data, loading, error, refetch } = useEmployeeContributionsData(
     Number(userId)
   );
+  const navigate = useNavigate();
 
   const employee = data?.employee;
   const contributions = data?.contributions;
@@ -128,7 +130,7 @@ export default function EmployeeContributionsPage() {
             <Button
               variant='ghost'
               size='sm'
-              onClick={() => window.history.back()}
+              onClick={() => navigate('/hr/employees')}
               className='p-2'
             >
               <ArrowLeft className='h-4 w-4' />

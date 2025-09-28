@@ -2,11 +2,11 @@ import React, { useState } from 'react';
 import useDialogState from '@/shared/hooks/useDialogState';
 import type { HREmployeeRecord } from '../types/employeeTypes';
 
-type EmployeesDialogType = 'add' | 'edit' | 'delete';
+type EmployeesActionType = 'add' | 'view' | 'edit' | 'delete';
 
 type EmployeesContextType = {
-  open: EmployeesDialogType | null;
-  setOpen: (str: EmployeesDialogType | null) => void;
+  open: EmployeesActionType | null;
+  setOpen: (str: EmployeesActionType | null) => void;
   currentRow: HREmployeeRecord | null;
   setCurrentRow: React.Dispatch<React.SetStateAction<HREmployeeRecord | null>>;
 };
@@ -14,7 +14,7 @@ type EmployeesContextType = {
 const EmployeesContext = React.createContext<EmployeesContextType | null>(null);
 
 export function EmployeesProvider({ children }: { children: React.ReactNode }) {
-  const [open, setOpen] = useDialogState<EmployeesDialogType>(null);
+  const [open, setOpen] = useDialogState<EmployeesActionType>(null);
   const [currentRow, setCurrentRow] = useState<HREmployeeRecord | null>(null);
 
   return (

@@ -9,7 +9,7 @@ export function EmployeesPrimaryButtons() {
 
   return (
     <div className='flex gap-2'>
-      <Button 
+      <Button
         className='space-x-1'
         onClick={() => {
           setOpen('add');
