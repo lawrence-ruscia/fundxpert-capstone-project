@@ -58,11 +58,14 @@ export default function EmployeeContributionsPage() {
   const { pagination, handlePaginationChange } = useTablePagination();
 
   // Export functionality
-  const { handleExport } = useContributionsExport(
-    Number(userId),
-    dateRange,
-    data?.employee
-  );
+  const { handleExport } = useContributionsExport({
+    userId: Number(userId),
+    dateRange: {
+      start: dateRange.start,
+      end: dateRange.end ?? new Date().toLocaleDateString(),
+    },
+    employee: data?.employee,
+  });
 
   const employee = data?.employee;
   const contributions = data?.contributions;

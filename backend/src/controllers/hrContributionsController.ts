@@ -363,11 +363,24 @@ export async function exportContributionsExcelController(
   res: Response
 ) {
   try {
-    const { employee_id, start, end } = req.query as {
-      employee_id?: string;
+    const {
+      user_id: employee_id,
+      start,
+      end,
+    } = req.query as {
+      user_id?: string;
       start?: string;
       end?: string;
     };
+
+    // Determine if this is a single employee or all employees export
+
+    const isSingleEmployee = !!employee_id;
+
+    // Fetch data based on export type
+    const employee = isSingleEmployee
+      ? await getEmployeeById(Number(employee_id))
+      : null;
 
     const contributions = await getAllContributions(
       employee_id ? Number(employee_id) : undefined,
@@ -375,125 +388,11 @@ export async function exportContributionsExcelController(
       end
     );
 
-    const employee = await getEmployeeById(Number(employee_id));
-
-    const workbook = new ExcelJS.Workbook();
-    workbook.creator = 'FundXpert';
-    workbook.lastModifiedBy = 'FundXpert';
-    workbook.created = new Date();
-    workbook.modified = new Date();
-    workbook.properties.subject =
-      'Employee Provident Fund Contributions Report';
-
-    //  Cover Sheet
-    const cover = workbook.addWorksheet('Report Info');
-    cover.addRow(['Employee Provident Fund Contributions Report']);
-    cover.addRow([`Generated at: ${new Date().toLocaleString()}`]);
-    if (employee_id)
-      cover.addRow([`Employee: ${employee.name} (${employee_id})`]);
-    if (start && end) cover.addRow([`Period: ${start} → ${end}`]);
-    cover.addRow([`Total Records: ${contributions.length}`]);
-    cover.addRow(['System: FundXpert']);
-
-    // Style
-    cover.getRow(1).font = { bold: true, size: 14 };
-    cover.getRow(2).font = { italic: true, size: 10 };
-
-    //  Contributions Sheet
-    const sheet = workbook.addWorksheet('Contributions');
-    sheet.columns = [
-      { header: 'ID', key: 'id', width: 8 },
-      { header: 'Employee ID', key: 'user_id', width: 12 },
-      { header: 'Date', key: 'contribution_date', width: 15 },
-      { header: 'Employee Amount', key: 'employee_amount', width: 18 },
-      { header: 'Employer Amount', key: 'employer_amount', width: 18 },
-      { header: 'Notes', key: 'notes', width: 30 },
-    ];
-
-    // Freeze header row
-    sheet.views = [{ state: 'frozen', ySplit: 1 }];
-
-    // Add data
-    contributions.forEach(c => {
-      sheet.addRow({
-        id: c.id,
-        user_id: c.user_id,
-        contribution_date: new Date(c.contribution_date)
-          .toISOString()
-          .split('T')[0],
-        employee_amount: Number(c.employee_amount),
-        employer_amount: Number(c.employer_amount),
-        notes: c.notes ?? '',
+    if (contributions.length === 0) {
+      return res.status(404).json({
+        error: 'No contributions found for the specified criteria',
       });
-    });
-
-    // Totals row
-    const totalEmployee = contributions.reduce(
-      (sum, c) => sum + Number(c.employee_amount),
-      0
-    );
-    const totalEmployer = contributions.reduce(
-      (sum, c) => sum + Number(c.employer_amount),
-      0
-    );
-    const totalRow = sheet.addRow({
-      id: '',
-      user_id: '',
-      contribution_date: 'TOTAL',
-      employee_amount: totalEmployee,
-      employer_amount: totalEmployer,
-      notes: '',
-    });
-    totalRow.font = { bold: true };
-
-    // Format currency columns
-    sheet.getColumn('employee_amount').numFmt = '#,##0.00';
-    sheet.getColumn('employer_amount').numFmt = '#,##0.00';
-
-    // Protect sheet (read-only);
-    await sheet.protect(SHEET_PASSWORD, {
-      selectLockedCells: true,
-      selectUnlockedCells: true,
-    });
-
-    // Stream to response
-    res.setHeader(
-      'Content-Type',
-      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    );
-    res.setHeader(
-      'Content-Disposition',
-      'attachment; filename=contributions_report.xlsx'
-    );
-
-    await workbook.xlsx.write(res);
-    res.end();
-  } catch (err) {
-    console.error('❌ Excel export error:', err);
-    res.status(500).json({ error: 'Failed to export Excel' });
-  }
-}
-
-/**
- * GET /hr/contributions/export/excel
- */
-export async function exportEmployeeContributionsExcelController(
-  req: Request,
-  res: Response
-) {
-  try {
-    const { id: employee_id } = req.params;
-    const { start, end } = req.query as {
-      start?: string;
-      end?: string;
-    };
-
-    const employee = await getEmployeeById(Number(employee_id));
-    const contributions = await getAllContributions(
-      Number(employee_id),
-      start,
-      end
-    );
+    }
 
     const workbook = new ExcelJS.Workbook();
     workbook.creator = 'FundXpert System';
@@ -503,65 +402,109 @@ export async function exportEmployeeContributionsExcelController(
     workbook.properties.subject =
       'Provident Fund Contributions Report - Banking Audit';
 
-    // Enhanced Cover Sheet
+    // ========== COVER SHEET ==========
     const cover = workbook.addWorksheet('Report Information');
 
     cover.addRow(['PROVIDENT FUND CONTRIBUTIONS REPORT']);
     cover.addRow(['']);
-    cover.addRow(['DOCUMENT CLASSIFICATION: CONFIDENTIAL']);
+    cover.addRow(['DOCUMENT CLASSIFICATION: CONFIDENTIAL - HR USE ONLY']);
     cover.addRow(['']);
     cover.addRow(['REPORT GENERATION']);
     cover.addRow(['Generated By:', 'FundXpert System']);
     cover.addRow(['Report Date:', new Date().toLocaleString()]);
-    cover.addRow(['Report Type:', 'Employee Contribution History']);
-    cover.addRow(['']);
-    cover.addRow(['EMPLOYEE INFORMATION']);
-    cover.addRow(['Full Name:', employee.name]);
-    cover.addRow(['Employee ID:', employee.employee_id]);
-    cover.addRow(['Department:', employee.department]);
-    cover.addRow(['Position:', employee.position]);
-    cover.addRow(['Employment Status:', employee.employment_status]);
     cover.addRow([
-      'Base Salary:',
-      `₱${Number(employee.salary).toLocaleString()}`,
+      'Report Type:',
+      isSingleEmployee
+        ? 'Individual Employee History'
+        : 'All Employees Contributions',
     ]);
     cover.addRow(['']);
-    cover.addRow(['REPORT SCOPE']);
+
+    if (isSingleEmployee && employee) {
+      // Single employee detailed information
+      cover.addRow(['EMPLOYEE INFORMATION']);
+      cover.addRow(['Full Name:', employee.name]);
+      cover.addRow(['Employee ID:', employee.employee_id]);
+      cover.addRow(['Department:', employee.department]);
+      cover.addRow(['Position:', employee.position]);
+      cover.addRow(['Employment Status:', employee.employment_status]);
+      cover.addRow([
+        'Base Salary:',
+        `₱${Number(employee.salary).toLocaleString()}`,
+      ]);
+      cover.addRow(['']);
+    } else {
+      // All employees summary information
+      cover.addRow(['REPORT SCOPE']);
+      cover.addRow(['Coverage:', 'All Active Employees']);
+      cover.addRow(['Total Records:', contributions.length]);
+
+      // Get unique employee count
+      const uniqueEmployees = new Set(contributions.map(c => c.user_id)).size;
+      cover.addRow(['Employees Included:', uniqueEmployees]);
+      cover.addRow(['']);
+    }
+
+    cover.addRow(['REPORTING PERIOD']);
     if (start && end) {
       cover.addRow([
-        'Report Period:',
+        'Date Range:',
         `${new Date(start).toLocaleDateString()} - ${new Date(end).toLocaleDateString()}`,
       ]);
     } else {
-      cover.addRow(['Report Period:', 'All Time']);
+      cover.addRow(['Date Range:', 'All Time']);
     }
-    cover.addRow(['Total Records:', contributions.length]);
+
+    if (!isSingleEmployee) {
+      cover.addRow(['Total Records:', contributions.length]);
+    }
 
     // Style cover sheet
     cover.getRow(1).font = { bold: true, size: 16 };
     cover.getRow(3).font = {
       bold: true,
-      size: 12,
+      size: 11,
       color: { argb: 'FFDC2626' },
     };
     cover.getRow(5).font = { bold: true, size: 11 };
-    cover.getRow(10).font = { bold: true, size: 11 };
-    cover.getRow(18).font = { bold: true, size: 11 };
+
+    if (isSingleEmployee) {
+      cover.getRow(10).font = { bold: true, size: 11 };
+      cover.getRow(18).font = { bold: true, size: 11 };
+    } else {
+      cover.getRow(10).font = { bold: true, size: 11 };
+      const periodRowIndex = 10 + 6; // Adjusted for all employees layout
+      cover.getRow(periodRowIndex).font = { bold: true, size: 11 };
+    }
+
     cover.columns = [{ width: 25 }, { width: 50 }];
 
-    // Main Contributions Sheet
+    // ========== MAIN CONTRIBUTIONS SHEET ==========
     const sheet = workbook.addWorksheet('Contribution Details');
 
-    // Set up columns with proper headers
-    sheet.columns = [
-      { header: 'ID', key: 'id', width: 10 },
-      { header: 'Date', key: 'contribution_date', width: 15 },
-      { header: 'Employee Amount (₱)', key: 'employee_amount', width: 20 },
-      { header: 'Employer Amount (₱)', key: 'employer_amount', width: 20 },
-      { header: 'Total (₱)', key: 'total', width: 18 },
-      { header: 'Status', key: 'status', width: 12 },
-      { header: 'Notes', key: 'notes', width: 35 },
-    ];
+    // Column configuration based on export type
+    const columns = isSingleEmployee
+      ? [
+          { header: 'ID', key: 'id', width: 10 },
+          { header: 'Date', key: 'contribution_date', width: 15 },
+          { header: 'Employee Amount (₱)', key: 'employee_amount', width: 20 },
+          { header: 'Employer Amount (₱)', key: 'employer_amount', width: 20 },
+          { header: 'Total (₱)', key: 'total', width: 18 },
+          { header: 'Status', key: 'status', width: 18 },
+          { header: 'Notes', key: 'notes', width: 35 },
+        ]
+      : [
+          { header: 'ID', key: 'id', width: 10 },
+          { header: 'Employee ID', key: 'user_id', width: 15 },
+          { header: 'Date', key: 'contribution_date', width: 15 },
+          { header: 'Employee Amount (₱)', key: 'employee_amount', width: 20 },
+          { header: 'Employer Amount (₱)', key: 'employer_amount', width: 20 },
+          { header: 'Total (₱)', key: 'total', width: 18 },
+          { header: 'Status', key: 'status', width: 18 },
+          { header: 'Notes', key: 'notes', width: 35 },
+        ];
+
+    sheet.columns = columns;
 
     // Freeze header row
     sheet.views = [{ state: 'frozen', ySplit: 1 }];
@@ -580,7 +523,7 @@ export async function exportEmployeeContributionsExcelController(
       const employeeAmount = Number(c.employee_amount);
       const employerAmount = Number(c.employer_amount);
 
-      const row = sheet.addRow({
+      const rowData: any = {
         id: c.id,
         contribution_date: new Date(c.contribution_date)
           .toISOString()
@@ -590,7 +533,14 @@ export async function exportEmployeeContributionsExcelController(
         total: employeeAmount + employerAmount,
         status: c.is_adjusted ? 'Adjusted' : 'Original',
         notes: c.notes ?? '',
-      });
+      };
+
+      // Include user_id for all employees export
+      if (!isSingleEmployee) {
+        rowData.user_id = c.user_id;
+      }
+
+      const row = sheet.addRow(rowData);
 
       // Alternate row colors
       if (index % 2 === 1) {
@@ -614,15 +564,21 @@ export async function exportEmployeeContributionsExcelController(
     const grandTotal = totalEmployee + totalEmployer;
 
     // Add totals row
-    const totalRow = sheet.addRow({
+    const totalRowData: any = {
       id: '',
       contribution_date: 'TOTAL',
       employee_amount: totalEmployee,
       employer_amount: totalEmployer,
-      total: grandTotal,
-      status: '',
-      notes: 'Grand Total',
-    });
+      total: '',
+      status: 'GRAND TOTAL',
+      notes: formatCurrency(grandTotal),
+    };
+
+    if (!isSingleEmployee) {
+      totalRowData.user_id = '';
+    }
+
+    const totalRow = sheet.addRow(totalRowData);
 
     totalRow.font = { bold: true };
     totalRow.fill = {
@@ -648,46 +604,70 @@ export async function exportEmployeeContributionsExcelController(
       });
     });
 
-    // Summary Sheet
+    // ========== SUMMARY SHEET ==========
     const summarySheet = workbook.addWorksheet('Financial Summary');
     summarySheet.addRow(['FINANCIAL SUMMARY']);
     summarySheet.addRow(['']);
-    summarySheet.addRow(['Employee:', employee.name]);
-    summarySheet.addRow(['Employee ID:', employee.employee_id]);
-    summarySheet.addRow(['']);
+
+    if (isSingleEmployee && employee) {
+      summarySheet.addRow(['Employee:', employee.name]);
+      summarySheet.addRow(['Employee ID:', employee.employee_id]);
+      summarySheet.addRow(['']);
+    } else {
+      summarySheet.addRow(['Report Type:', 'All Employees']);
+      summarySheet.addRow([
+        'Number of Employees:',
+        new Set(contributions.map(c => c.user_id)).size,
+      ]);
+      summarySheet.addRow(['']);
+    }
+
     summarySheet.addRow(['Total Employee Contributions:', totalEmployee]);
     summarySheet.addRow(['Total Employer Contributions:', totalEmployer]);
     summarySheet.addRow(['Grand Total:', grandTotal]);
+    summarySheet.addRow(['']);
+    summarySheet.addRow([
+      'Average per Record:',
+      grandTotal / contributions.length,
+    ]);
 
     summarySheet.getRow(1).font = { bold: true, size: 14 };
     summarySheet.getColumn('B').numFmt = '"₱"#,##0.00';
     summarySheet.columns = [{ width: 30 }, { width: 20 }];
 
-    // Protect sheets
-    const sheetPassword = 'audit2024';
-    await sheet.protect(sheetPassword, {
+    // Protect sheets (bank-grade security)
+    await sheet.protect(SHEET_PASSWORD, {
+      selectLockedCells: true,
+      selectUnlockedCells: true,
+    });
+    await summarySheet.protect(SHEET_PASSWORD, {
       selectLockedCells: true,
       selectUnlockedCells: true,
     });
 
-    // Professional filename
-    const lastName = employee.name.split(' ').pop() || 'Employee';
-    const dateRange = start && end ? `_${start}_to_${end}` : '';
+    // ========== GENERATE FILENAME ==========
     const timestamp = new Date().toISOString().split('T')[0];
+    const dateRange = start && end ? `_${start}_to_${end}` : '';
 
+    let filename: string;
+    if (isSingleEmployee && employee) {
+      const lastName = employee.name.split(' ').pop() || 'Employee';
+      filename = `PF_Contributions_${lastName}_${employee.employee_id}${dateRange}_${timestamp}.xlsx`;
+    } else {
+      filename = `PF_Contributions_AllEmployees${dateRange}_${timestamp}.xlsx`;
+    }
+
+    // ========== SEND RESPONSE ==========
     res.setHeader(
       'Content-Type',
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     );
-    res.setHeader(
-      'Content-Disposition',
-      `attachment; filename="PF_Contributions_${lastName}_${employee.employee_id}${dateRange}_${timestamp}.xlsx"`
-    );
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
 
     await workbook.xlsx.write(res);
     res.end();
   } catch (err) {
-    console.error('Excel export error:', err);
+    console.error('❌ Excel export error:', err);
     res.status(500).json({
       error: 'Failed to export Excel',
       message: err instanceof Error ? err.message : 'Unknown error occurred',
@@ -1750,3 +1730,10 @@ const truncateText = (text: string, maxLength: number) => {
     ? text.substring(0, maxLength - 3) + '...'
     : text;
 };
+
+export function formatCurrency(value: number): string {
+  return `₱${value.toLocaleString('en-PH', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+}

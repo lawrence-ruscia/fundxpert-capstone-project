@@ -4,6 +4,7 @@ import { useApi } from '@/shared/hooks/useApi.js';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner.js';
 import { DataError } from '@/shared/components/DataError.js';
 import { Link, useNavigate } from 'react-router-dom';
+import { useContributionsExport } from '../hooks/useContributionsExport.js';
 export default function ContributionListPage() {
   const {
     data: contributions,
@@ -12,80 +13,71 @@ export default function ContributionListPage() {
   } = useApi<Contribution[]>(() =>
     hrContributionsService.getAllContributions()
   );
+  const { handleExport } = useContributionsExport();
+
   const navigate = useNavigate();
 
-  if (loading) {
-    return <LoadingSpinner text={'Loading contributions data...'} />;
-  }
-
-  if (error) {
-    return <DataError message='Unable to fetch contribution data' />;
-  }
-
-  const handleExport = async (type: 'csv' | 'excel' | 'pdf') => {
-    let blob;
-    if (type === 'csv') blob = await hrContributionsService.exportCSV();
-    if (type === 'excel') blob = await hrContributionsService.exportExcel();
-    if (type === 'pdf')
-      blob = await hrContributionsService.exportEmpContributionPDF(31);
-
-    const url = window.URL.createObjectURL(new Blob([blob]));
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `contributions.${type}`;
-    link.click();
-  };
+  if (loading) return <LoadingSpinner text='Loading contributions...' />;
+  if (error) return <DataError message='Unable to fetch contributions' />;
 
   return (
-    <div>
-      <h1>HR Contributions</h1>
+    <div className='space-y-6'>
+      <h1 className='text-xl font-semibold'>Employee Contributions</h1>
 
-      <div className='flex gap-5'>
+      {/* Actions */}
+      <div className='flex gap-3'>
         <button onClick={() => handleExport('csv')}>Export CSV</button>
-        <button onClick={() => handleExport('excel')}>Export Excel</button>
+        <button onClick={() => handleExport('xlsx')}>Export Excel</button>
         <button onClick={() => handleExport('pdf')}>Export PDF</button>
         <button onClick={() => navigate('/hr/contributions/new')}>
-          Create Contribution Record
+          + Add Contribution
         </button>
       </div>
 
-      <table>
+      {/* Table */}
+      <table className='w-full border'>
         <thead>
-          <tr>
+          <tr className='bg-gray-100 text-left'>
             <th>ID</th>
-            <th>User</th>
-            <th>Date</th>
+            <th>Employee</th>
+            <th>Contribution Date</th>
             <th>Employee Amt</th>
             <th>Employer Amt</th>
+            <th>Adjusted</th>
+            <th>Created By</th>
+            <th>Updated By</th>
             <th>Notes</th>
+            <th>Actions</th>
           </tr>
         </thead>
-        <tbody className='flex flex-col gap-4'>
+        <tbody>
           {contributions?.map(c => (
-            <tr>
-              <Link
-                key={c.id}
-                to={`/hr/employees/${c.user_id}/contributions`}
-                className='flex justify-between gap-5'
-              >
-                <tr
-                  key={c.user_id}
-                  className='flex w-full justify-between border-2'
+            <tr key={c.id} className='border-b hover:bg-gray-50'>
+              <td>{c.id}</td>
+              <td>
+                <Link
+                  to={`/hr/employees/${c.user_id}/contributions`}
+                  className='text-blue-600 hover:underline'
                 >
-                  <td>{c.id}</td>
-                  <td>{c.user_id}</td>
-                  <td>{new Date(c.contribution_date).toLocaleDateString()}</td>
-                  <td>{c.employee_amount.toFixed(2)}</td>
-                  <td>{c.employer_amount.toFixed(2)}</td>
-                  <td>{c.notes}</td>
-                </tr>
-              </Link>
-              <Link
-                key={c.contribution_date}
-                to={`/hr/contributions/${c.id}/edit`}
-              >
-                Edit Contribution
-              </Link>
+                  {c.employee_name} ({c.employee_id})
+                </Link>
+              </td>
+              <td>{new Date(c.contribution_date).toLocaleDateString()}</td>
+              <td>{c.employee_amount.toFixed(2)}</td>
+              <td>{c.employer_amount.toFixed(2)}</td>
+              <td>{c.is_adjusted ? '✅' : '—'}</td>
+              <td>{c.created_by_name}</td>
+              <td>{c.updated_by_name || '—'}</td>
+              <td>{c.notes || '—'}</td>
+              <td className='flex gap-2'>
+                <Link
+                  to={`/hr/contributions/${c.id}/edit`}
+                  className='text-blue-600 hover:underline'
+                >
+                  Edit
+                </Link>
+                <button className='text-red-600 hover:underline'>Delete</button>
+              </td>
             </tr>
           ))}
         </tbody>

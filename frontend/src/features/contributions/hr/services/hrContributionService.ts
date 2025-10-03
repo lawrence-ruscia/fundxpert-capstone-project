@@ -78,9 +78,18 @@ export const hrContributionsService = {
     return res.data;
   },
 
-  async exportExcel() {
+  async exportContributionsExcel(params?: {
+    userId?: number;
+    start?: string;
+    end?: string;
+  }) {
     const res = await api.get('/hr/contributions/export/excel', {
       responseType: 'blob',
+      params: {
+        user_id: params?.userId,
+        start: params?.start,
+        end: params?.end,
+      },
     });
     return res.data;
   },
