@@ -36,8 +36,8 @@ export function useContributionsExport({
 
         // Call unified export functions with optional employeeId
         if (type === 'csv') {
-          // blob =
-          //   await hrContributionsService.exportContributionsCSV(exportParams);
+          blob =
+            await hrContributionsService.exportContributionsCSV(exportParams);
         } else if (type === 'xlsx') {
           blob =
             await hrContributionsService.exportContributionsExcel(exportParams);

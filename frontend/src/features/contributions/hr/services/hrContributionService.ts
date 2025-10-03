@@ -71,9 +71,18 @@ export const hrContributionsService = {
     return data;
   },
 
-  async exportCSV() {
+  async exportContributionsCSV(params?: {
+    userId?: number;
+    start?: string;
+    end?: string;
+  }) {
     const res = await api.get('/hr/contributions/export/csv', {
       responseType: 'blob',
+      params: {
+        user_id: params?.userId,
+        start: params?.start,
+        end: params?.end,
+      },
     });
     return res.data;
   },
