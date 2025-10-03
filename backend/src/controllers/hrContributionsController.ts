@@ -307,7 +307,7 @@ export async function exportContributionsCSVController(
     contributions.forEach(c => {
       const rowData = [
         c.id.toString(),
-        ...(isSingleEmployee ? [] : [c.user_id.toString()]), // Include Employee ID for all employees
+        ...(isSingleEmployee ? [] : [c.employee_id.toString()]), // Include Employee ID for all employees
         new Date(c.contribution_date).toISOString().split('T')[0],
         Number(c.employee_amount).toFixed(2),
         Number(c.employer_amount).toFixed(2),
@@ -607,7 +607,7 @@ export async function exportContributionsExcelController(
 
       // Include user_id for all employees export
       if (!isSingleEmployee) {
-        rowData.user_id = c.user_id;
+        rowData.user_id = c.employee_id;
       }
 
       const row = sheet.addRow(rowData);
