@@ -1462,6 +1462,21 @@ export async function getEmployeeContributionSummary(
     res.status(500).json({ error: 'Failed to fetch contribution summary' });
   }
 }
+
+export async function getAllContributionSummary(req: Request, res: Response) {
+  try {
+    const summary = await getContributionSummary();
+
+    if (!summary) {
+      return res.status(404).json({ error: 'No contributions found' });
+    }
+
+    res.json(summary);
+  } catch (err) {
+    console.error('Error fetching contribution summary:', err);
+    res.status(500).json({ error: 'Failed to fetch contribution summary' });
+  }
+}
 const truncateText = (text: string, maxLength: number) => {
   if (!text) return '-';
   return text.length > maxLength

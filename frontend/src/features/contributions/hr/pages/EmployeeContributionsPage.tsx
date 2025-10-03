@@ -204,23 +204,23 @@ export default function EmployeeContributionsPage() {
             <CardContent className='grid gap-4 md:grid-cols-2 lg:grid-cols-4'>
               <BalanceCard
                 label=' Total Contributions'
-                value={formatCurrency(summary?.total_contributions)}
+                value={formatCurrency(Number(summary?.total_contributions))}
                 icon={PiggyBank}
                 comparison={`Last contribution: ${summary.last_contribution && formatDisplayDate(new Date(summary.last_contribution))}`}
               />
               <BalanceCard
                 label='Employee Contributions'
-                value={formatCurrency(summary.total_employee)}
+                value={formatCurrency(Number(summary.total_employee))}
                 icon={User}
               />
               <BalanceCard
                 label='Employer Contributions'
-                value={formatCurrency(summary.total_employee)}
+                value={formatCurrency(Number(summary.total_employee))}
                 icon={Building2}
               />
               <BalanceCard
                 label='Monthly Average'
-                value={formatCurrency(summary.average_monthly)}
+                value={formatCurrency(Number(summary.average_monthly))}
                 icon={Percent}
                 comparison={`Total contribution records: ${summary?.contribution_count}`}
               />

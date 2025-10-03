@@ -89,3 +89,9 @@ hrContributionsRouter.get(
   authMiddleware('HR'),
   getEmployeeContributionSummary
 );
+
+hrContributionsRouter.get(
+  '/employees/summary',
+  authMiddleware('HR'),
+  getEmployeeContributionSummary
+);

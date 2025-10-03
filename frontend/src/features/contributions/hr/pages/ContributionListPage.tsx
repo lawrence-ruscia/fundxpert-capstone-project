@@ -1,9 +1,11 @@
-import type { Contribution } from '../types/hrContribution';
+import type {
+  Contribution,
+  ContributionSummary,
+} from '../types/hrContribution';
 import { hrContributionsService } from '../services/hrContributionService.js';
-import { useApi } from '@/shared/hooks/useApi.js';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner.js';
 import { DataError } from '@/shared/components/DataError.js';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useContributionsExport } from '../hooks/useContributionsExport.js';
 import { useState } from 'react';
 import { useTablePagination } from '@/shared/hooks/useTablePagination.js';
@@ -25,18 +27,37 @@ import {
   CardContent,
 } from '@/components/ui/card.js';
 import { ExportDropdown } from '@/shared/components/ExportDropdown.js';
-import { ArrowLeft, FileText } from 'lucide-react';
+import {
+  ArrowLeft,
+  Building2,
+  FileText,
+  Percent,
+  PiggyBank,
+  Plus,
+  TrendingUp,
+  User,
+} from 'lucide-react';
 import { ContributionsProvider } from '../components/ContributionsProvider.js';
 import { EmployeeContributionsTable } from '../components/EmployeeContributionsTable.js';
 import { Button } from '@/components/ui/button.js';
+import { BalanceCard } from '@/features/dashboard/employee/components/BalanceCard.js';
+import { formatCurrency } from '@/features/dashboard/employee/utils/formatters.js';
+import { useMultiFetch } from '@/shared/hooks/useMultiFetch.js';
 export default function ContributionListPage() {
-  const {
-    data: contributions,
-    loading,
-    error,
-  } = useApi<Contribution[]>(() =>
-    hrContributionsService.getAllContributions()
-  );
+  const { data, loading, error } = useMultiFetch<{
+    contributions: Contribution[];
+    summary: ContributionSummary;
+  }>(async () => {
+    const [contributions, summary] = await Promise.all([
+      hrContributionsService.getAllContributions(),
+      hrContributionsService.getAllContributionsSummary(),
+    ]);
+
+    return { contributions, summary };
+  });
+
+  const contributions = data?.contributions;
+  const summary = data?.summary;
 
   const navigate = useNavigate();
   // Table states
@@ -104,6 +125,43 @@ export default function ContributionListPage() {
           </div>
         </div>
 
+        {/* Balance Cards */}
+
+        {summary && (
+          <Card className='mb-8'>
+            <CardHeader className='mb-4 flex items-center gap-2 font-semibold'>
+              <div className='bg-primary/10 rounded-lg p-2'>
+                <TrendingUp className='h-5 w-5' />
+              </div>
+              <CardTitle className='text-lg'>Contributions Summary</CardTitle>
+            </CardHeader>
+            <CardContent className='grid gap-4 md:grid-cols-2 lg:grid-cols-4'>
+              <BalanceCard
+                label=' Total Contributions'
+                value={formatCurrency(Number(summary?.total_contributions))}
+                icon={PiggyBank}
+              />
+              <BalanceCard
+                label='Total Employee Contributions'
+                value={formatCurrency(Number(summary.total_employee))}
+                icon={User}
+              />
+              <BalanceCard
+                label='Total Employer Contributions'
+                value={formatCurrency(Number(summary.total_employee))}
+                icon={Building2}
+              />
+              <BalanceCard
+                label='Monthly Average'
+                value={formatCurrency(Number(summary.average_monthly))}
+                icon={Percent}
+                comparison={`Total contribution records: ${summary?.contribution_count}`}
+              />
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Contribution History Table */}
         <Card>
           <CardHeader className='mb-4 flex flex-wrap items-center justify-between gap-4 font-semibold'>
             <div className='flex items-center gap-2'>
@@ -111,13 +169,19 @@ export default function ContributionListPage() {
                 <FileText className='h-5 w-5' />
               </div>
               <CardTitle className='text-lg'>
-                Contribution History
+                Contributions History
                 <p className='text-muted-foreground text-sm'>
-                  Detailed breakdown of all contributions for this employee
+                  Detailed breakdown of all contributions for all employees
                 </p>
               </CardTitle>
             </div>
-            <ExportDropdown onExport={handleExport} />
+            <div className='flex items-center gap-4'>
+              <Button>
+                <Plus />
+                <Link to='/hr/contributions/new'>Add contribution</Link>
+              </Button>
+              <ExportDropdown onExport={handleExport} variant='outline' />
+            </div>
           </CardHeader>
           <CardContent>
             <div className='overflow-auto'>

@@ -56,6 +56,11 @@ export const hrContributionsService = {
     return data;
   },
 
+  async getAllContributionsSummary(): Promise<ContributionSummary> {
+    const { data } = await api.get(`/hr/contributions/employees/summary`);
+    return data;
+  },
+
   async getAllContributions(params?: {
     userId?: number;
     startDate?: string;

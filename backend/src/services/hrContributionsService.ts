@@ -258,8 +258,16 @@ export async function getEmployeeByContributionId(contribution_id: number) {
 }
 
 export async function getContributionSummary(
-  userId: number
+  userId?: number | null
 ): Promise<ContributionSummary> {
+  const params: unknown[] = [];
+  let whereClause = '';
+
+  if (userId) {
+    params.push(userId);
+    whereClause = `WHERE user_id = $1`;
+  }
+
   const query = `
     WITH summary AS (
       SELECT
@@ -269,7 +277,7 @@ export async function getContributionSummary(
         COUNT(*) AS contribution_count,
         MAX(contribution_date) AS last_contribution
       FROM contributions
-      WHERE user_id = $1
+      ${whereClause}
     )
     SELECT
       total_contributions,
@@ -285,6 +293,6 @@ export async function getContributionSummary(
     FROM summary;
   `;
 
-  const { rows } = await pool.query(query, [userId]);
+  const { rows } = await pool.query(query, params);
   return rows[0];
 }

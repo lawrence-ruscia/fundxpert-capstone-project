@@ -49,9 +49,7 @@ export function useMultiFetch<T>(
   };
 
   useEffect(() => {
-    if (dependencies.some(dep => dep !== undefined && dep !== null)) {
-      executeFetch();
-    }
+    executeFetch();
   }, dependencies);
 
   return {
