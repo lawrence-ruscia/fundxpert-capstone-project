@@ -436,7 +436,7 @@ export async function exportContributionsExcelController(
     } else {
       // All employees summary information
       cover.addRow(['REPORT SCOPE']);
-      cover.addRow(['Coverage:', 'All Active Employees']);
+      cover.addRow(['Coverage:', 'All Employees']);
       cover.addRow(['Total Records:', contributions.length]);
 
       // Get unique employee count
