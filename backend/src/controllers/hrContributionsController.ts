@@ -636,6 +636,11 @@ export async function exportContributionsExcelController(
     summarySheet.columns = [{ width: 30 }, { width: 20 }];
 
     // Protect sheets (bank-grade security)
+    await cover.protect(SHEET_PASSWORD, {
+      selectLockedCells: true,
+      selectUnlockedCells: true,
+    });
+
     await sheet.protect(SHEET_PASSWORD, {
       selectLockedCells: true,
       selectUnlockedCells: true,
