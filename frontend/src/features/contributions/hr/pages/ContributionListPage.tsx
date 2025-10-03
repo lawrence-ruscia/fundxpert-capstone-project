@@ -3,8 +3,32 @@ import { hrContributionsService } from '../services/hrContributionService.js';
 import { useApi } from '@/shared/hooks/useApi.js';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner.js';
 import { DataError } from '@/shared/components/DataError.js';
-import { Link, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useContributionsExport } from '../hooks/useContributionsExport.js';
+import { useState } from 'react';
+import { useTablePagination } from '@/shared/hooks/useTablePagination.js';
+import { useDateRangeFilter } from '@/shared/hooks/useDateRangeFilter.js';
+import {
+  type SortingState,
+  type ColumnFiltersState,
+  useReactTable,
+  getCoreRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  getFilteredRowModel,
+} from '@tanstack/react-table';
+import { allContributionsColumns } from '../components/AllContributionsColumn.js';
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+} from '@/components/ui/card.js';
+import { ExportDropdown } from '@/shared/components/ExportDropdown.js';
+import { ArrowLeft, FileText } from 'lucide-react';
+import { ContributionsProvider } from '../components/ContributionsProvider.js';
+import { EmployeeContributionsTable } from '../components/EmployeeContributionsTable.js';
+import { Button } from '@/components/ui/button.js';
 export default function ContributionListPage() {
   const {
     data: contributions,
@@ -13,75 +37,96 @@ export default function ContributionListPage() {
   } = useApi<Contribution[]>(() =>
     hrContributionsService.getAllContributions()
   );
-  const { handleExport } = useContributionsExport();
 
   const navigate = useNavigate();
+  // Table states
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = useState({});
+
+  // Date range from filters
+  const dateRange = useDateRangeFilter(columnFilters);
+
+  // Sync pagination changes to URL
+  const { pagination, handlePaginationChange } = useTablePagination();
+
+  // Export functionality
+  const { handleExport } = useContributionsExport({
+    dateRange: {
+      start: dateRange.start,
+      end: dateRange.end ?? new Date().toLocaleDateString(),
+    },
+  });
+
+  const table = useReactTable({
+    data: contributions ?? [],
+    columns: allContributionsColumns,
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    onColumnVisibilityChange: setColumnVisibility,
+    onPaginationChange: handlePaginationChange,
+    state: {
+      sorting,
+      columnVisibility,
+      columnFilters,
+      pagination,
+    },
+  });
 
   if (loading) return <LoadingSpinner text='Loading contributions...' />;
   if (error) return <DataError message='Unable to fetch contributions' />;
 
   return (
-    <div className='space-y-6'>
-      <h1 className='text-xl font-semibold'>Employee Contributions</h1>
+    <ContributionsProvider>
+      <div>
+        <div className='mb-8'>
+          <div className='mb-4 gap-3'>
+            <Button
+              variant='ghost'
+              size='sm'
+              onClick={() => navigate('/hr/employees')}
+              className='p-2'
+            >
+              <ArrowLeft className='h-4 w-4' />
+            </Button>
+            <div>
+              <h1 className='text-2xl font-bold tracking-tight'>
+                Contributions List
+              </h1>
+              <p className='text-muted-foreground'>
+                Manage and track contribution history for all employees
+              </p>
+            </div>
+          </div>
+        </div>
 
-      {/* Actions */}
-      <div className='flex gap-3'>
-        <button onClick={() => handleExport('csv')}>Export CSV</button>
-        <button onClick={() => handleExport('xlsx')}>Export Excel</button>
-        <button onClick={() => handleExport('pdf')}>Export PDF</button>
-        <button onClick={() => navigate('/hr/contributions/new')}>
-          + Add Contribution
-        </button>
+        <Card>
+          <CardHeader className='mb-4 flex flex-wrap items-center justify-between gap-4 font-semibold'>
+            <div className='flex items-center gap-2'>
+              <div className='bg-primary/10 rounded-lg p-2'>
+                <FileText className='h-5 w-5' />
+              </div>
+              <CardTitle className='text-lg'>
+                Contribution History
+                <p className='text-muted-foreground text-sm'>
+                  Detailed breakdown of all contributions for this employee
+                </p>
+              </CardTitle>
+            </div>
+            <ExportDropdown onExport={handleExport} />
+          </CardHeader>
+          <CardContent>
+            <div className='overflow-auto'>
+              {/* Your existing EmployeeContributionsTable component */}
+              <EmployeeContributionsTable table={table} />
+            </div>
+          </CardContent>
+        </Card>
       </div>
-
-      {/* Table */}
-      <table className='w-full border'>
-        <thead>
-          <tr className='bg-gray-100 text-left'>
-            <th>ID</th>
-            <th>Employee</th>
-            <th>Contribution Date</th>
-            <th>Employee Amt</th>
-            <th>Employer Amt</th>
-            <th>Adjusted</th>
-            <th>Created By</th>
-            <th>Updated By</th>
-            <th>Notes</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {contributions?.map(c => (
-            <tr key={c.id} className='border-b hover:bg-gray-50'>
-              <td>{c.id}</td>
-              <td>
-                <Link
-                  to={`/hr/employees/${c.user_id}/contributions`}
-                  className='text-blue-600 hover:underline'
-                >
-                  {c.employee_name} ({c.employee_id})
-                </Link>
-              </td>
-              <td>{new Date(c.contribution_date).toLocaleDateString()}</td>
-              <td>{c.employee_amount.toFixed(2)}</td>
-              <td>{c.employer_amount.toFixed(2)}</td>
-              <td>{c.is_adjusted ? '✅' : '—'}</td>
-              <td>{c.created_by_name}</td>
-              <td>{c.updated_by_name || '—'}</td>
-              <td>{c.notes || '—'}</td>
-              <td className='flex gap-2'>
-                <Link
-                  to={`/hr/contributions/${c.id}/edit`}
-                  className='text-blue-600 hover:underline'
-                >
-                  Edit
-                </Link>
-                <button className='text-red-600 hover:underline'>Delete</button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    </ContributionsProvider>
   );
 }

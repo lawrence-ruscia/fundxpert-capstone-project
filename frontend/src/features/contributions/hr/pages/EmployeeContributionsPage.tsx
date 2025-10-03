@@ -11,9 +11,9 @@ import {
   getFilteredRowModel,
 } from '@tanstack/react-table';
 import { useState } from 'react';
-import { contributionsColumns } from '../components/EmployeeContributionsColumn';
+import { empContributionsColumns } from '../components/EmployeeContributionsColumn';
 import { EmployeeContributionsTable } from '../components/EmployeeContributionsTable';
-import { EmployeeContributionsProvider } from '../components/EmployeeContributionsProvider';
+import { ContributionsProvider } from '../components/ContributionsProvider';
 import { Button } from '@/components/ui/button';
 import {
   ArrowLeft,
@@ -73,7 +73,7 @@ export default function EmployeeContributionsPage() {
 
   const table = useReactTable({
     data: contributions ?? [],
-    columns: contributionsColumns,
+    columns: empContributionsColumns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
     getCoreRowModel: getCoreRowModel(),
@@ -99,7 +99,7 @@ export default function EmployeeContributionsPage() {
   }
 
   return (
-    <EmployeeContributionsProvider>
+    <ContributionsProvider>
       <div>
         <div className='mb-8'>
           <div className='mb-4 gap-3'>
@@ -251,7 +251,7 @@ export default function EmployeeContributionsPage() {
           </CardContent>
         </Card>
       </div>
-    </EmployeeContributionsProvider>
+    </ContributionsProvider>
   );
 }
 

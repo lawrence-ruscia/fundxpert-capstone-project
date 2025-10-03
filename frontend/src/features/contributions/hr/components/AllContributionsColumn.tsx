@@ -21,7 +21,7 @@ const formatCurrency = (amount: number) => {
   }).format(amount);
 };
 
-export const empContributionsColumns: ColumnDef<Contribution>[] = [
+export const allContributionsColumns: ColumnDef<Contribution>[] = [
   {
     id: 'select',
     header: ({ table }) => <div className='w-[8px]'> </div>,
@@ -32,6 +32,7 @@ export const empContributionsColumns: ColumnDef<Contribution>[] = [
     enableSorting: false,
     enableHiding: false,
   },
+
   {
     accessorKey: 'id',
     header: ({ column }) => (
@@ -53,6 +54,21 @@ export const empContributionsColumns: ColumnDef<Contribution>[] = [
     enableSorting: false,
   },
 
+  {
+    accessorKey: 'employee_id',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title='Employee ID' />
+    ),
+    cell: ({ row }) => {
+      return (
+        <LongText className='max-w-36 text-left font-medium'>
+          {row.getValue('employee_id')}
+        </LongText>
+      );
+    },
+    meta: { className: 'w-36' },
+    enableSorting: false,
+  },
   {
     accessorKey: 'contribution_date',
     header: ({ column }) => (

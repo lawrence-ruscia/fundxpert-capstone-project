@@ -9,7 +9,7 @@ import {
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useEmpContributions } from './EmployeeContributionsProvider.js';
+import { useContributions } from './ContributionsProvider.js';
 import type { Contribution } from '../types/hrContribution.js';
 import { useNavigate } from 'react-router-dom';
 
@@ -20,7 +20,7 @@ type DataTableRowActionsProps = {
 export function ContributionsTableRowActions({
   row,
 }: DataTableRowActionsProps) {
-  const { setOpen, setCurrentRow } = useEmpContributions();
+  const { setOpen, setCurrentRow } = useContributions();
   const navigate = useNavigate();
   return (
     <>

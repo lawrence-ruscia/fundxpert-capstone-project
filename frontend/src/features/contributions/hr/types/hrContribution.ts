@@ -10,6 +10,7 @@ export type Contribution = {
   updated_at?: string;
   is_adjusted: boolean;
   notes?: string;
+  employee_id: string;
 };
 
 export type ContributionPayload = Omit<

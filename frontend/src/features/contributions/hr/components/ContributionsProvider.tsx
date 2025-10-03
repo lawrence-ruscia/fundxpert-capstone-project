@@ -4,17 +4,17 @@ import type { Contribution } from '../types/hrContribution';
 
 type DialogType = 'add' | 'edit' | 'delete';
 
-type EmployeesContextType = {
+type ContributionsContextType = {
   open: DialogType | null;
   setOpen: (str: DialogType | null) => void;
   currentRow: Contribution | null;
   setCurrentRow: React.Dispatch<React.SetStateAction<Contribution | null>>;
 };
 
-const EmployeeContributionsContext =
-  React.createContext<EmployeesContextType | null>(null);
+const ContributionsContext =
+  React.createContext<ContributionsContextType | null>(null);
 
-export function EmployeeContributionsProvider({
+export function ContributionsProvider({
   children,
 }: {
   children: React.ReactNode;
@@ -23,23 +23,21 @@ export function EmployeeContributionsProvider({
   const [currentRow, setCurrentRow] = useState<Contribution | null>(null);
 
   return (
-    <EmployeeContributionsContext
-      value={{ open, setOpen, currentRow, setCurrentRow }}
-    >
+    <ContributionsContext value={{ open, setOpen, currentRow, setCurrentRow }}>
       {children}
-    </EmployeeContributionsContext>
+    </ContributionsContext>
   );
 }
 
 // eslint-disable-next-line react-refresh/only-export-components
-export const useEmpContributions = () => {
-  const employeesContext = React.useContext(EmployeeContributionsContext);
+export const useContributions = () => {
+  const context = React.useContext(ContributionsContext);
 
-  if (!employeesContext) {
+  if (!context) {
     throw new Error(
-      'useEmpContributions has to be used within <EmployeeContributionsContext>'
+      'useContributions has to be used within <ContributionsContext>'
     );
   }
 
-  return employeesContext;
+  return context;
 };
