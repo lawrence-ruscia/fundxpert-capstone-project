@@ -11,7 +11,6 @@ import {
   getContributionsByIdController,
   getEmployeeByContributionIdController,
   getEmployeeContributionSummary,
-  exportEmployeeContributionsPDFController,
   exportContributionsCSVController,
 } from '../controllers/hrContributionsController.js';
 import { authMiddleware } from '../middleware/authMiddleware.js';

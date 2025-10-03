@@ -120,40 +120,44 @@ export async function getAllContributions(
   userId?: number | null,
   startDate?: string | null,
   endDate?: string | null
-): Promise<Contribution[]> {
-  let query = `SELECT * FROM contributions`;
+): Promise<(Contribution & { employee_id: string })[]> {
+  let query = `
+    SELECT c.*, u.employee_id
+    FROM contributions c
+    INNER JOIN users u ON c.user_id = u.id
+  `;
   const params: unknown[] = [];
   const conditions: string[] = [];
 
   if (userId) {
     params.push(userId);
-    conditions.push(`user_id = $${params.length}`);
+    conditions.push(`c.user_id = $${params.length}`);
   }
 
   if (startDate) {
     params.push(startDate);
-    conditions.push(`contribution_date >= $${params.length}`);
+    conditions.push(`c.contribution_date >= $${params.length}`);
   }
 
   if (endDate) {
     params.push(endDate);
-    conditions.push(`contribution_date <= $${params.length}`);
+    conditions.push(`c.contribution_date <= $${params.length}`);
   }
 
   if (conditions.length > 0) {
     query += ` WHERE ${conditions.join(' AND ')}`;
   }
 
-  query += ` ORDER BY contribution_date DESC`;
+  query += ` ORDER BY c.contribution_date DESC`;
 
   const { rows } = await pool.query(query, params);
-  return rows.map(c => {
-    return {
-      ...c,
-      employee_amount: Number(c.employee_amount),
-      employer_amount: Number(c.employer_amount),
-    };
-  });
+
+  return rows.map(c => ({
+    ...c,
+    employee_amount: Number(c.employee_amount),
+    employer_amount: Number(c.employer_amount),
+    employee_id: c.employee_id, // added from users table
+  }));
 }
 
 export async function getContributionsById(

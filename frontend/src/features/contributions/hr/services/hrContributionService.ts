@@ -103,9 +103,18 @@ export const hrContributionsService = {
     return res.data;
   },
 
-  async exportPDF() {
+  async exportContributionsPDF(params?: {
+    userId?: number;
+    start?: string;
+    end?: string;
+  }) {
     const res = await api.get('/hr/contributions/export/pdf', {
       responseType: 'blob',
+      params: {
+        user_id: params?.userId,
+        start: params?.start,
+        end: params?.end,
+      },
     });
     return res.data;
   },

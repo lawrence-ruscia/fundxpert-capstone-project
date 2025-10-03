@@ -42,8 +42,8 @@ export function useContributionsExport({
           blob =
             await hrContributionsService.exportContributionsExcel(exportParams);
         } else if (type === 'pdf') {
-          // blob =
-          //   await hrContributionsService.exportContributionsPDF(exportParams);
+          blob =
+            await hrContributionsService.exportContributionsPDF(exportParams);
         }
 
         if (!blob) {
