@@ -1,6 +1,6 @@
 import { pool } from '../config/db.config.js';
 import type { EmployeeOverview } from '../types/employeeOverview.js';
-import { checkLoanEligibility } from './loanService.js';
+import { checkLoanEligibility } from './empLoanService.js';
 import {
   getDateRange,
   isContributionVested,

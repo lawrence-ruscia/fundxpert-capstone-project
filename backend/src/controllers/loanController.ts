@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import * as loanService from '../services/loanService.js';
+import * as loanService from '../services/empLoanService.js';
 import { isAuthenticatedRequest } from './employeeControllers.js';
 
 export async function getLoanEligibility(req: Request, res: Response) {

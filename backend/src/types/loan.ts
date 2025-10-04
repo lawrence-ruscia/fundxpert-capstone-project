@@ -1,10 +1,14 @@
 export type LoanStatus =
   | 'Pending'
+  | 'UnderReviewOfficer'
+  | 'AwaitingApprovals'
+  | 'Rejected'
   | 'Approved'
   | 'Active'
   | 'Settled'
-  | 'Rejected'
   | 'Cancelled';
+
+export type LoanApprovalStatus = 'Pending' | 'Approved' | 'Rejected';
 
 export interface Loan {
   id: number;
