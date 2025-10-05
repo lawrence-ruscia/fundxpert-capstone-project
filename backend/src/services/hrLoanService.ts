@@ -99,6 +99,10 @@ export async function assignLoanApprovers(
     if (loan.status !== 'UnderReviewOfficer')
       throw new Error('Loan is not in review stage.');
 
+    // At least two approvers
+    if (approvers.length < 2)
+      throw new Error('At least two approvers are required for this loan.');
+
     // Prevent officer from assigning themselves
     if (approvers.some(a => a.approverId === officerId)) {
       throw new Error(

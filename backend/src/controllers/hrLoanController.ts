@@ -157,6 +157,14 @@ export const assignLoanApproversHandler = async (
       });
     }
 
+    //  Require at least 2 approvers (per loan policy)
+    if (approvers.length < 2) {
+      return res.status(400).json({
+        error:
+          'At least two approvers are required for Provident Fund loans per policy.',
+      });
+    }
+
     const result = await assignLoanApprovers(Number(loanId), userId, approvers);
 
     await recordLoanHistory(Number(loanId), 'Approvers assigned', req.user.id);
