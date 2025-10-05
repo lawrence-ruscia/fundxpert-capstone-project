@@ -4,14 +4,84 @@ import {
   assignLoanApprovers,
   cancelLoanRequest,
   getAllLoans,
+  getLoanAccess,
   getLoanApprovals,
   getLoanById,
   getLoanHistory,
+  markLoanIncomplete,
+  markLoanReadyForReview,
   moveLoanToReview,
   recordLoanHistory,
   releaseLoanToTrustBank,
   reviewLoanApproval,
 } from '../services/hrLoanService.js';
+
+export const markLoanReadyHandler = async (req: Request, res: Response) => {
+  try {
+    if (!req.user || req.user.role !== 'HR')
+      return res.status(403).json({ error: 'Access denied' });
+
+    const { loanId } = req.params;
+    const assistantId = req.user.id;
+
+    const access = await getLoanAccess(assistantId, Number(loanId));
+    if (!access.canMarkReady) {
+      return res.status(403).json({
+        error: 'You are not authorized to mark this loan as ready',
+      });
+    }
+
+    const loan = await markLoanReadyForReview(Number(loanId), assistantId);
+    if (!loan)
+      return res
+        .status(400)
+        .json({ error: 'Loan not found or not in Pending state' });
+
+    await recordLoanHistory(loan.id, 'Marked ready for review', assistantId);
+    res.json({ success: true, loan });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to mark loan as ready' });
+  }
+};
+
+export const markLoanIncompleteHandler = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    if (!req.user || req.user.role !== 'HR')
+      return res.status(403).json({ error: 'Access denied' });
+
+    const { loanId } = req.params;
+    const { remarks } = req.body;
+    const assistantId = req.user.id;
+
+    const access = await getLoanAccess(assistantId, Number(loanId));
+    if (!access.canMarkIncomplete) {
+      return res.status(403).json({
+        error: 'You are not authorized to mark this loan as incomplete',
+      });
+    }
+
+    const loan = await markLoanIncomplete(Number(loanId), assistantId, remarks);
+    if (!loan)
+      return res
+        .status(400)
+        .json({ error: 'Loan not found or not in Pending state' });
+
+    await recordLoanHistory(
+      loan.id,
+      'Marked incomplete by HR assistant',
+      assistantId,
+      remarks
+    );
+    res.json({ success: true, loan });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to mark loan as incomplete' });
+  }
+};
 
 export const moveLoanToReviewHandler = async (req: Request, res: Response) => {
   try {
@@ -21,8 +91,16 @@ export const moveLoanToReviewHandler = async (req: Request, res: Response) => {
 
     const { loanId } = req.params;
     const officerId = req.user.id;
+
+    const access = await getLoanAccess(officerId, Number(loanId));
+    if (!access.canMoveToReview) {
+      return res.status(403).json({
+        error: 'You are not authorized to move this loan for officer review',
+      });
+    }
+
     const loan = await moveLoanToReview(Number(loanId), officerId);
-    console.log(loan);
+
     if (!loan)
       return res.status(400).json({ error: 'Loan not eligible for review' });
 
@@ -45,17 +123,50 @@ export const assignLoanApproversHandler = async (
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
+    const userId = req.user.id;
     const { loanId } = req.params;
     const { approvers } = req.body; // e.g. [{ approverId: 12, sequence: 1 }, { approverId: 15, sequence: 2 }]
 
-    const result = await assignLoanApprovers(Number(loanId), approvers);
+    // Check officer access
+    const access = await getLoanAccess(userId, Number(loanId));
+    if (!access.canAssignApprovers) {
+      return res.status(403).json({
+        error: 'You are not authorized to assign approvers for this loan',
+      });
+    }
+
+    // Prevent self-inclusion as approver
+    const selfIncluded = approvers.some(
+      (a: { approverId: number; sequence: number }) => a.approverId === userId
+    );
+
+    if (selfIncluded) {
+      return res.status(400).json({
+        error:
+          'You cannot assign yourself as an approver. Approvers must be other HR officers.',
+      });
+    }
+    // Prevent duplicate approvers
+    const approverIds = approvers.map(
+      (a: { approverId: number; sequence: number }) => a.approverId
+    );
+    const hasDuplicates = new Set(approverIds).size !== approverIds.length;
+    if (hasDuplicates) {
+      return res.status(400).json({
+        error: 'Duplicate approvers detected. Each approver must be unique.',
+      });
+    }
+
+    const result = await assignLoanApprovers(Number(loanId), userId, approvers);
 
     await recordLoanHistory(Number(loanId), 'Approvers assigned', req.user.id);
     res.json(result);
   } catch (err) {
     if (err instanceof Error) {
       console.error(err);
-      res.status(500).json({ error: err?.message ?? 'Failed to release loan' });
+      res.status(500).json({
+        error: err?.message ?? 'Failed to assign approvers',
+      });
     }
   }
 };
@@ -71,6 +182,13 @@ export const reviewLoanApprovalHandler = async (
     const { loanId } = req.params;
     const approverId = req.user.id;
     const { decision, comments } = req.body; // 'Approved' | 'Rejected'
+
+    const access = await getLoanAccess(approverId, Number(loanId));
+    if (!access.canApprove) {
+      return res.status(403).json({
+        error: 'You are not authorized to approve this loan',
+      });
+    }
 
     const approval = await reviewLoanApproval(
       Number(loanId),
@@ -108,6 +226,13 @@ export const releaseLoanToTrustBankHandler = async (
     const { loanId } = req.params;
     const { txRef } = req.body;
     const releasedBy = req.user.id;
+
+    const access = await getLoanAccess(releasedBy, Number(loanId));
+    if (!access.canRelease) {
+      return res.status(403).json({
+        error: 'You are not authorized to release this loan',
+      });
+    }
 
     const loan = await releaseLoanToTrustBank(
       Number(loanId),
@@ -224,5 +349,21 @@ export const getLoanHistoryHandler = async (req: Request, res: Response) => {
       console.error(err);
       res.status(500).json({ error: err?.message ?? 'Failed to release loan' });
     }
+  }
+};
+
+export const getLoanAccessHandler = async (req: Request, res: Response) => {
+  try {
+    if (!req.user || req.user.role !== 'HR') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
+    const { loanId } = req.params;
+    const access = await getLoanAccess(req.user.id, Number(loanId));
+
+    res.json({ userId: req.user.id, access });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Failed to fetch access permissions' });
   }
 };

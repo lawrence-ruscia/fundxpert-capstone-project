@@ -20,6 +20,11 @@ export interface Loan {
   co_maker_employee_id?: string | null;
   consent_acknowledged: boolean;
   status: LoanStatus;
+
+  officer_id: number;
+  ready_for_review: boolean;
+  assistant_id: number;
+
   monthly_amortization: number;
   created_at: Date;
   approved_at?: Date | null;
@@ -27,8 +32,7 @@ export interface Loan {
   active_at?: Date | null;
   settled_at?: Date | null;
   rejected_at?: Date | null;
-  trust_bank_txref?: string | null;
-  approval_flow?: unknown; // JSONB, can define structure later
+  trust_bank_ref?: string | null;
 }
 
 export type LoanPurposeCategory =

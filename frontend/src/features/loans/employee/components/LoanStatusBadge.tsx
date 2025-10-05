@@ -1,12 +1,5 @@
 import { Badge } from '@/components/ui/badge';
-import {
-  Clock,
-  CheckCircle,
-  PlayCircle,
-  Trophy,
-  XCircle,
-  MinusCircle,
-} from 'lucide-react';
+import { Clock, CheckCircle, XCircle, MinusCircle } from 'lucide-react';
 import type { LoanStatus } from '../types/loan';
 
 interface LoanStatusConfig {
@@ -20,39 +13,51 @@ const loanStatusConfig: Record<LoanStatus, LoanStatusConfig> = {
   Pending: {
     icon: Clock,
     className:
-      'bg-amber-500 hover:bg-amber-600 text-white dark:bg-amber-600 dark:hover:bg-amber-700',
+      'bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-300 dark:border-gray-600',
+    variant: 'outline',
+    label: 'Pending',
+  },
+  UnderReview: {
+    icon: Clock,
+    className:
+      'bg-blue-100 hover:bg-blue-200 text-blue-700 border border-blue-300 dark:bg-blue-950 dark:hover:bg-blue-900 dark:text-blue-300 dark:border-blue-800',
     variant: 'secondary',
-    label: 'Pending Review',
+    label: 'Under Review',
+  },
+  AwaitingApprovals: {
+    icon: Clock,
+    className:
+      'bg-yellow-100 hover:bg-yellow-200 text-yellow-700 border border-yellow-300 dark:bg-yellow-950 dark:hover:bg-yellow-900 dark:text-yellow-300 dark:border-yellow-800',
+    variant: 'secondary',
+    label: 'Awaiting Approvals',
   },
   Approved: {
     icon: CheckCircle,
     className:
-      'bg-teal-500 hover:bg-teal-600 text-white dark:bg-teal-600 dark:hover:bg-teal-700',
+      'bg-green-100 hover:bg-green-200 text-green-700 border border-green-300 dark:bg-green-950 dark:hover:bg-green-900 dark:text-green-300 dark:border-green-800',
     variant: 'secondary',
-  },
-  Active: {
-    icon: CheckCircle,
-    className:
-      'bg-blue-500 hover:bg-blue-600 text-white dark:bg-blue-600 dark:hover:bg-blue-700',
-    variant: 'secondary',
-  },
-  Settled: {
-    icon: Trophy,
-    className:
-      'bg-emerald-500 hover:bg-emerald-600 text-white dark:bg-emerald-600 dark:hover:bg-emerald-700',
-    variant: 'secondary',
+    label: 'Approved',
   },
   Rejected: {
     icon: XCircle,
     className:
-      'bg-rose-500 hover:bg-rose-600 text-white dark:bg-rose-600 dark:hover:bg-rose-700',
+      'bg-red-100 hover:bg-red-200 text-red-700 border border-red-300 dark:bg-red-950 dark:hover:bg-red-900 dark:text-red-300 dark:border-red-800',
     variant: 'destructive',
+    label: 'Rejected',
+  },
+  Released: {
+    icon: CheckCircle,
+    className:
+      'bg-teal-100 hover:bg-teal-200 text-teal-700 border border-teal-300 dark:bg-teal-950 dark:hover:bg-teal-900 dark:text-teal-300 dark:border-teal-800',
+    variant: 'secondary',
+    label: 'Released',
   },
   Cancelled: {
     icon: MinusCircle,
     className:
-      'bg-slate-500 hover:bg-slate-600 text-white dark:bg-slate-600 dark:hover:bg-slate-700',
+      'bg-neutral-100 hover:bg-neutral-200 text-neutral-700 border border-neutral-300 dark:bg-neutral-800 dark:hover:bg-neutral-700 dark:text-neutral-300 dark:border-neutral-600',
     variant: 'outline',
+    label: 'Cancelled',
   },
 };
 
@@ -73,15 +78,15 @@ export function LoanStatusBadge({
   const IconComponent = config.icon;
 
   const sizeClasses = {
-    sm: 'px-2 py-1 text-xs',
-    md: 'px-4 py-2 text-sm',
-    lg: 'px-6 py-3 text-base',
+    sm: 'px-2.5 py-1 text-xs',
+    md: 'px-3 py-1.5 text-sm',
+    lg: 'px-4 py-2 text-base',
   };
 
   const iconSizes = {
     sm: 14,
-    md: 18,
-    lg: 22,
+    md: 16,
+    lg: 20,
   };
 
   const displayLabel = customLabel || config.label || status;
@@ -89,64 +94,12 @@ export function LoanStatusBadge({
   return (
     <Badge
       variant={config.variant}
-      className={`${config.className} ${sizeClasses[size]} font-semibold transition-colors`}
+      className={`${config.className} ${sizeClasses[size]} rounded-md font-medium transition-all duration-200`}
     >
-      <div className='flex items-center gap-2'>
+      <div className='flex items-center gap-1.5'>
         {showIcon && <IconComponent size={iconSizes[size]} />}
         <span>{displayLabel}</span>
       </div>
     </Badge>
-  );
-}
-
-// Usage Examples Component
-export function LoanStatusBadgeExamples() {
-  const statuses: LoanStatus[] = [
-    'Pending',
-    'Approved',
-    'Active',
-    'Settled',
-    'Rejected',
-    'Cancelled',
-  ];
-
-  return (
-    <div className='space-y-6 p-6'>
-      <div>
-        <h3 className='mb-3 text-lg font-semibold'>All Loan Statuses</h3>
-        <div className='flex flex-wrap gap-2'>
-          {statuses.map(status => (
-            <LoanStatusBadge key={status} status={status} />
-          ))}
-        </div>
-      </div>
-
-      <div>
-        <h3 className='mb-3 text-lg font-semibold'>Without Icons</h3>
-        <div className='flex flex-wrap gap-2'>
-          {statuses.slice(0, 4).map(status => (
-            <LoanStatusBadge key={status} status={status} showIcon={false} />
-          ))}
-        </div>
-      </div>
-
-      <div>
-        <h3 className='mb-3 text-lg font-semibold'>Different Sizes</h3>
-        <div className='flex flex-wrap items-center gap-2'>
-          <LoanStatusBadge status='Active' size='sm' />
-          <LoanStatusBadge status='Active' size='md' />
-          <LoanStatusBadge status='Active' size='lg' />
-        </div>
-      </div>
-
-      <div>
-        <h3 className='mb-3 text-lg font-semibold'>Custom Labels</h3>
-        <div className='flex flex-wrap gap-2'>
-          <LoanStatusBadge status='Pending' customLabel='Awaiting Review' />
-          <LoanStatusBadge status='Active' customLabel='Currently Active' />
-          <LoanStatusBadge status='Settled' customLabel='Fully Paid' />
-        </div>
-      </div>
-    </div>
   );
 }

@@ -5,9 +5,12 @@ import {
   assignLoanApproversHandler,
   cancelLoanRequestHandler,
   getAllLoansHandler,
+  getLoanAccessHandler,
   getLoanApprovalsHandler,
   getLoanByIdHandler,
   getLoanHistoryHandler,
+  markLoanIncompleteHandler,
+  markLoanReadyHandler,
   moveLoanToReviewHandler,
   releaseLoanToTrustBankHandler,
   reviewLoanApprovalHandler,
@@ -16,7 +19,22 @@ import {
 export const hrLoanRouter = Router();
 
 /**
- * STEP 1: HR Assistant / Officer marks application as ready for review
+ * STEP 0: HR Assistant / Officer marks application as ready for HR Benfits Officer review
+ */
+
+hrLoanRouter.patch(
+  '/:loanId/mark-ready',
+  authMiddleware('HR'),
+  markLoanReadyHandler
+);
+hrLoanRouter.patch(
+  '/:loanId/mark-incomplete',
+  authMiddleware('HR'),
+  markLoanIncompleteHandler
+);
+
+/**
+ * STEP 1: HR Benefits Officer Moves the loan into the review process
  */
 hrLoanRouter.post(
   '/:loanId/review',
@@ -25,7 +43,7 @@ hrLoanRouter.post(
 );
 
 /**
- * STEP 2: HR assigns approvers dynamically
+ * STEP 2: HR Benefits Officer assigns approvers dynamically
  * (benefits officer sets the sequence of approvers)
  */
 hrLoanRouter.post(
@@ -93,3 +111,9 @@ hrLoanRouter.get(
   authMiddleware('HR'),
   getLoanHistoryHandler
 );
+
+/**
+ * GET /hr/loans/:loanId/access
+ * View all role-based contextual access
+ */
+hrLoanRouter.get('/:loanId/access', authMiddleware('HR'), getLoanAccessHandler);

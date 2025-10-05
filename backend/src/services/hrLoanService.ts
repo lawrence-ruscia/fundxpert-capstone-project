@@ -2,37 +2,123 @@ import { pool } from '../config/db.config.js';
 import type { LoanApprovalStatus } from '../types/loan.js';
 
 /**
- * Step 1: HR Officer moves loan into review stage
+ * Step 0: Assistant marks loan as ready for HR Officer review
  */
-export async function moveLoanToReview(loanId: number, officerId: number) {
+export async function markLoanReadyForReview(
+  loanId: number,
+  assistantId: number
+) {
   const { rows } = await pool.query(
     `UPDATE loans
-     SET status = 'UnderReviewOfficer',
-         officer_id = $2,
+     SET ready_for_review = TRUE,
+         assistant_id = $2,
          updated_at = NOW()
-     WHERE id = $1 AND status = 'Pending'
+     WHERE id = $1
+       AND status = 'Pending'
      RETURNING *`,
-    [loanId, officerId]
+    [loanId, assistantId]
   );
   return rows[0] || null;
 }
 
 /**
+ * Step 0: Assistant marks loan as incomplete / needs correction
+ */
+export async function markLoanIncomplete(
+  loanId: number,
+  assistantId: number,
+  remarks?: string
+) {
+  const { rows } = await pool.query(
+    `UPDATE loans
+     SET ready_for_review = FALSE,
+         assistant_id = $2,
+         notes = COALESCE($3, notes),
+         updated_at = NOW()
+     WHERE id = $1
+       AND status = 'Pending'
+     RETURNING *`,
+    [loanId, assistantId, remarks || null]
+  );
+  return rows[0] || null;
+}
+
+/**
+ * Step 1: HR Officer moves loan into review stage
+ */
+export async function moveLoanToReview(loanId: number, officerId: number) {
+  const { rows } = await pool.query(
+    `SELECT ready_for_review, assistant_id, status 
+     FROM loans WHERE id = $1`,
+    [loanId]
+  );
+  const loan = rows[0];
+  if (!loan) throw new Error('Loan not found');
+  if (!loan.ready_for_review)
+    throw new Error(
+      'Loan must be marked ready for review by an HR assistant first.'
+    );
+  if (loan.status !== 'Pending')
+    throw new Error('Loan must be in Pending state before review.');
+
+  const { rows: updated } = await pool.query(
+    `UPDATE loans
+     SET status = 'UnderReviewOfficer',
+         officer_id = $2,
+         updated_at = NOW()
+     WHERE id = $1
+     RETURNING *`,
+    [loanId, officerId]
+  );
+  return updated[0] || null;
+}
+
+/**
  * Step 2: Assign approvers dynamically (sequence order defines flow)
+ * Only the HR officer who moved the loan to review can perform this action.
  */
 export async function assignLoanApprovers(
   loanId: number,
+  officerId: number,
   approvers: { approverId: number; sequence: number }[]
 ) {
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
 
+    // Validate ownership — must match the officer who moved to review
+    const { rows: loanRows } = await client.query(
+      `SELECT officer_id, status FROM loans WHERE id = $1`,
+      [loanId]
+    );
+
+    const loan = loanRows[0];
+    if (!loan) throw new Error('Loan not found.');
+    if (loan.officer_id !== officerId)
+      throw new Error('Only the assigned HR officer can assign approvers.');
+    if (loan.status !== 'UnderReviewOfficer')
+      throw new Error('Loan is not in review stage.');
+
+    // Prevent officer from assigning themselves
+    if (approvers.some(a => a.approverId === officerId)) {
+      throw new Error(
+        'The HR officer cannot assign themselves as an approver.'
+      );
+    }
+
+    //  Prevent duplicate approvers
+    const approverIds = approvers.map(a => a.approverId);
+    const uniqueIds = new Set(approverIds);
+    if (uniqueIds.size !== approverIds.length) {
+      throw new Error('Duplicate approvers are not allowed.');
+    }
+
     // Remove existing approvers if reassigning
     await client.query(`DELETE FROM loan_approvals WHERE loan_id = $1`, [
       loanId,
     ]);
 
+    // Insert new approvers with correct sequence
     for (const { approverId, sequence } of approvers) {
       const isFirst = sequence === Math.min(...approvers.map(a => a.sequence));
       await client.query(
@@ -42,6 +128,7 @@ export async function assignLoanApprovers(
       );
     }
 
+    // Move loan to awaiting approvals
     await client.query(
       `UPDATE loans
        SET status = 'AwaitingApprovals', updated_at = NOW()
@@ -95,8 +182,6 @@ export async function reviewLoanApproval(
        WHERE loan_id = $1 AND approver_id = $2`,
       [loanId, approverId, decision, comments || null]
     );
-
-
 
     // 3️. If rejected → end immediately
     if (decision === 'Rejected') {
@@ -154,23 +239,41 @@ export async function reviewLoanApproval(
 
 /**
  * Step 4: Mark loan as released (Trust Bank confirmation)
+ * Only the HR officer who created the approval flow can release it.
  */
 export async function releaseLoanToTrustBank(
   loanId: number,
   txRef: string,
   releasedBy: number
 ) {
+  const { rows: loanRows } = await pool.query(
+    `SELECT officer_id, status FROM loans WHERE id = $1`,
+    [loanId]
+  );
+
+  const loan = loanRows[0];
+  if (!loan) throw new Error('Loan not found.');
+  if (loan.officer_id !== releasedBy)
+    throw new Error(
+      'Only the HR officer who processed this loan can release it.'
+    );
+  if (loan.status !== 'Approved')
+    throw new Error('Loan must be approved before it can be released.');
+
+  // Proceed to mark as released
   const { rows } = await pool.query(
     `UPDATE loans
      SET status = 'Active',
          trust_bank_confirmed = true,
          trust_bank_ref = $2,
          approved_by = $3,
-         active_at = NOW()
-     WHERE id = $1 AND status = 'Approved'
+         active_at = NOW(),
+         updated_at = NOW()
+     WHERE id = $1
      RETURNING *`,
     [loanId, txRef, releasedBy]
   );
+
   return rows[0] || null;
 }
 
@@ -313,4 +416,65 @@ export async function getLoanHistory(loanId: number) {
   `;
   const { rows } = await pool.query(query, [loanId]);
   return rows;
+}
+
+/** Handle Assistant vs Officer context detection */
+export async function getLoanAccess(userId: number, loanId: number) {
+  const { rows } = await pool.query(
+    `SELECT id, status, officer_id, assistant_id, ready_for_review 
+     FROM loans WHERE id = $1`,
+    [loanId]
+  );
+  const loan = rows[0];
+  if (!loan) throw new Error('Loan not found');
+
+  const access = {
+    canMarkReady: false,
+    canMarkIncomplete: false,
+    canMoveToReview: false,
+    canAssignApprovers: false,
+    canApprove: false,
+    canRelease: false,
+    canCancel: false,
+  };
+
+  switch (loan.status) {
+    case 'Pending':
+      // Assistant actions
+      if (!loan.assistant_id || loan.assistant_id === userId) {
+        access.canMarkReady = true;
+        access.canMarkIncomplete = true;
+      }
+
+      // Officer can move to review, but NOT the same assistant
+      if (loan.ready_for_review && loan.assistant_id !== userId) {
+        access.canMoveToReview = true;
+      }
+
+      access.canCancel = true;
+      break;
+
+    case 'UnderReviewOfficer':
+      if (loan.officer_id === userId) {
+        access.canAssignApprovers = true;
+        access.canCancel = true;
+      }
+      break;
+
+    case 'AwaitingApprovals': {
+      const { rows: approverRows } = await pool.query(
+        `SELECT 1 FROM loan_approvals WHERE loan_id = $1 AND approver_id = $2 AND is_current = TRUE`,
+        [loanId, userId]
+      );
+      if (approverRows.length > 0) access.canApprove = true;
+      access.canCancel = true;
+      break;
+    }
+
+    case 'Approved':
+      if (loan.officer_id === userId) access.canRelease = true;
+      break;
+  }
+
+  return access;
 }
