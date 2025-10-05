@@ -1,11 +1,12 @@
 export type LoanStatus =
   | 'Pending'
-  | 'UnderReview'
+  | 'Incomplete'
+  | 'UnderReviewOfficer'
   | 'AwaitingApprovals'
   | 'PendingNextApproval'
   | 'Approved'
-  | 'Rejected'
   | 'Released'
+  | 'Rejected'
   | 'Cancelled';
 
 export interface Loan {
@@ -20,6 +21,7 @@ export interface Loan {
   status: LoanStatus;
 
   officer_id: number;
+  officer_name: string;
   ready_for_review: boolean;
   assistant_id: number;
 

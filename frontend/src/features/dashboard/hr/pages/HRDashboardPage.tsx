@@ -50,7 +50,7 @@ export const HRDashboardPage = () => {
               label='Total Employees'
               value={String(overview?.total_employees)}
               icon={Users}
-              comparison={`${overview?.active_employees} active employees`}
+              description={`${overview?.active_employees} active employees`}
             />
             <BalanceCard
               label='Total Contributions'
@@ -59,21 +59,21 @@ export const HRDashboardPage = () => {
                   Number(overview?.total_employer_contributions)
               )}
               icon={PiggyBank}
-              comparison={`${formatCurrency(Number(overview?.total_employee_contributions))} from employee`}
+              description={`${formatCurrency(Number(overview?.total_employee_contributions))} from employee`}
             />
 
             <BalanceCard
               label='Pending Loans'
               value={String(overview?.pending_loans)}
               icon={Wallet}
-              comparison={`${String(overview?.approved_loans_this_month ?? 0)} approved loans this month`}
+              description={`${String(overview?.approved_loans_this_month ?? 0)} approved loans this month`}
             />
 
             <BalanceCard
               label='Pending Withdrawals'
               value={String(overview?.pending_withdrawals)}
               icon={BanknoteArrowDown}
-              comparison={`${String(overview?.processsed_withdrawals_this_month ?? 0)} processed withdrawals this month`}
+              description={`${String(overview?.processsed_withdrawals_this_month ?? 0)} processed withdrawals this month`}
             />
           </div>
           <div className='grid grid-cols-1'>

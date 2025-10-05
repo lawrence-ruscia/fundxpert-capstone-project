@@ -38,7 +38,7 @@ export const hrSidebarData: SidebarData = {
 
         {
           title: 'Loans',
-          url: '/dashboard/loans',
+          url: '/hr/loans',
           icon: Wallet,
         },
         {

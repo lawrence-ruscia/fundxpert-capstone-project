@@ -106,14 +106,6 @@ export default function ContributionListPage() {
       <div>
         <div className='mb-8'>
           <div className='mb-4 gap-3'>
-            <Button
-              variant='ghost'
-              size='sm'
-              onClick={() => navigate('/hr/employees')}
-              className='p-2'
-            >
-              <ArrowLeft className='h-4 w-4' />
-            </Button>
             <div>
               <h1 className='text-2xl font-bold tracking-tight'>
                 Contributions List
@@ -155,12 +147,12 @@ export default function ContributionListPage() {
                 label='Monthly Average'
                 value={formatCurrency(Number(summary.average_monthly))}
                 icon={Percent}
-                comparison={`Total contribution records: ${summary?.contribution_count}`}
+                description={`Total contribution records: ${summary?.contribution_count}`}
               />
             </CardContent>
           </Card>
         )}
-
+ 
         {/* Contribution History Table */}
         <Card>
           <CardHeader className='mb-4 flex flex-wrap items-center justify-between gap-4 font-semibold'>

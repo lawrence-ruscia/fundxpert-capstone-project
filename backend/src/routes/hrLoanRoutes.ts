@@ -9,6 +9,7 @@ import {
   getLoanApprovalsHandler,
   getLoanByIdHandler,
   getLoanHistoryHandler,
+  getLoanStatusSummaryHandler,
   markLoanIncompleteHandler,
   markLoanReadyHandler,
   moveLoanToReviewHandler,
@@ -17,6 +18,16 @@ import {
 } from '../controllers/hrLoanController.js';
 
 export const hrLoanRouter = Router();
+
+/**
+ * GET /hr/loans/status-summary
+ * Loan Status Summary
+ */
+hrLoanRouter.get(
+  '/status-summary',
+  authMiddleware('HR'),
+  getLoanStatusSummaryHandler
+);
 
 /**
  * STEP 0: HR Assistant / Officer marks application as ready for HR Benfits Officer review

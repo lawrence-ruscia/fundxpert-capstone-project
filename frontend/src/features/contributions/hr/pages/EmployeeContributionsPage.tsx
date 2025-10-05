@@ -206,7 +206,7 @@ export default function EmployeeContributionsPage() {
                 label=' Total Contributions'
                 value={formatCurrency(Number(summary?.total_contributions))}
                 icon={PiggyBank}
-                comparison={`Last contribution: ${summary.last_contribution && formatDisplayDate(new Date(summary.last_contribution))}`}
+                description={`Last contribution: ${summary.last_contribution && formatDisplayDate(new Date(summary.last_contribution))}`}
               />
               <BalanceCard
                 label='Employee Contributions'
@@ -222,7 +222,7 @@ export default function EmployeeContributionsPage() {
                 label='Monthly Average'
                 value={formatCurrency(Number(summary.average_monthly))}
                 icon={Percent}
-                comparison={`Total contribution records: ${summary?.contribution_count}`}
+                description={`Total contribution records: ${summary?.contribution_count}`}
               />
             </CardContent>
           </Card>

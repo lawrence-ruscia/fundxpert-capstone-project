@@ -1,3 +1,5 @@
+import type { LoanStatus } from '../../employee/types/loan';
+
 export interface LoanApproval {
   approver_id: number;
   approver_name?: string;
@@ -35,3 +37,7 @@ export interface LoanAccess {
   canCancel: boolean;
 }
 
+export interface LoanSummary {
+  status: LoanStatus;
+  count: number;
+}

@@ -79,7 +79,7 @@ export default function EmployeeDashboardPage() {
               label='Vested Amount'
               value={formatCurrency(Number(overview.balances.vested_amount))}
               icon={ShieldCheck}
-              comparison={formatVesting(
+              description={formatVesting(
                 Number(overview.balances.comparisons.vesting_percentage)
               )}
             />
@@ -87,7 +87,7 @@ export default function EmployeeDashboardPage() {
               label='Unvested Amount'
               value={formatCurrency(Number(overview.balances.unvested_amount))}
               icon={Clock}
-              comparison={formatVestingDate(
+              description={formatVestingDate(
                 overview.employee.date_hired,
                 overview.balances.unvested_amount
               )}
@@ -96,7 +96,7 @@ export default function EmployeeDashboardPage() {
               label='Total Balance'
               value={formatCurrency(Number(overview.balances.total_balance))}
               icon={PiggyBank}
-              comparison={formatGrowth(
+              description={formatGrowth(
                 Number(overview.balances.comparisons.growth_percentage)
               )}
             />

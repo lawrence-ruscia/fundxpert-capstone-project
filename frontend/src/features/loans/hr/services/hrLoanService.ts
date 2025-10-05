@@ -4,6 +4,7 @@ import type {
   LoanApproval,
   LoanFilters,
   LoanHistory,
+  LoanSummary,
 } from '../types/hrLoanType';
 
 import type { Loan } from '../../employee/types/loan';
@@ -136,4 +137,13 @@ export async function getAllLoans(filters?: LoanFilters): Promise<Loan[]> {
 export async function getLoanById(loanId: number): Promise<Loan> {
   const res = await api.get(`/hr/loans/${loanId}`);
   return res.data;
+}
+
+/**
+ * Fetch loan status summary
+ */
+export async function getLoanStatusSummary(): Promise<LoanSummary[]> {
+  const res = await api.get(`/hr/loans/status-summary`);
+
+  return res.data.summary;
 }

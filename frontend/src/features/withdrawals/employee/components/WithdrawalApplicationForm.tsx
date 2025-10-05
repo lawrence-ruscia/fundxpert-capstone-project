@@ -208,7 +208,7 @@ export const WithdrawalApplicationForm = ({
         label='Available for Withdrawal'
         value={formatCurrency(Number(eligibility.snapshot.vested_amount))}
         icon={Wallet}
-        comparison={`Total Balance: ${formatCurrency(Number(eligibility.snapshot.total_balance))}`}
+        description={`Total Balance: ${formatCurrency(Number(eligibility.snapshot.total_balance))}`}
       />
 
       <form onSubmit={handleSubmit(onSubmit)} className='space-y-6'>

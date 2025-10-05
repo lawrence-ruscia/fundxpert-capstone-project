@@ -12,33 +12,51 @@ import { type Table as TableType, flexRender } from '@tanstack/react-table';
 import { cn } from '@/lib/utils';
 import { DataTableToolbar } from '@/shared/components/DataTableToolbar';
 import { DataTablePagination } from '@/shared/components/Pagination';
-import type { Contribution } from '../types/hrContribution';
-
-type ContributionsTableProps = {
-  table: TableType<Contribution>;
+import type { Loan } from '../../employee/types/loan';
+type LoansDataTableProps = {
+  table: TableType<Loan>;
 };
 
-export const AllContributionsTable = ({ table }: ContributionsTableProps) => {
+export const LoansDataTable = ({ table }: LoansDataTableProps) => {
   return (
     <div className='space-y-4 max-sm:has-[div[role="toolbar"]]:mb-16'>
       <DataTableToolbar
         table={table}
-        // TODO: Add employee name search
-        searchPlaceholder='Search by contribution date...'
-        searchKey='contribution_date'
-        includeSearch={false}
+        searchPlaceholder='Search by employee name...'
+        searchKey='employee_name'
+        includeSearch={true}
         filters={[
           {
-            columnId: 'is_adjusted',
-            title: 'Record Status',
+            columnId: 'status',
+            title: 'Loan Status',
             options: [
-              { label: 'Original Contributions', value: false },
-              { label: 'Adjusted/Corrected', value: true },
+              { label: 'Pending', value: 'Pending' },
+              { label: 'Incomplete', value: 'Incomplete' },
+              { label: 'Under HR Review', value: 'UnderReviewOfficer' },
+              { label: 'Awaiting Approvals', value: 'Awaiting Approvals' },
+              { label: 'Pending Next Approval', value: 'PendingNextApproval' },
+              { label: 'Approved', value: 'Approved' },
+              { label: 'Released', value: 'Released' },
+              { label: 'Rejected', value: 'Rejected' },
+              { label: 'Cancelled', value: 'Cancelled' },
             ],
           },
 
           {
-            columnId: 'contribution_date',
+            columnId: 'purpose_category',
+            title: 'Purpose',
+            options: [
+              { label: 'Medical', value: 'Medical' },
+              { label: 'Education', value: 'Education' },
+              { label: 'Housing', value: 'Housing' },
+              { label: 'Emergency', value: 'Emergency' },
+              { label: 'Debt', value: 'Debt' },
+              { label: 'Others', value: 'Others' },
+            ],
+          },
+
+          {
+            columnId: 'created_at',
             title: 'Date Range',
             type: 'date-range', // Add this type to distinguish from regular select filters
             options: [], // Empty since this will be a date picker

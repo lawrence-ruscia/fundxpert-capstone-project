@@ -1,5 +1,11 @@
 import { Badge } from '@/components/ui/badge';
-import { Clock, CheckCircle, XCircle, MinusCircle } from 'lucide-react';
+import {
+  Clock,
+  CheckCircle,
+  XCircle,
+  MinusCircle,
+  AlertCircle,
+} from 'lucide-react';
 import type { LoanStatus } from '../types/loan';
 
 interface LoanStatusConfig {
@@ -17,7 +23,14 @@ const loanStatusConfig: Record<LoanStatus, LoanStatusConfig> = {
     variant: 'outline',
     label: 'Pending',
   },
-  UnderReview: {
+  Incomplete: {
+    icon: AlertCircle,
+    className:
+      'bg-orange-100 hover:bg-orange-200 text-orange-700 border border-orange-300 dark:bg-orange-950 dark:hover:bg-orange-900 dark:text-orange-300 dark:border-orange-800',
+    variant: 'secondary',
+    label: 'Incomplete',
+  },
+  UnderReviewOfficer: {
     icon: Clock,
     className:
       'bg-blue-100 hover:bg-blue-200 text-blue-700 border border-blue-300 dark:bg-blue-950 dark:hover:bg-blue-900 dark:text-blue-300 dark:border-blue-800',
@@ -31,19 +44,19 @@ const loanStatusConfig: Record<LoanStatus, LoanStatusConfig> = {
     variant: 'secondary',
     label: 'Awaiting Approvals',
   },
+  PendingNextApproval: {
+    icon: Clock,
+    className:
+      'bg-indigo-100 hover:bg-indigo-200 text-indigo-700 border border-indigo-300 dark:bg-indigo-950 dark:hover:bg-indigo-900 dark:text-indigo-300 dark:border-indigo-800',
+    variant: 'secondary',
+    label: 'Pending Next Approval',
+  },
   Approved: {
     icon: CheckCircle,
     className:
       'bg-green-100 hover:bg-green-200 text-green-700 border border-green-300 dark:bg-green-950 dark:hover:bg-green-900 dark:text-green-300 dark:border-green-800',
     variant: 'secondary',
     label: 'Approved',
-  },
-  Rejected: {
-    icon: XCircle,
-    className:
-      'bg-red-100 hover:bg-red-200 text-red-700 border border-red-300 dark:bg-red-950 dark:hover:bg-red-900 dark:text-red-300 dark:border-red-800',
-    variant: 'destructive',
-    label: 'Rejected',
   },
   Released: {
     icon: CheckCircle,
@@ -52,6 +65,15 @@ const loanStatusConfig: Record<LoanStatus, LoanStatusConfig> = {
     variant: 'secondary',
     label: 'Released',
   },
+
+  Rejected: {
+    icon: XCircle,
+    className:
+      'bg-red-100 hover:bg-red-200 text-red-700 border border-red-300 dark:bg-red-950 dark:hover:bg-red-900 dark:text-red-300 dark:border-red-800',
+    variant: 'destructive',
+    label: 'Rejected',
+  },
+
   Cancelled: {
     icon: MinusCircle,
     className:

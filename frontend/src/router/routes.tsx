@@ -21,11 +21,11 @@ import HRLayout from '@/shared/layout/HRLayout';
 import { EmployeeDetailPage } from '@/features/employeeManagement/pages/EmployeeDetailPage';
 import { EmployeeListPage } from '@/features/employeeManagement/pages/EmployeeListPage';
 import { EmployeeFormPage } from '@/features/employeeManagement/pages/EmployeeFormPage';
-import { EmployeesProvider } from '@/features/employeeManagement/components/EmployeesProvider';
 import ContributionListPage from '@/features/contributions/hr/pages/ContributionListPage';
 import EmployeeContributionsPage from '@/features/contributions/hr/pages/EmployeeContributionsPage';
 import RecordContributionForm from '@/features/contributions/hr/components/RecordContributionForm';
 import UpdateContributionForm from '@/features/contributions/hr/components/UpdateContributionForm';
+import { LoansDashboardPage } from '@/features/loans/hr/pages/LoanDashboard';
 
 export const router = createBrowserRouter([
   {
@@ -113,8 +113,13 @@ export const router = createBrowserRouter([
         path: '/hr/contributions/:id/edit',
         element: <UpdateContributionForm />,
       },
+      {
+        path: '/hr/loans',
+        element: <LoansDashboardPage />,
+      },
     ],
   },
+
   {
     path: '/admin-dashboard',
     element: (

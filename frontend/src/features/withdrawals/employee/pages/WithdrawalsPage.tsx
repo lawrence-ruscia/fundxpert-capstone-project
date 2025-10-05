@@ -153,7 +153,7 @@ export default function WithdrawalsPage() {
               label='Available to Withdraw'
               value={formatCurrency(Number(eligibility.snapshot.vested_amount))}
               icon={Wallet}
-              comparison='Your vested balance eligible for withdrawal'
+              description='Your vested balance eligible for withdrawal'
             />
             <BalanceCard
               label='Current Status'
@@ -169,7 +169,7 @@ export default function WithdrawalsPage() {
                         : AlertCircle
                   : FileX
               }
-              comparison={
+              description={
                 latest
                   ? latest.status === 'Pending'
                     ? 'Awaiting review'
@@ -201,7 +201,7 @@ export default function WithdrawalsPage() {
                             : FileText
                   : Minus
               }
-              comparison={
+              description={
                 latest
                   ? 'Reason for withdrawal request'
                   : 'No withdrawal type selected'
@@ -219,7 +219,7 @@ export default function WithdrawalsPage() {
                   : '—'
               }
               icon={Calendar}
-              comparison={
+              description={
                 latest
                   ? 'When you submitted your request'
                   : 'No request submitted yet'

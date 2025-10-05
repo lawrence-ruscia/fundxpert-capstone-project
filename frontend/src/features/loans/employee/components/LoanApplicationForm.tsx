@@ -171,7 +171,7 @@ export const LoanApplicationForm = ({
         label='Loan Eligibility'
         value={formatCurrency(Number(maxLoan))}
         icon={Calculator}
-        comparison='Based on 50% of your vested balance'
+        description='Based on 50% of your vested balance'
       />
 
       <form onSubmit={handleSubmit(onSubmit)} className='space-y-6'>

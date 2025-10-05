@@ -359,10 +359,12 @@ export async function getAllLoans(filters: {
     SELECT l.*, 
            u.name AS employee_name, 
            u.employee_id,
-           d.name AS department_name
+           d.name AS department_name,
+           o.name AS officer_name
     FROM loans l
     JOIN users u ON l.user_id = u.id
-    LEFT JOIN departments d ON u.department_id = d.id
+    LEFT JOIN departments d ON u.department_id = d.id  
+    LEFT JOIN users o ON l.officer_id = o.id
   `;
 
   if (conditions.length > 0) {
@@ -481,4 +483,19 @@ export async function getLoanAccess(userId: number, loanId: number) {
   }
 
   return access;
+}
+
+export async function getLoanStatusSummary(): Promise<
+  { status: string; count: number }[]
+> {
+  const { rows } = await pool.query(`
+    SELECT 
+      status,
+      COUNT(*)::int AS count
+    FROM loans
+    GROUP BY status
+    ORDER BY status;
+  `);
+
+  return rows;
 }

@@ -7,13 +7,13 @@ interface PropTypes {
   icon: React.ForwardRefExoticComponent<
     Omit<LucideProps, 'ref'> & React.RefAttributes<SVGSVGElement>
   >;
-  comparison?: string | null;
+  description?: string | null;
 }
 export const BalanceCard = ({
   label,
   value = '0',
   icon,
-  comparison,
+  description,
 }: PropTypes) => {
   const Icon = icon;
   return (
@@ -24,7 +24,7 @@ export const BalanceCard = ({
       </CardHeader>
       <CardContent className='space-y-1'>
         <div className='text-2xl font-semibold tabular-nums'>{value}</div>
-        <p className='text-muted-foreground text-xs'>{comparison}</p>
+        <p className='text-muted-foreground text-xs'>{description}</p>
       </CardContent>
     </Card>
   );

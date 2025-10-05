@@ -130,7 +130,7 @@ export default function LoansPage() {
               label='Max Loan Amount'
               value={formatCurrency(maxLoanAmount)}
               icon={Wallet}
-              comparison={
+              description={
                 overview.eligibility.can_request_loan
                   ? 'Eligible for loan'
                   : 'Not eligible'

@@ -8,6 +8,7 @@ import {
   getLoanApprovals,
   getLoanById,
   getLoanHistory,
+  getLoanStatusSummary,
   markLoanIncomplete,
   markLoanReadyForReview,
   moveLoanToReview,
@@ -373,5 +374,22 @@ export const getLoanAccessHandler = async (req: Request, res: Response) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Failed to fetch access permissions' });
+  }
+};
+
+export const getLoanStatusSummaryHandler = async (
+  req: Request,
+  res: Response
+) => {
+  try {
+    if (!isAuthenticatedRequest(req)) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const summary = await getLoanStatusSummary();
+    return res.json({ summary });
+  } catch (err) {
+    console.error('Failed to fetch loan status summary:', err);
+    res.status(500).json({ error: 'Failed to fetch loan status summary' });
   }
 };
