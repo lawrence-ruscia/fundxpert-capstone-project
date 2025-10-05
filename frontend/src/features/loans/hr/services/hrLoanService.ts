@@ -147,3 +147,51 @@ export async function getLoanStatusSummary(): Promise<LoanSummary[]> {
 
   return res.data.summary;
 }
+
+export async function exportLoansDataCSV(params?: {
+  userId?: number;
+  start?: string;
+  end?: string;
+}) {
+  const res = await api.get('/hr/loans/export/csv', {
+    responseType: 'blob',
+    params: {
+      user_id: params?.userId,
+      start: params?.start,
+      end: params?.end,
+    },
+  });
+  return res.data;
+}
+
+export async function exportLoansDataExcel(params?: {
+  userId?: number;
+  start?: string;
+  end?: string;
+}) {
+  const res = await api.get('/hr/loans/export/excel', {
+    responseType: 'blob',
+    params: {
+      user_id: params?.userId,
+      start: params?.start,
+      end: params?.end,
+    },
+  });
+  return res.data;
+}
+
+export async function exportLoansDataPDF(params?: {
+  userId?: number;
+  start?: string;
+  end?: string;
+}) {
+  const res = await api.get('/hr/loans/export/pdf', {
+    responseType: 'blob',
+    params: {
+      user_id: params?.userId,
+      start: params?.start,
+      end: params?.end,
+    },
+  });
+  return res.data;
+}

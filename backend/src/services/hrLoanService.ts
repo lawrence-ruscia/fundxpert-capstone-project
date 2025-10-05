@@ -356,15 +356,30 @@ export async function getAllLoans(filters: {
   }
 
   let query = `
-    SELECT l.*, 
-           u.name AS employee_name, 
-           u.employee_id,
-           d.name AS department_name,
-           o.name AS officer_name
+     SELECT
+      l.id,
+      u.employee_id,
+      u.name AS employee_name,
+      d.name AS department_name, -- Added department name to the selection
+      l.purpose_category,
+      l.purpose_detail,
+      l.amount,
+      l.repayment_term_months,
+      l.monthly_amortization,
+      l.co_maker_employee_id,
+      l.status,
+      ua.name AS assistant_name,
+      ub.name AS officer_name,
+      l.approved_at,
+      l.trust_bank_ref,
+      l.trust_bank_confirmed,
+      l.created_at,
+      l.updated_at
     FROM loans l
-    JOIN users u ON l.user_id = u.id
-    LEFT JOIN departments d ON u.department_id = d.id  
-    LEFT JOIN users o ON l.officer_id = o.id
+    LEFT JOIN users u ON l.user_id = u.id
+    LEFT JOIN departments d ON u.department_id = d.id 
+    LEFT JOIN users ua ON l.assistant_id = ua.id
+    LEFT JOIN users ub ON l.officer_id = ub.id
   `;
 
   if (conditions.length > 0) {

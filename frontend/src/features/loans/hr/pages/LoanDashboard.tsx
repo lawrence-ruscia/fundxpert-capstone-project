@@ -9,7 +9,6 @@ import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 import { FileText, Plus } from 'lucide-react';
 
-import { useContributionsExport } from '@/features/contributions/hr/hooks/useContributionsExport';
 import { useDateRangeFilter } from '@/shared/hooks/useDateRangeFilter';
 import { useTablePagination } from '@/shared/hooks/useTablePagination';
 import {
@@ -26,6 +25,7 @@ import { LoansDataProvider } from '../components/LoansDataProvider';
 import { loansDataColumns } from '../components/LoansDataColumn';
 import { LoansDataTable } from '../components/LoansDataTable';
 import { ExportDropdown } from '@/shared/components/ExportDropdown';
+import { useLoansDataExport } from '../hooks/useLoansDataExport';
 
 export const LoansDashboardPage = () => {
   const { data, loading, error } = useMultiFetch<{
@@ -49,13 +49,16 @@ export const LoansDashboardPage = () => {
   const [columnVisibility, setColumnVisibility] = useState({});
 
   // Date range from filters
-  const dateRange = useDateRangeFilter(columnFilters);
+  const dateRange = useDateRangeFilter(columnFilters, 'created_at');
 
   // Sync pagination changes to URL
   const { pagination, handlePaginationChange } = useTablePagination();
 
+  console.log('Start', dateRange.start);
+  console.log('End', dateRange.end);
+
   // Export functionality
-  const { handleExport } = useContributionsExport({
+  const { handleExport } = useLoansDataExport({
     dateRange: {
       start: dateRange.start,
       end: dateRange.end ?? new Date().toLocaleDateString(),
@@ -123,7 +126,7 @@ export const LoansDashboardPage = () => {
               </CardTitle>
             </div>
             <div className='flex items-center gap-4'>
-              {/* <ExportDropdown onExport={handleExport} variant='outline' /> */}
+              <ExportDropdown onExport={handleExport} variant='outline' />
             </div>
           </CardHeader>
           <CardContent>

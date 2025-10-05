@@ -4,6 +4,9 @@ import { authMiddleware } from '../middleware/authMiddleware.js';
 import {
   assignLoanApproversHandler,
   cancelLoanRequestHandler,
+  exportLoansCSVController,
+  exportLoansExcelController,
+  exportLoansPDFController,
   getAllLoansHandler,
   getLoanAccessHandler,
   getLoanApprovalsHandler,
@@ -128,3 +131,22 @@ hrLoanRouter.get(
  * View all role-based contextual access
  */
 hrLoanRouter.get('/:loanId/access', authMiddleware('HR'), getLoanAccessHandler);
+
+/**
+ * GET /hr/loans/export/csv
+ */
+hrLoanRouter.get('/export/csv', authMiddleware('HR'), exportLoansCSVController);
+
+/**
+ * GET /hr/loans/export/excel
+ */
+hrLoanRouter.get(
+  '/export/excel',
+  authMiddleware('HR'),
+  exportLoansExcelController
+);
+
+/**
+ * GET /hr/loans/export/pdf
+ */
+hrLoanRouter.get('/export/pdf', authMiddleware('HR'), exportLoansPDFController);

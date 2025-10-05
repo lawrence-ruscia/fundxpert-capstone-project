@@ -1,6 +1,11 @@
 import { useCallback } from 'react';
 
 import { toast } from 'sonner';
+import {
+  exportLoansDataCSV,
+  exportLoansDataExcel,
+  exportLoansDataPDF,
+} from '../services/hrLoanService';
 
 interface DateRange {
   start?: string;
@@ -32,17 +37,13 @@ export function useLoansDataExport({
           start: dateRange?.start,
           end: dateRange?.end,
         };
-
         // Call unified export functions with optional employeeId
         if (type === 'csv') {
-          blob =
-            await hrContributionsService.exportContributionsCSV(exportParams);
+          blob = await exportLoansDataCSV(exportParams);
         } else if (type === 'xlsx') {
-          blob =
-            await hrContributionsService.exportContributionsExcel(exportParams);
+          blob = await exportLoansDataExcel(exportParams);
         } else if (type === 'pdf') {
-          blob =
-            await hrContributionsService.exportContributionsPDF(exportParams);
+          blob = await exportLoansDataPDF(exportParams);
         }
 
         if (!blob) {
@@ -99,9 +100,9 @@ function generateFilename(
     // Single employee export
     const employeeName = employee.name.toLowerCase().replace(/\s+/g, '_');
     const employeeId = employee.employee_id || userId;
-    return `contributions_${employeeName}_${employeeId}${dateRangeStr}_${timestamp}.${type}`;
+    return `loans_${employeeName}_${employeeId}${dateRangeStr}_${timestamp}.${type}`;
   } else {
     // All employees export
-    return `contributions_all_employees${dateRangeStr}_${timestamp}.${type}`;
+    return `loans_all_employees${dateRangeStr}_${timestamp}.${type}`;
   }
 }

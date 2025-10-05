@@ -20,6 +20,7 @@ export interface Loan {
   consent_acknowledged: boolean;
   status: LoanStatus;
 
+  assistant_name: string;
   officer_id: number;
   officer_name: string;
   ready_for_review: boolean;
