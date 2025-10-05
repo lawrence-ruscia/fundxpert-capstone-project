@@ -34,3 +34,4 @@ export interface LoanAccess {
   canRelease: boolean;
   canCancel: boolean;
 }
+

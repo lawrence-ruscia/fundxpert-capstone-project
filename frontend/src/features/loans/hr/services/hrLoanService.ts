@@ -9,7 +9,7 @@ import type {
 import type { Loan } from '../../employee/types/loan';
 
 /**
- * Move a loan from pending to HR review stage
+ * Step 0: Mark loan as ready for HR officer review
  */
 export async function markLoanReady(
   loanId: number
@@ -19,7 +19,7 @@ export async function markLoanReady(
 }
 
 /**
- * Move a loan from pending to HR review stage
+ * Step 0: Mark loan as incomplete for HR officer review
  */
 export async function markLoanIncomplete(
   loanId: number
@@ -29,7 +29,7 @@ export async function markLoanIncomplete(
 }
 
 /**
- * Move a loan from pending to HR review stage
+ * Step 1:  Move a loan from pending to HR approvers review stage
  */
 export async function moveLoanToReview(
   loanId: number
@@ -39,7 +39,7 @@ export async function moveLoanToReview(
 }
 
 /**
- * Assign approvers dynamically
+ * Step 2:  Assign approvers dynamically
  */
 export async function assignLoanApprovers(
   loanId: number,
@@ -52,7 +52,7 @@ export async function assignLoanApprovers(
 }
 
 /**
- * Review loan approval (approve/reject)
+ * Step 3:  Review loan approval (approve/reject)
  */
 export async function reviewLoanApproval(
   loanId: number,
@@ -67,7 +67,7 @@ export async function reviewLoanApproval(
 }
 
 /**
- * Release an approved loan to the trust bank
+ * Step 4:  Release an approved loan to the trust bank
  */
 export async function releaseLoanToTrustBank(
   loanId: number,
@@ -88,9 +88,9 @@ export async function cancelLoanRequest(
 }
 
 /**
- * Mark loan as ready
+ * HR can view loan access
  */
-export async function viewLoanAccess(
+export async function getLoanAccess(
   loanId: number
 ): Promise<{ user: number; access: LoanAccess }> {
   const res = await api.post(`/hr/loans/${loanId}/access`);
