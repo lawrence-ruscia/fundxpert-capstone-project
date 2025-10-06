@@ -265,7 +265,7 @@ export default function LoanDetailsPage() {
                   {approvals.map((approval, index) => (
                     <div
                       key={approval.id}
-                      className='hover:bg-muted/50 flex items-center justify-between rounded-lg border p-4 transition-colors'
+                      className='hover:bg-muted/50 flex max-h-96 items-center justify-between overflow-y-auto rounded-lg border p-4 transition-colors'
                     >
                       <div className='flex items-center gap-4'>
                         <div className='bg-primary/10 text-primary flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold'>
@@ -317,7 +317,7 @@ export default function LoanDetailsPage() {
                 Activity History
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className='max-h-96 overflow-y-auto'>
               {!history || history.length === 0 ? (
                 <div className='py-8 text-center'>
                   <History className='text-muted-foreground mx-auto mb-3 h-12 w-12 opacity-50' />
@@ -382,7 +382,7 @@ export default function LoanDetailsPage() {
                     <h4 className='text-foreground text-sm font-medium'>
                       Uploaded Documents ({documents?.length})
                     </h4>
-                    <div className='space-y-2'>
+                    <div className='max-h-96 space-y-2 overflow-y-auto'>
                       {documents?.map(doc => (
                         <div
                           key={doc.id}
@@ -452,9 +452,6 @@ export default function LoanDetailsPage() {
                   <p className='text-muted-foreground text-sm'>
                     No documents uploaded yet
                   </p>
-                  <p className='text-muted-foreground mt-1 text-xs'>
-                    Upload your first document to get started
-                  </p>
                 </div>
               )}
             </CardContent>
@@ -467,7 +464,7 @@ export default function LoanDetailsPage() {
             <CardHeader>
               <CardTitle className='text-lg'>Actions</CardTitle>
               <CardDescription>
-                Manage the loan's current status and process flow.
+                Manage the loan's current status and process flow
               </CardDescription>
             </CardHeader>
             <CardContent className='space-y-3'>
@@ -495,6 +492,7 @@ export default function LoanDetailsPage() {
               )}
 
               {
+                // TODO: Create separate page (LoanReviewPage)
                 /**can('canMoveToReview') &&**/ <Button
                   onClick={handleMoveToReview}
                   disabled={actionLoading}
