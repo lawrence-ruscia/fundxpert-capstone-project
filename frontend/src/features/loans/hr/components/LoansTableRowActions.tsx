@@ -1,25 +1,28 @@
-import { Ellipsis } from 'lucide-react';
+import { Bolt, Ellipsis, FileCheck, Pencil, Send, Wrench } from 'lucide-react';
 import { type Row } from '@tanstack/react-table';
-import { UserPen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import type { Loan } from '../../employee/types/loan.js';
 import { useNavigate } from 'react-router-dom';
-import { useLoansData } from './LoansDataProvider.js';
+import { useLoanAccess } from '../hooks/useLoanAccess.js';
 
 type DataTableRowActionsProps = {
   row: Row<Loan>;
 };
 
 export function LoanTableRowActions({ row }: DataTableRowActionsProps) {
-  const { setOpen, setCurrentRow } = useLoansData();
+  const { can, loading } = useLoanAccess(Number(row.original.id));
+
   const navigate = useNavigate();
+
+  if (loading) return null;
   return (
     <>
       <DropdownMenu modal={false}>
@@ -34,17 +37,45 @@ export function LoanTableRowActions({ row }: DataTableRowActionsProps) {
         </DropdownMenuTrigger>
         <DropdownMenuContent align='end' className='w-[160px]'>
           <DropdownMenuItem
-          // onClick={() => {
-          //   setCurrentRow(row.original);
-          //   setOpen('edit');
-          //   navigate(`/hr/contributions/${row.original.id}/edit`);
-          // }}
+            onClick={() => {
+              navigate(`/hr/loans/${row.original.id}`);
+            }}
           >
-            Approve
+            Manage
             <DropdownMenuShortcut>
-              <UserPen size={16} />
+              <Bolt size={16} />
             </DropdownMenuShortcut>
           </DropdownMenuItem>
+          {can('canApprove') && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => {
+                  navigate(`/hr/loans/${row.original.id}/approval`);
+                }}
+              >
+                Approve
+                <DropdownMenuShortcut>
+                  <FileCheck size={16} />
+                </DropdownMenuShortcut>
+              </DropdownMenuItem>
+            </>
+          )}
+          {can('canRelease') && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                onClick={() => {
+                  navigate(`/hr/loans/${row.original.id}/approval`);
+                }}
+              >
+                Release
+                <DropdownMenuShortcut>
+                  <Send size={16} />
+                </DropdownMenuShortcut>
+              </DropdownMenuItem>
+            </>
+          )}
         </DropdownMenuContent>
       </DropdownMenu>
     </>

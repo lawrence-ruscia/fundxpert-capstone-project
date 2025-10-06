@@ -30,6 +30,7 @@ export function useLoanAccess(loanId: number | undefined): UseLoanAccessResult {
       setLoading(true);
       setError(null);
       const res = await getLoanAccess(loanId);
+
       setAccess(res.access);
     } catch (err) {
       setError((err as Error).message);

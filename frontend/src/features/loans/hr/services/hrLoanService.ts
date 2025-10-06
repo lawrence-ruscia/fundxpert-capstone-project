@@ -94,7 +94,8 @@ export async function cancelLoanRequest(
 export async function getLoanAccess(
   loanId: number
 ): Promise<{ user: number; access: LoanAccess }> {
-  const res = await api.post(`/hr/loans/${loanId}/access`);
+  const res = await api.get(`/hr/loans/${loanId}/access`);
+
   return res.data;
 }
 

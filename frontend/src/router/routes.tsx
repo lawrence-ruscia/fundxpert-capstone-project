@@ -115,7 +115,65 @@ export const router = createBrowserRouter([
       },
       {
         path: '/hr/loans',
-        element: <LoansDashboardPage />,
+        children: [
+          { index: true, element: <LoansDashboardPage /> },
+
+          // Assistants — handle pre-screening
+          // {
+          //   path: 'assistant',
+          //   element: (
+          //     <RequireAccess accessKey='canMarkReady'>
+          //       <LoanAssistantPage />
+          //     </RequireAccess>
+          //   ),
+          // },
+
+          // // General loan details (any HR can view)
+          // { path: ':loanId', element: <LoanDetailsPage /> },
+
+          // // Officer review
+          // {
+          //   path: ':loanId/review',
+          //   element: (
+          //     <RequireAccess accessKey='canMoveToReview'>
+          //       <LoanReviewPage />
+          //     </RequireAccess>
+          //   ),
+          // },
+
+          // // Approvers (multi-step sequence)
+          // {
+          //   path: ':loanId/approval',
+          //   element: (
+          //     <RequireAccess accessKey='canApprove'>
+          //       <LoanApprovalPage />
+          //     </RequireAccess>
+          //   ),
+          // },
+
+          // // Loan release (officer only)
+          // {
+          //   path: ':loanId/release',
+          //   element: (
+          //     <RequireAccess accessKey='canRelease'>
+          //       <LoanReleasePage />
+          //     </RequireAccess>
+          //   ),
+          // },
+
+          // // History — all HR can view
+          // { path: ':loanId/history', element: <LoanHistoryPage /> },
+
+          // // Cancel loan
+          // {
+          //   path: ':loanId/cancel',
+          //   element: (
+          //     <RequireAccess accessKey='canCancel'>
+          //       <LoanCancellationPage />
+          //     </RequireAccess>
+          //   ),
+          // },
+        ],
       },
     ],
   },
