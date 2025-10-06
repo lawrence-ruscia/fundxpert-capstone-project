@@ -12,9 +12,11 @@ export async function markLoanReadyForReview(
     `UPDATE loans
      SET ready_for_review = TRUE,
          assistant_id = $2,
-         updated_at = NOW()
+         updated_at = NOW(),
+         status = 'Pending',
+         notes = NULL
      WHERE id = $1
-       AND status = 'Pending'
+       AND status IN ('Pending', 'Incomplete')
      RETURNING *`,
     [loanId, assistantId]
   );
@@ -34,7 +36,8 @@ export async function markLoanIncomplete(
      SET ready_for_review = FALSE,
          assistant_id = $2,
          notes = COALESCE($3, notes),
-         updated_at = NOW()
+         updated_at = NOW(),
+         status = 'Incomplete'
      WHERE id = $1
        AND status = 'Pending'
      RETURNING *`,
@@ -463,10 +466,21 @@ export async function getLoanAccess(userId: number, loanId: number) {
 
   switch (loan.status) {
     case 'Pending':
+    case 'Incomplete':
       // Assistant actions
       if (!loan.assistant_id || loan.assistant_id === userId) {
         access.canMarkReady = true;
         access.canMarkIncomplete = true;
+      }
+
+      // Prevent from res
+      if (loan.ready_for_review) {
+        access.canMarkReady = false;
+        access.canMarkIncomplete = false;
+      }
+
+      if (loan.status === 'Incomplete') {
+        access.canMarkIncomplete = false;
       }
 
       // Officer can move to review, but NOT the same assistant

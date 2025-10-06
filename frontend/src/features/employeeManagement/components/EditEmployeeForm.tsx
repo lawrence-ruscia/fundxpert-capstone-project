@@ -122,7 +122,7 @@ export const EditEmployeeForm = ({ id }: EmployeeEditFormProps) => {
   const [tempPasswordGenerated, setTempPasswordGenerated] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const navigate = useNavigate();
-
+  
   const {
     data: optionsData,
     loading: optionsLoading,

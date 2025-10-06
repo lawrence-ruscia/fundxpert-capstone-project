@@ -15,7 +15,7 @@ import type { Loan, LoanDocument } from '../../employee/types/loan';
 export async function markLoanReady(
   loanId: number
 ): Promise<{ success: boolean; loan: Loan }> {
-  const res = await api.post(`/hr/loans/${loanId}/mark-ready`);
+  const res = await api.patch(`/hr/loans/${loanId}/mark-ready`);
   return res.data;
 }
 
@@ -23,9 +23,12 @@ export async function markLoanReady(
  * Step 0: Mark loan as incomplete for HR officer review
  */
 export async function markLoanIncomplete(
-  loanId: number
+  loanId: number,
+  reason?: string | null
 ): Promise<{ success: boolean; loan: Loan }> {
-  const res = await api.post(`/hr/loans/${loanId}/mark-incomplete`);
+  const res = await api.patch(`/hr/loans/${loanId}/mark-incomplete`, {
+    remarks: reason,
+  });
   return res.data;
 }
 

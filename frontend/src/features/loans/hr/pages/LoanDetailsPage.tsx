@@ -44,13 +44,17 @@ import { LoanStatusBadge } from '../../employee/components/LoanStatusBadge';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/features/dashboard/employee/utils/formatters';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { toast } from 'sonner';
+import { MarkIncompleteDialog } from '../components/MarkIncompleteDialog';
 
 export default function LoanDetailsPage() {
   const { loanId } = useParams();
   const navigate = useNavigate();
 
   const [actionLoading, setActionLoading] = useState(false);
-  const { data, loading, error } = useMultiFetch<{
+  const [openIncomplete, setOpenIncomplete] = useState(false);
+
+  const { data, loading, error, refetch } = useMultiFetch<{
     loan: Loan;
     approvals: LoanApproval[];
     history: LoanHistory[];
@@ -87,17 +91,23 @@ export default function LoanDetailsPage() {
 
   // --- Action Handlers ---
   const handleMarkReady = async () => {
-    setActionLoading(true);
-    await markLoanReady(Number(loanId));
-    await refreshAccess();
-    setActionLoading(false);
-  };
-
-  const handleMarkIncomplete = async () => {
-    setActionLoading(true);
-    await markLoanIncomplete(Number(loanId));
-    await refreshAccess();
-    setActionLoading(false);
+    try {
+      setActionLoading(true);
+      await markLoanReady(Number(loanId));
+      await refreshAccess();
+      setActionLoading(false);
+      toast.success(
+        `Loan #${loanId} marked as ready for review. The HR Officer has been notified.`
+      );
+      refetch();
+    } catch (err) {
+      console.error(err);
+      toast.error(
+        (err as Error).message ??
+          'Failed to mark loan as ready. Please try again or contact system support'
+      );
+      refetch();
+    }
   };
 
   const handleMoveToReview = async () => {
@@ -456,6 +466,9 @@ export default function LoanDetailsPage() {
           <Card className='sticky top-6'>
             <CardHeader>
               <CardTitle className='text-lg'>Actions</CardTitle>
+              <CardDescription>
+                Manage the loan's current status and process flow.
+              </CardDescription>
             </CardHeader>
             <CardContent className='space-y-3'>
               {can('canMarkReady') && (
@@ -472,7 +485,7 @@ export default function LoanDetailsPage() {
               {can('canMarkIncomplete') && (
                 <Button
                   variant='outline'
-                  onClick={handleMarkIncomplete}
+                  onClick={() => setOpenIncomplete(true)}
                   disabled={actionLoading}
                   className='w-full justify-start'
                 >
@@ -481,8 +494,8 @@ export default function LoanDetailsPage() {
                 </Button>
               )}
 
-              {can('canMoveToReview') && (
-                <Button
+              {
+                /**can('canMoveToReview') &&**/ <Button
                   onClick={handleMoveToReview}
                   disabled={actionLoading}
                   className='w-full justify-start'
@@ -490,10 +503,10 @@ export default function LoanDetailsPage() {
                   <FileText className='mr-2 h-4 w-4' />
                   Move to Review
                 </Button>
-              )}
+              }
 
-              {can('canAssignApprovers') && (
-                <Button
+              {
+                /**can('canAssignApprovers') && **/ <Button
                   onClick={() => navigate(`/hr/loans/${loan.id}/review`)}
                   disabled={actionLoading}
                   className='w-full justify-start'
@@ -501,10 +514,10 @@ export default function LoanDetailsPage() {
                   <Shield className='mr-2 h-4 w-4' />
                   Assign Approvers
                 </Button>
-              )}
+              }
 
-              {can('canApprove') && (
-                <Button
+              {
+                /**can('canApprove') && **/ <Button
                   onClick={() => navigate(`/hr/loans/${loan.id}/approval`)}
                   disabled={actionLoading}
                   className='w-full justify-start'
@@ -512,10 +525,10 @@ export default function LoanDetailsPage() {
                   <CheckCircle2 className='mr-2 h-4 w-4' />
                   Approve / Reject
                 </Button>
-              )}
+              }
 
-              {can('canRelease') && (
-                <Button
+              {
+                /** can('canRelease') && **/ <Button
                   variant='secondary'
                   onClick={() => navigate(`/hr/loans/${loan.id}/release`)}
                   disabled={actionLoading}
@@ -524,10 +537,10 @@ export default function LoanDetailsPage() {
                   <DollarSign className='mr-2 h-4 w-4' />
                   Release Loan
                 </Button>
-              )}
+              }
 
-              {can('canCancel') && (
-                <>
+              {
+                /** can('canCancel') && **/ <>
                   <Separator className='my-4' />
                   <Button
                     variant='destructive'
@@ -539,7 +552,7 @@ export default function LoanDetailsPage() {
                     Cancel Loan
                   </Button>
                 </>
-              )}
+              }
 
               {!can('canMarkReady') &&
                 !can('canMarkIncomplete') &&
@@ -558,6 +571,14 @@ export default function LoanDetailsPage() {
           </Card>
         </div>
       </div>
+      <MarkIncompleteDialog
+        open={openIncomplete}
+        onOpenChange={setOpenIncomplete}
+        setActionLoading={setActionLoading}
+        refreshAccess={refreshAccess}
+        loanId={Number(loanId)}
+        refetch={refetch}
+      />
     </div>
   );
 }

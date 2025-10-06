@@ -22,7 +22,6 @@ import PDFDocument from 'pdfkit';
 import ExcelJS from 'exceljs';
 
 import { getEmployeeById } from '../services/hrService.js';
-import type { Loan } from '../types/loan.js';
 import path from 'path';
 import { SHEET_PASSWORD } from '../config/security.config.js';
 import { getLoanDocuments } from '../services/loanDocumentService.js';
@@ -34,7 +33,7 @@ export const markLoanReadyHandler = async (req: Request, res: Response) => {
 
     const { loanId } = req.params;
     const assistantId = req.user.id;
-
+    
     const access = await getLoanAccess(assistantId, Number(loanId));
     if (!access.canMarkReady) {
       return res.status(403).json({

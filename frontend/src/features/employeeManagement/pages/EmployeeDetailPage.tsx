@@ -12,3 +12,4 @@ export const EmployeeDetailPage = () => {
     </div>
   );
 };
+ 
