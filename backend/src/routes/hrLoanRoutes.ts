@@ -11,6 +11,7 @@ import {
   getLoanAccessHandler,
   getLoanApprovalsHandler,
   getLoanByIdHandler,
+  getLoanDocumentsHandler,
   getLoanHistoryHandler,
   getLoanStatusSummaryHandler,
   markLoanIncompleteHandler,
@@ -150,3 +151,10 @@ hrLoanRouter.get(
  * GET /hr/loans/export/pdf
  */
 hrLoanRouter.get('/export/pdf', authMiddleware('HR'), exportLoansPDFController);
+
+/** GET  /hr/loans/:loanId/documents */
+hrLoanRouter.get(
+  '/:loanId/documents',
+  authMiddleware('HR'),
+  getLoanDocumentsHandler
+);

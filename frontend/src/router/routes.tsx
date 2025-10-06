@@ -26,6 +26,7 @@ import EmployeeContributionsPage from '@/features/contributions/hr/pages/Employe
 import RecordContributionForm from '@/features/contributions/hr/components/RecordContributionForm';
 import UpdateContributionForm from '@/features/contributions/hr/components/UpdateContributionForm';
 import { LoansDashboardPage } from '@/features/loans/hr/pages/LoanDashboard';
+import LoanDetailsPage from '@/features/loans/hr/pages/LoanDetailsPage';
 
 export const router = createBrowserRouter([
   {
@@ -128,8 +129,8 @@ export const router = createBrowserRouter([
           //   ),
           // },
 
-          // // General loan details (any HR can view)
-          // { path: ':loanId', element: <LoanDetailsPage /> },
+          // General loan details (any HR can view)
+          { path: ':loanId', element: <LoanDetailsPage /> },
 
           // // Officer review
           // {

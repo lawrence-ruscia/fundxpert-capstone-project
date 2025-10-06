@@ -1,8 +1,11 @@
 import type { LoanStatus } from '../../employee/types/loan';
 
 export interface LoanApproval {
+  id: number;
+  loan_id: number;
   approver_id: number;
   approver_name?: string;
+  approver_email?: string;
   sequence_order: number;
   status: 'Pending' | 'Approved' | 'Rejected';
   reviewed_at?: string;

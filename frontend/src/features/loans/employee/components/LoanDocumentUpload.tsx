@@ -19,10 +19,17 @@ import { Button } from '@/components/ui/button';
 import { useCallback, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Separator } from '@radix-ui/react-select';
+import { toast } from 'sonner';
 
 export const LoanDocumentUpload = ({ loanId }: { loanId: number }) => {
-  const { documents, handleFileChange, handleFileDelete, loading, error } =
-    useLoanDocs(loanId);
+  const {
+    documents,
+    handleFileChange,
+    handleFileDelete,
+    loading,
+    error,
+    clearError,
+  } = useLoanDocs(loanId);
 
   const [dragActive, setDragActive] = useState(false);
 
@@ -67,14 +74,8 @@ export const LoanDocumentUpload = ({ loanId }: { loanId: number }) => {
   }
 
   if (error) {
-    return (
-      <Alert className='border-destructive/50 bg-destructive/5'>
-        <AlertCircle className='h-4 w-4' />
-        <AlertDescription className='text-destructive'>
-          {error}
-        </AlertDescription>
-      </Alert>
-    );
+    toast.error(error ?? 'Failed to upload file');
+    clearError();
   }
 
   return (

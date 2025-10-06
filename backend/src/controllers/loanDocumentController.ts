@@ -29,7 +29,7 @@ export async function uploadLoanDocument(req: Request, res: Response) {
     if (!loan || loan.user_id !== userId) {
       return res.status(403).json({ error: 'Not authorized to add documents' });
     }
-    if (loan.status !== 'Pending') {
+    if (loan.status !== 'Pending' && loan.status !== 'Incomplete') {
       return res
         .status(400)
         .json({ error: 'Cannot add documents after loan is processed' });

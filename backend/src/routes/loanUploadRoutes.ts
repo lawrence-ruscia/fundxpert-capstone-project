@@ -24,9 +24,32 @@ uploadRouter.post(
         return res.status(401).json({ error: 'Unauthorized' });
       }
 
-      const fileExt = req.file.originalname.split('.').pop();
-      const fileName = `${Date.now()}-${req.user.id}.${fileExt}`;
       const bucket = 'loan-documents';
+
+      const originalName = req.file.originalname;
+      const fileExt = originalName.split('.').pop();
+      const baseName = originalName.substring(0, originalName.lastIndexOf('.'));
+      const generateFileName = async () => {
+        let fileName = originalName;
+        let counter = 1;
+
+        while (true) {
+          // Check if file exists
+          const { data: existingFile } = await supabase.storage
+            .from(bucket)
+            .list('', { search: fileName });
+
+          if (!existingFile || existingFile.length === 0) {
+            return fileName;
+          }
+
+          // If exists, increment counter
+          fileName = `${baseName}(${counter}).${fileExt}`;
+          counter++;
+        }
+      };
+
+      const fileName = await generateFileName();
 
       // Upload to Supabase
       const { data, error } = await supabase.storage

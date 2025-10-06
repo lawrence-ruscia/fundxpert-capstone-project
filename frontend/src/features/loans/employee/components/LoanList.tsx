@@ -8,22 +8,25 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { CreditCard, Activity } from 'lucide-react';
 import type { Loan } from '../types/loan';
-import { ActiveLoanItem } from './ActiveLoanItem';
+import { ApprovedLoanItem } from './ApprovedLoanItem';
 import { HistoryLoanItem } from './HistoryLoanItem';
 import { History } from 'lucide-react';
 
 export function LoansList({ loans }: { loans: Loan[] }) {
   const activeLoans =
     loans?.filter(
-      loan => loan.status === 'Active' || loan.status === 'Approved'
+      loan => loan.status === 'Approved' || loan.status === 'Released'
     ) || [];
   const loanHistory =
     loans?.filter(
       loan =>
-        loan.status === 'Settled' ||
-        loan.status === 'Rejected' ||
         loan.status === 'Pending' ||
+        loan.status === 'Incomplete' ||
+        loan.status === 'UnderReviewOfficer' ||
+        loan.status === 'AwaitingApprovals' ||
         loan.status === 'Approved' ||
+        loan.status === 'Released' ||
+        loan.status === 'Rejected' ||
         loan.status === 'Cancelled'
     ) || [];
 
@@ -54,9 +57,9 @@ export function LoansList({ loans }: { loans: Loan[] }) {
             <div className='rounded-lg p-2'>
               <Activity className='h-5 w-5' />
             </div>
-            Active Loan
+            Approved Loan
           </CardTitle>
-          <CardDescription>Your current active loan</CardDescription>
+          <CardDescription>Your current approved loan</CardDescription>
         </CardHeader>
         <CardContent>
           {activeLoans.length === 0 ? (
@@ -64,7 +67,7 @@ export function LoansList({ loans }: { loans: Loan[] }) {
               <div className='mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl'>
                 <Activity className='h-6 w-6' />
               </div>
-              <p className='font-medium'>No active loans</p>
+              <p className='font-medium'>No approved loans</p>
               <p className='mt-1 text-sm'>
                 Apply for a new loan to get started
               </p>
@@ -72,7 +75,7 @@ export function LoansList({ loans }: { loans: Loan[] }) {
           ) : (
             <div className='space-y-4'>
               {activeLoans.map(loan => (
-                <ActiveLoanItem key={loan.id} loan={loan} />
+                <ApprovedLoanItem key={loan.id} loan={loan} />
               ))}
             </div>
           )}
@@ -105,20 +108,14 @@ export function LoansList({ loans }: { loans: Loan[] }) {
           ) : (
             <Tabs defaultValue='all' className='w-full'>
               <div className='mb-6 overflow-x-auto'>
-                <TabsList className='inline-flex w-max min-w-full lg:grid lg:w-full lg:grid-cols-6'>
+                <TabsList className='inline-flex w-max min-w-full'>
                   <TabsTrigger
                     value='all'
                     className='flex-shrink-0 px-3 text-xs sm:text-sm'
                   >
                     All ({loanHistory.length})
                   </TabsTrigger>
-                  <TabsTrigger
-                    value='settled'
-                    className='flex-shrink-0 px-3 text-xs sm:text-sm'
-                  >
-                    Settled (
-                    {loanHistory.filter(l => l.status === 'Settled').length})
-                  </TabsTrigger>
+
                   <TabsTrigger
                     value='pending'
                     className='flex-shrink-0 px-3 text-xs sm:text-sm'
@@ -127,11 +124,47 @@ export function LoansList({ loans }: { loans: Loan[] }) {
                     {loanHistory.filter(l => l.status === 'Pending').length})
                   </TabsTrigger>
                   <TabsTrigger
+                    value='incomplete'
+                    className='flex-shrink-0 px-3 text-xs sm:text-sm'
+                  >
+                    Incomplete (
+                    {loanHistory.filter(l => l.status === 'Incomplete').length})
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value='underreview'
+                    className='flex-shrink-0 px-3 text-xs sm:text-sm'
+                  >
+                    Under Review Officer (
+                    {
+                      loanHistory.filter(l => l.status === 'UnderReviewOfficer')
+                        .length
+                    }
+                    )
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value='awaitingapprovals'
+                    className='flex-shrink-0 px-3 text-xs sm:text-sm'
+                  >
+                    Awaiting Approvals (
+                    {
+                      loanHistory.filter(l => l.status === 'AwaitingApprovals')
+                        .length
+                    }
+                    )
+                  </TabsTrigger>
+                  <TabsTrigger
                     value='approved'
                     className='flex-shrink-0 px-3 text-xs sm:text-sm'
                   >
                     Approved (
                     {loanHistory.filter(l => l.status === 'Approved').length})
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value='released'
+                    className='flex-shrink-0 px-3 text-xs sm:text-sm'
+                  >
+                    Released (
+                    {loanHistory.filter(l => l.status === 'Released').length})
                   </TabsTrigger>
                   <TabsTrigger
                     value='rejected'
@@ -158,14 +191,6 @@ export function LoansList({ loans }: { loans: Loan[] }) {
                 ))}
               </TabsContent>
 
-              <TabsContent value='settled' className='space-y-3'>
-                {loanHistory
-                  .filter(l => l.status === 'Settled')
-                  .map(loan => (
-                    <HistoryLoanItem key={loan.id} loan={loan} />
-                  ))}
-              </TabsContent>
-
               <TabsContent
                 value='pending'
                 className='max-h-96 space-y-3 overflow-y-auto'
@@ -178,11 +203,55 @@ export function LoansList({ loans }: { loans: Loan[] }) {
               </TabsContent>
 
               <TabsContent
+                value='incomplete'
+                className='max-h-96 space-y-3 overflow-y-auto'
+              >
+                {loanHistory
+                  .filter(l => l.status === 'Incomplete')
+                  .map(loan => (
+                    <HistoryLoanItem key={loan.id} loan={loan} />
+                  ))}
+              </TabsContent>
+
+              <TabsContent
+                value='underreview'
+                className='max-h-96 space-y-3 overflow-y-auto'
+              >
+                {loanHistory
+                  .filter(l => l.status === 'UnderReviewOfficer')
+                  .map(loan => (
+                    <HistoryLoanItem key={loan.id} loan={loan} />
+                  ))}
+              </TabsContent>
+
+              <TabsContent
+                value='awaitingapprovals'
+                className='max-h-96 space-y-3 overflow-y-auto'
+              >
+                {loanHistory
+                  .filter(l => l.status === 'AwaitingApprovals')
+                  .map(loan => (
+                    <HistoryLoanItem key={loan.id} loan={loan} />
+                  ))}
+              </TabsContent>
+
+              <TabsContent
                 value='approved'
                 className='max-h-96 space-y-3 overflow-y-auto'
               >
                 {loanHistory
                   .filter(l => l.status === 'Approved')
+                  .map(loan => (
+                    <HistoryLoanItem key={loan.id} loan={loan} />
+                  ))}
+              </TabsContent>
+
+              <TabsContent
+                value='released'
+                className='max-h-96 space-y-3 overflow-y-auto'
+              >
+                {loanHistory
+                  .filter(l => l.status === 'Released')
                   .map(loan => (
                     <HistoryLoanItem key={loan.id} loan={loan} />
                   ))}

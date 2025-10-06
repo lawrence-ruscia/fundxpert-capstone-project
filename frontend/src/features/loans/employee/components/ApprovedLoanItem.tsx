@@ -11,19 +11,18 @@ import {
   Clock,
   Target,
   Eye,
-  Info,
 } from 'lucide-react';
 
 import { Badge } from '@/components/ui/badge';
-import type { Loan } from '../types/loan';
+import type { Loan, LoanStatus } from '../types/loan';
 import { LoanStatusBadge } from './LoanStatusBadge';
 import { Link } from 'react-router-dom';
 
-export function ActiveLoanItem({ loan }: { loan: Loan }) {
-  const getStatusIcon = (status: string) => {
+export function ApprovedLoanItem({ loan }: { loan: Loan }) {
+  const getStatusIcon = (status: LoanStatus) => {
     switch (status) {
       case 'Approved':
-      case 'Active':
+      case 'Released':
         return <CheckCircle className='h-5 w-5' />;
       default:
         return <AlertCircle className='h-5 w-5' />;
@@ -173,26 +172,13 @@ export function ActiveLoanItem({ loan }: { loan: Loan }) {
         </div>
 
         {/* Progress indicator for active loans */}
-        {loan.status === 'Active' && (
-          <Alert className='rounded-lg border-0 border-l-6 border-blue-500 bg-blue-600/10 text-blue-500'>
-            <Info className='h-4 w-4 text-blue-500' />
-            <AlertTitle className='font-semibold text-blue-500'>
-              Active Repayment Period
-            </AlertTitle>
-
-            <AlertDescription className='text-blue-500 dark:text-blue-700'>
-              Make your monthly payments on time to maintain good standing
-            </AlertDescription>
-          </Alert>
-        )}
 
         {loan.status === 'Approved' && (
           <Alert className='rounded-lg border-0 border-l-4 border-green-500 bg-green-50 text-green-800 dark:bg-green-900/20'>
             <CheckCircle className='h-4 w-4' />
             <AlertTitle className='font-semibold'>Loan Approved</AlertTitle>
             <AlertDescription className='text-green-800'>
-              Your loan has been approved! Funds will be disbursed shortly and
-              repayment will begin next month.
+              Your loan has been approved! Funds will be disbursed shortly
             </AlertDescription>
           </Alert>
         )}

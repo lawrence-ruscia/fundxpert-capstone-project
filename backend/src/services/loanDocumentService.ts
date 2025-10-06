@@ -58,7 +58,7 @@ export async function deleteLoanDocument(
     console.error('❌ Cannot determine storage path - aborting deletion');
     return false;
   }
- 
+
   // Delete from Supabase
   console.log(` Deleting from Supabase Storage: ${storagePath}`);
   const { error: storageError } = await supabase.storage

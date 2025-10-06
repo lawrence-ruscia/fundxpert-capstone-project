@@ -25,6 +25,7 @@ import { getEmployeeById } from '../services/hrService.js';
 import type { Loan } from '../types/loan.js';
 import path from 'path';
 import { SHEET_PASSWORD } from '../config/security.config.js';
+import { getLoanDocuments } from '../services/loanDocumentService.js';
 
 export const markLoanReadyHandler = async (req: Request, res: Response) => {
   try {
@@ -1744,5 +1745,21 @@ export async function exportLoansPDFController(req: Request, res: Response) {
       error: 'Failed to export PDF',
       message: err instanceof Error ? err.message : 'Unknown error occurred',
     });
+  }
+}
+
+export async function getLoanDocumentsHandler(req: Request, res: Response) {
+  try {
+    if (!isAuthenticatedRequest(req)) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const { loanId } = req.params;
+
+    const docs = await getLoanDocuments(Number(loanId));
+    res.json({ documents: docs });
+  } catch (err) {
+    console.error('❌ Error fetching loan documents:', err);
+    res.status(500).json({ error: 'Failed to fetch documents' });
   }
 }

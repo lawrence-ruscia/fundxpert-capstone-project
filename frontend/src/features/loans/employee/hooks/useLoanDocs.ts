@@ -98,5 +98,12 @@ export const useLoanDocs = (loanId: number) => {
     }
   }
 
-  return { documents, handleFileChange, handleFileDelete, loading, error };
+  return {
+    documents,
+    handleFileChange,
+    handleFileDelete,
+    loading,
+    error,
+    clearError: () => setError(null),
+  };
 };

@@ -1,5 +1,5 @@
 import { pool } from '../config/db.config.js';
-import type { LoanApprovalStatus } from '../types/loan.js';
+import type { LoanApprovalStatus, LoanDocument } from '../types/loan.js';
 
 /**
  * Step 0: Assistant marks loan as ready for HR Officer review
