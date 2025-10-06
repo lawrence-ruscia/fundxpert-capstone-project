@@ -360,7 +360,8 @@ export async function getAllLoans(filters: {
       l.id,
       u.employee_id,
       u.name AS employee_name,
-      d.name AS department_name, -- Added department name to the selection
+      d.name AS department_name,
+      p.title AS position_title,
       l.purpose_category,
       l.purpose_detail,
       l.amount,
@@ -378,6 +379,7 @@ export async function getAllLoans(filters: {
     FROM loans l
     LEFT JOIN users u ON l.user_id = u.id
     LEFT JOIN departments d ON u.department_id = d.id 
+    LEFT JOIN positions p ON u.position_id = p.id 
     LEFT JOIN users ua ON l.assistant_id = ua.id
     LEFT JOIN users ub ON l.officer_id = ub.id
   `;

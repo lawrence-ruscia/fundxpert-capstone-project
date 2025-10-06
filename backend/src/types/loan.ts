@@ -22,7 +22,10 @@ export interface Loan {
   consent_acknowledged: boolean;
   status: LoanStatus;
 
+  employee_id: string;
+  employee_name: string;
   department_name: string;
+  position_title: string;
   assistant_name: string;
   officer_id: number;
   officer_name: string;
@@ -32,11 +35,7 @@ export interface Loan {
   monthly_amortization: number;
   created_at: Date;
   approved_at?: Date | null;
-  approved_by?: number | null;
-  active_at?: Date | null;
-  settled_at?: Date | null;
-  rejected_at?: Date | null;
-  trust_bank_ref?: string | null;
+  updated_at?: Date | null;
 }
 
 export type LoanPurposeCategory =

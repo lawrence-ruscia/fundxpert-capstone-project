@@ -19,7 +19,7 @@ const formatCurrency = (amount: number) => {
     style: 'currency',
     currency: 'PHP',
   }).format(amount);
-}; 
+};
 
 export const loansDataColumns: ColumnDef<Loan>[] = [
   {
@@ -95,6 +95,22 @@ export const loansDataColumns: ColumnDef<Loan>[] = [
       return (
         <LongText className='max-w-36 text-left font-medium'>
           {row.getValue('department_name')}
+        </LongText>
+      );
+    },
+    meta: { className: 'w-48' },
+    enableSorting: true,
+  },
+
+  {
+    accessorKey: 'position_title',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title='Position' />
+    ),
+    cell: ({ row }) => {
+      return (
+        <LongText className='max-w-36 text-left font-medium'>
+          {row.getValue('position_title')}
         </LongText>
       );
     },

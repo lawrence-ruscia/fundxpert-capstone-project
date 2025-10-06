@@ -525,6 +525,7 @@ export async function exportLoansCSVController(req: Request, res: Response) {
         'Employee ID',
         'Employee Name',
         'Deparment',
+        'Position',
         'Purpose',
         'Amount (₱)',
         'Term (Months)',
@@ -543,6 +544,7 @@ export async function exportLoansCSVController(req: Request, res: Response) {
         ...(isSingleEmployee ? [] : [l.employee_id.toString()]),
         ...(isSingleEmployee ? [] : [l.employee_name]),
         ...(isSingleEmployee ? [] : [l.department_name]),
+        ...(isSingleEmployee ? [] : [l.position_title]),
         l.purpose_category,
 
         Number(l.amount).toFixed(2),
@@ -809,8 +811,9 @@ export async function exportLoansExcelController(req: Request, res: Response) {
       : [
           { header: 'ID', key: 'id', width: 10 },
           { header: 'Employee ID', key: 'employee_id', width: 15 },
-          { header: 'Employee Name', key: 'employee_name', width: 18 },
-          { header: 'Department', key: 'department_name', width: 15 },
+          { header: 'Employee Name', key: 'employee_name', width: 20 },
+          { header: 'Department', key: 'department_name', width: 20 },
+          { header: 'Position', key: 'position_title', width: 20 },
           { header: 'Purpose', key: 'purpose', width: 30 },
           { header: 'Amount (₱)', key: 'amount', width: 18 },
           { header: 'Term (Months)', key: 'term', width: 15 },
@@ -856,6 +859,7 @@ export async function exportLoansExcelController(req: Request, res: Response) {
         rowData.employee_id = l.employee_id;
         rowData.employee_name = l.employee_name;
         rowData.department_name = l.department_name;
+        rowData.position_title = l.position_title;
       }
 
       const row = sheet.addRow(rowData);
