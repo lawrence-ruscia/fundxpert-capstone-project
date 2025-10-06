@@ -294,6 +294,9 @@ export async function exportContributionsCSVController(
       csvData.push([
         'ID',
         'Employee ID',
+        'Employee Name',
+        'Department',
+        'Position',
         'Date',
         'Employee Amount (₱)',
         'Employer Amount (₱)',
@@ -307,7 +310,10 @@ export async function exportContributionsCSVController(
     contributions.forEach(c => {
       const rowData = [
         c.id.toString(),
-        ...(isSingleEmployee ? [] : [c.employee_id.toString()]), // Include Employee ID for all employees
+        ...(isSingleEmployee ? [] : [c.employee_id]), // Include Employee ID for all employees
+        ...(isSingleEmployee ? [] : [c.employee_name]),
+        ...(isSingleEmployee ? [] : [c.department_name]),
+        ...(isSingleEmployee ? [] : [c.position_title]),
         new Date(c.contribution_date).toISOString().split('T')[0],
         Number(c.employee_amount).toFixed(2),
         Number(c.employer_amount).toFixed(2),
@@ -565,7 +571,10 @@ export async function exportContributionsExcelController(
         ]
       : [
           { header: 'ID', key: 'id', width: 10 },
-          { header: 'Employee ID', key: 'user_id', width: 15 },
+          { header: 'Employee ID', key: 'employee_id', width: 15 },
+          { header: 'Employee Name', key: 'employee_name', width: 20 },
+          { header: 'Department', key: 'department', width: 20 },
+          { header: 'Position', key: 'position', width: 20 },
           { header: 'Date', key: 'contribution_date', width: 15 },
           { header: 'Employee Amount (₱)', key: 'employee_amount', width: 20 },
           { header: 'Employer Amount (₱)', key: 'employer_amount', width: 20 },
@@ -607,7 +616,10 @@ export async function exportContributionsExcelController(
 
       // Include user_id for all employees export
       if (!isSingleEmployee) {
-        rowData.user_id = c.employee_id;
+        rowData.employee_id = c.employee_id;
+        rowData.employee_name = c.employee_name;
+        rowData.department = c.department_name;
+        rowData.position = c.position_title;
       }
 
       const row = sheet.addRow(rowData);
@@ -1085,13 +1097,13 @@ export async function exportContributionsPDFController(
         }
       : {
           id: 35,
-          userId: 55,
+          userId: 50,
+          employeeName: 90,
           date: 65,
           employeeAmount: 75,
           employerAmount: 75,
           total: 75,
-          status: 55,
-          notes: 80,
+          status: 50,
         };
 
     // Calculate column positions
@@ -1125,10 +1137,15 @@ export async function exportContributionsPDFController(
       });
 
     if (!isSingleEmployee) {
-      doc.text('Emp ID', columnPositions.userId + 2, currentY, {
-        width: columnWidths.userId - 4,
-        align: 'center',
-      });
+      doc
+        .text('Emp ID', columnPositions.userId + 2, currentY, {
+          width: columnWidths.userId - 4,
+          align: 'center',
+        })
+        .text('Employee Name', columnPositions.employeeName + 2, currentY, {
+          width: columnWidths.employeeName - 4,
+          align: 'left',
+        });
     }
 
     doc
@@ -1151,11 +1168,14 @@ export async function exportContributionsPDFController(
       .text('Status', columnPositions.status + 2, currentY, {
         width: columnWidths.status - 4,
         align: 'center',
-      })
-      .text('Notes', columnPositions.notes + 2, currentY, {
+      });
+
+    if (isSingleEmployee) {
+      doc.text('Notes', columnPositions.notes + 2, currentY, {
         width: columnWidths.notes - 4,
         align: 'center',
       });
+    }
 
     currentY += 35;
 
@@ -1180,10 +1200,15 @@ export async function exportContributionsPDFController(
         });
 
       if (!isSingleEmployee) {
-        doc.text('Emp ID', columnPositions.userId + 2, headerY, {
-          width: columnWidths.userId - 4,
-          align: 'center',
-        });
+        doc
+          .text('Emp ID', columnPositions.userId + 2, headerY, {
+            width: columnWidths.userId - 4,
+            align: 'center',
+          })
+          .text('Employee Name', columnPositions.employeeName + 2, headerY, {
+            width: columnWidths.employeeName - 4,
+            align: 'left',
+          });
       }
 
       doc
@@ -1206,16 +1231,19 @@ export async function exportContributionsPDFController(
         .text('Status', columnPositions.status + 2, headerY, {
           width: columnWidths.status - 4,
           align: 'center',
-        })
-        .text('Notes', columnPositions.notes + 2, headerY, {
+        });
+
+      if (isSingleEmployee) {
+        doc.text('Notes', columnPositions.notes + 2, headerY, {
           width: columnWidths.notes - 4,
           align: 'center',
         });
+      }
 
       return y + 35;
     };
 
-    contributions.forEach(async (contribution, index) => {
+    contributions.forEach((contribution, index) => {
       // Check for new page
       if (currentY + rowHeight > doc.page.height - 100) {
         addFooter();
@@ -1245,15 +1273,22 @@ export async function exportContributionsPDFController(
         });
 
       if (!isSingleEmployee) {
-        doc.text(
-          String(contribution.employee_id),
-          columnPositions.userId + 2,
-          textY,
-          {
-            width: columnWidths.userId - 4,
-            align: 'center',
-          }
-        );
+        doc
+          .text(
+            String(contribution.employee_id),
+            columnPositions.userId + 2,
+            textY,
+            {
+              width: columnWidths.userId - 4,
+              align: 'center',
+            }
+          )
+          .text(
+            truncateText(contribution.employee_name || '-', 27),
+            columnPositions.employeeName + 2,
+            textY,
+            { width: columnWidths.employeeName - 4, align: 'left' }
+          );
       }
 
       doc
@@ -1292,13 +1327,16 @@ export async function exportContributionsPDFController(
           { width: columnWidths.status - 4, align: 'center' }
         )
         .fillColor(colors.primary)
-        .font('Helvetica')
-        .text(
-          truncateText(contribution.notes || '', isSingleEmployee ? 50 : 40),
+        .font('Helvetica');
+
+      if (isSingleEmployee) {
+        doc.text(
+          truncateText(contribution.notes || '', 50),
           columnPositions.notes + 2,
           textY,
           { width: columnWidths.notes - 4, align: 'left' }
         );
+      }
 
       totalEmployee += Number(contribution.employee_amount);
       totalEmployer += Number(contribution.employer_amount);

@@ -2,15 +2,18 @@ export type Contribution = {
   id: number;
   user_id: number;
   contribution_date: string;
+
+  employee_name: string;
+  department_name: string;
+  position_title: string;
   employee_amount: number;
   employer_amount: number;
-  created_at: string;
   created_by: number;
+  created_at: string;
   updated_by?: number;
   updated_at?: string;
   is_adjusted: boolean;
   notes?: string;
-  employee_id: string;
 };
 
 export type ContributionPayload = Omit<

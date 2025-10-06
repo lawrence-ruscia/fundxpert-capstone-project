@@ -120,11 +120,18 @@ export async function getAllContributions(
   userId?: number | null,
   startDate?: string | null,
   endDate?: string | null
-): Promise<(Contribution & { employee_id: string })[]> {
+): Promise<Contribution[]> {
   let query = `
-    SELECT c.*, u.employee_id
+     SELECT
+      c.*,
+      u.employee_id,
+      u.name AS employee_name,
+      d.name AS department_name,
+      p.title AS position_title
     FROM contributions c
     INNER JOIN users u ON c.user_id = u.id
+    LEFT JOIN departments d ON u.department_id = d.id
+    LEFT JOIN positions p ON u.position_id = p.id
   `;
   const params: unknown[] = [];
   const conditions: string[] = [];

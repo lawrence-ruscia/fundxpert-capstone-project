@@ -19,7 +19,7 @@ const formatCurrency = (amount: number) => {
     style: 'currency',
     currency: 'PHP',
   }).format(amount);
-};
+}; 
 
 export const loansDataColumns: ColumnDef<Loan>[] = [
   {

@@ -2,6 +2,11 @@ export type Contribution = {
   id: number;
   user_id: number;
   contribution_date: string;
+
+  employee_name: string;
+  employee_id: string;
+  department_name: string;
+  position_title: string;
   employee_amount: number;
   employer_amount: number;
   created_by: number;

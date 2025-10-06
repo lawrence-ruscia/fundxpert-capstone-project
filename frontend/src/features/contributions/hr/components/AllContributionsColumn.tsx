@@ -52,6 +52,7 @@ export const allContributionsColumns: ColumnDef<Contribution>[] = [
       ),
     },
     enableSorting: false,
+    enableHiding: false,
   },
 
   {
@@ -68,7 +69,57 @@ export const allContributionsColumns: ColumnDef<Contribution>[] = [
     },
     meta: { className: 'w-36' },
     enableSorting: false,
+    enableHiding: false,
   },
+
+  {
+    accessorKey: 'employee_name',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title='Employee Name' />
+    ),
+    cell: ({ row }) => {
+      return (
+        <LongText className='max-w-36 text-left font-medium'>
+          {row.getValue('employee_name')}
+        </LongText>
+      );
+    },
+    meta: { className: 'w-48' },
+    enableSorting: true,
+  },
+
+  {
+    accessorKey: 'department_name',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title='Department' />
+    ),
+    cell: ({ row }) => {
+      return (
+        <LongText className='max-w-36 text-left font-medium'>
+          {row.getValue('department_name')}
+        </LongText>
+      );
+    },
+    meta: { className: 'w-48' },
+    enableSorting: true,
+  },
+
+  {
+    accessorKey: 'position_title',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title='Position' />
+    ),
+    cell: ({ row }) => {
+      return (
+        <LongText className='max-w-36 text-left font-medium'>
+          {row.getValue('position_title')}
+        </LongText>
+      );
+    },
+    meta: { className: 'w-48' },
+    enableSorting: true,
+  },
+
   {
     accessorKey: 'contribution_date',
     header: ({ column }) => (
@@ -150,7 +201,6 @@ export const allContributionsColumns: ColumnDef<Contribution>[] = [
       ),
     },
     enableSorting: true,
-    enableHiding: false,
   },
 
   {
@@ -243,7 +293,6 @@ export const allContributionsColumns: ColumnDef<Contribution>[] = [
     },
 
     enableSorting: false,
-    enableHiding: false,
   },
   {
     id: 'actions',
