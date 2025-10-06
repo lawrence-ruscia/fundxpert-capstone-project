@@ -31,6 +31,7 @@ export interface Loan {
   officer_name: string;
   ready_for_review: boolean;
   assistant_id: number;
+  notes?: string;
 
   monthly_amortization: number;
   created_at: Date;

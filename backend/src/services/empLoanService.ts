@@ -137,8 +137,7 @@ export async function getLoanHistory(userId: number): Promise<Loan[]> {
 
 export async function getLoanDetails(userId: number, loanId: number) {
   const query = `
-    SELECT id, amount, status, created_at, purpose_category, 
-      purpose_detail, repayment_term_months
+    SELECT *
     FROM loans 
     WHERE id = $1 AND user_id = $2;
   `;

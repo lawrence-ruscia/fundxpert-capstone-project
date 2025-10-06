@@ -6,7 +6,9 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import {
+  AlertTriangle,
   CalendarDays,
+  CheckCircle,
   Clock,
   PhilippinePeso,
   Target,
@@ -72,7 +74,7 @@ export default function LoanDetailPage() {
   };
 
   // Add this cancel button section before the "View Withdrawal Details" button
-  const canCancel = loan?.status === 'Pending' || loan?.status === 'Approved';
+  const canCancel = loan?.status === 'Pending' || loan?.status === 'Incomplete';
 
   if (loading) {
     return <LoadingSpinner text={'Loading Loan Details'} />;
@@ -187,7 +189,15 @@ export default function LoanDetailPage() {
                   </p>
                 )}
               </div>
-
+              {loan.status === 'Incomplete' && (
+                <Alert className='mt-6 rounded-lg border-0 border-l-4 border-amber-500 bg-amber-50 text-amber-800 dark:bg-amber-900/20'>
+                  <AlertTriangle className='h-4 w-4' />
+                  <AlertTitle className='font-semibold'>Incomplete</AlertTitle>
+                  <AlertDescription className='text-amber-800'>
+                    {loan.notes}
+                  </AlertDescription>
+                </Alert>
+              )}
               {canCancel && (
                 <div className='flex flex-1 gap-2'>
                   <Button

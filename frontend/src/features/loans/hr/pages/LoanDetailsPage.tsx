@@ -198,7 +198,14 @@ export default function LoanDetailsPage() {
                         Purpose
                       </span>
                     </div>
-                    <p className='text-base'>{loan.purpose_category}</p>
+                    <p className='text-base'>
+                      {loan.purpose_category}{' '}
+                      {loan.purpose_detail && (
+                        <p className='text-muted-foreground text-sm'>
+                          {loan.purpose_detail}
+                        </p>
+                      )}
+                    </p>
                   </div>
                 </div>
 
