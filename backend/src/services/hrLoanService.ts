@@ -91,7 +91,7 @@ export async function assignLoanApprovers(
 
     // Validate ownership — must match the officer who moved to review
     const { rows: loanRows } = await client.query(
-      `SELECT officer_id, status FROM loans WHERE id = $1`,
+      `SELECT officer_id, assistant_id, status FROM loans WHERE id = $1`,
       [loanId]
     );
 
@@ -111,6 +111,14 @@ export async function assignLoanApprovers(
       throw new Error(
         'The HR officer cannot assign themselves as an approver.'
       );
+    }
+
+    // Prevent HR assistant from being assigned
+    if (
+      loan.assistant_id &&
+      approvers.some(a => a.approverId === loan.assistant_id)
+    ) {
+      throw new Error('HR assistant cannot be assigned as an approver.');
     }
 
     //  Prevent duplicate approvers
