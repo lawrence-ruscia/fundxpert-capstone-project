@@ -28,27 +28,25 @@ import { NetworkError } from '@/shared/components/NetworkError';
 import { DataError } from '@/shared/components/DataError';
 
 export default function LoansPage() {
-  const [refreshKey, setRefreshKey] = useState(0);
-
   const {
     data: loans,
     loading,
     error,
-  } = useApi<Loan[]>(
-    fetchEmployeeLoans,
-    [refreshKey] // Add refreshKey as dependency
-  );
+    refetch: refetchLoans,
+  } = useApi<Loan[]>(fetchEmployeeLoans);
   const {
     data: overview,
     loading: overviewLoading,
     error: overviewError,
+    refetch: refetchOverview,
   } = useEmployeeOverview();
 
   const [showForm, setShowForm] = useState(false);
 
   const handleFormSuccess = () => {
     setShowForm(false);
-    setRefreshKey(prev => prev + 1); // Increment to trigger refetch
+    refetchLoans();
+    refetchOverview();
   };
 
   const handleFormCancel = () => {

@@ -20,27 +20,27 @@ export const employeeSidebarData: SidebarData = {
       items: [
         {
           title: 'Dashboard',
-          url: '/dashboard',
+          url: '/employee',
           icon: LayoutDashboard,
         },
         {
           title: 'Contributions History',
-          url: '/dashboard/contributions',
+          url: '/employee/contributions',
           icon: PiggyBank,
         },
         {
           title: 'Fund Projection',
-          url: '/dashboard/projection',
+          url: '/employee/projection',
           icon: ChartLine,
         },
         {
           title: 'Loans',
-          url: '/dashboard/loans',
+          url: '/employee/loans',
           icon: Wallet,
         },
         {
           title: 'Withdrawals',
-          url: '/dashboard/withdrawals',
+          url: '/employee/withdrawals',
           icon: BanknoteArrowDown,
         },
       ],

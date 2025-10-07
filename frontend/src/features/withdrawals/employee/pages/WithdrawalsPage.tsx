@@ -45,26 +45,25 @@ import { DataError } from '@/shared/components/DataError';
 import { WithdrawalItem } from '../components/WithdrawalItem';
 
 export default function WithdrawalsPage() {
-  const [refreshKey, setRefreshKey] = useState(0);
   const {
     data: withdrawals,
     loading,
     error,
-  } = useApi<WithdrawalRequest[]>(
-    fetchWithdrawalHistory,
-    [refreshKey] // Add refreshKey as dependency
-  );
+    refetch: refetchWithdrawal,
+  } = useApi<WithdrawalRequest[]>(fetchWithdrawalHistory);
   const {
     data: eligibility,
     loading: eligibilityLoading,
     error: eligibilityError,
-  } = useApi<WithdrawalEligibility>(fetchWithdrawalEligibility, [refreshKey]);
+    refetch: refetchEligibility,
+  } = useApi<WithdrawalEligibility>(fetchWithdrawalEligibility);
 
   const [showForm, setShowForm] = useState(false);
 
   const handleFormSuccess = () => {
     setShowForm(false);
-    setRefreshKey(prev => prev + 1); // Increment to trigger refetch
+    refetchWithdrawal();
+    refetchEligibility();
   };
 
   const handleFormCancel = () => {

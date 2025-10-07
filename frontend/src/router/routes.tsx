@@ -63,7 +63,7 @@ export const router = createBrowserRouter([
     ],
   },
   {
-    path: '/dashboard',
+    path: '/employee',
     element: (
       <ProtectedRoute allowedRoles={['Employee']}>
         <EmployeeLayout />
@@ -89,35 +89,35 @@ export const router = createBrowserRouter([
     children: [
       { index: true, element: <HRDashboardPage /> },
       {
-        path: '/hr/employees',
+        path: 'employees',
         element: <EmployeeListPage />,
       },
       {
-        path: '/hr/employees/add',
+        path: 'employees/add',
         element: <EmployeeFormPage />,
       },
       {
-        path: '/hr/employees/:id',
+        path: 'employees/:id',
         element: <EmployeeDetailPage />,
       },
       {
-        path: '/hr/contributions',
+        path: 'contributions',
         element: <ContributionListPage />,
       },
       {
-        path: '/hr/contributions/new',
+        path: 'contributions/new',
         element: <RecordContributionForm />,
       },
       {
-        path: '/hr/employees/:id/contributions',
+        path: 'employees/:id/contributions',
         element: <EmployeeContributionsPage />,
       },
       {
-        path: '/hr/contributions/:id/edit',
+        path: 'contributions/:id/edit',
         element: <UpdateContributionForm />,
       },
       {
-        path: '/hr/loans',
+        path: 'loans',
         children: [
           { index: true, element: <LoansDashboardPage /> },
 

@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { LoanStatusBadge } from '@/features/loans/employee/components/LoanStatusBadge';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useEmployeeLoans } from '@/features/loans/employee/hooks/useEmployeeLoans';
 
 export const LoanStatus = ({ ...props }) => {
@@ -17,6 +17,8 @@ export const LoanStatus = ({ ...props }) => {
     loading: loanLoading,
     error: loanError,
   } = useEmployeeLoans();
+
+  const navigate = useNavigate();
 
   if (loanLoading) {
     return (
@@ -82,7 +84,7 @@ export const LoanStatus = ({ ...props }) => {
             </div>
 
             {/* Monthly Amortization - Only show for Active/Approved loans */}
-            {(loan.status === 'Active' || loan.status === 'Approved') && (
+            {(loan.status === 'Approved' || loan.status === 'Released') && (
               <div className='flex items-center justify-between'>
                 <span className='text-sm'>Monthly Payment</span>
                 <span className='font-semibold'>
@@ -117,9 +119,13 @@ export const LoanStatus = ({ ...props }) => {
             </Link>
           </div>
         ) : (
-          <div className='py-4 text-center'>
-            <p className='text-muted-foreground mb-3'>No active loans</p>
-            <Button size='sm' className='w-full'>
+          <div className='flex-col justify-between text-center'>
+            <p className='text-muted-foreground mb-3 py-12'>No active loans</p>
+            <Button
+              onClick={() => navigate('/employee/loans')}
+              size='sm'
+              className='w-full'
+            >
               Apply for Loan
             </Button>
           </div>

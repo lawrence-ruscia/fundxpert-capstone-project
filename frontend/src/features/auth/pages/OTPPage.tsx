@@ -44,7 +44,7 @@ export const OTPPage = () => {
         login(response.user, response.tokenExpiry);
         // Redirect to dashboard
         console.log('User is: ', response);
-        navigate('/dashboard', { replace: true });
+        navigate('/', { replace: true });
       }
     } catch (err) {
       setError('otp', {

@@ -12,9 +12,13 @@ export default function AuthRedirect({ children }: AuthRedirectProps) {
     return <LoadingSpinner text={'Checking Authentication'} />;
   }
 
-  if (user) {
+  if (user && user.role === 'Employee') {
     // already logged in, redirect to dashboard
-    return <Navigate to='/dashboard' replace />;
+    return <Navigate to='/employee' replace />;
+  }
+
+  if (user && user.role === 'HR') {
+    return <Navigate to='/hr' replace />;
   }
 
   return <>{children}</>;

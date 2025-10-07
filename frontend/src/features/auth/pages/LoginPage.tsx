@@ -45,7 +45,7 @@ export const LoginPage = () => {
       if ('user' in response) {
         // Fully logged in (no 2FA at all or already completed)
         login(response.user, response.tokenExpiry);
-        navigate('/dashboard', { replace: true });
+        navigate('/', { replace: true });
       }
     } catch (err) {
       setError('root', { message: (err as Error).message || 'Login failed' });
