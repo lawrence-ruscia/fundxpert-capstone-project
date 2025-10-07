@@ -258,8 +258,8 @@ export async function reviewLoanApproval(
  */
 export async function releaseLoanToTrustBank(
   loanId: number,
-  txRef: string,
-  releasedBy: number
+  releasedBy: number,
+  txRef?: string | null
 ) {
   const { rows: loanRows } = await pool.query(
     `SELECT officer_id, status FROM loans WHERE id = $1`,
@@ -286,7 +286,7 @@ export async function releaseLoanToTrustBank(
          updated_at = NOW()
      WHERE id = $1
      RETURNING *`,
-    [loanId, txRef, releasedBy]
+    [loanId, txRef || null, releasedBy]
   );
 
   return rows[0] || null;
@@ -298,21 +298,23 @@ export async function releaseLoanToTrustBank(
 export async function cancelLoanRequest(
   loanId: number,
   userId: number,
-  byRole: 'Employee' | 'HR'
+  byRole: 'Employee' | 'HR',
+  remarks: string
 ) {
   const allowedStatuses = [
     'Pending',
+    'Incomplete',
     'UnderReviewOfficer',
     'AwaitingApprovals',
   ];
   const { rows } = await pool.query(
     `UPDATE loans
-     SET status = 'Cancelled', updated_at = NOW()
+     SET status = 'Cancelled', updated_at = NOW(), notes = $5
      WHERE id = $1 
        AND status = ANY($2)
        AND ($3 = 'HR' OR user_id = $4) -- HR can cancel, employee only their own
      RETURNING *`,
-    [loanId, allowedStatuses, byRole, userId]
+    [loanId, allowedStatuses, byRole, userId, remarks]
   );
 
   return rows[0] || null;

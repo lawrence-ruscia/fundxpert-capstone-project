@@ -15,6 +15,7 @@ import {
   getDepartments,
   getPositions,
   deleteEmployee,
+  searchHR,
 } from '../services/hrService.js';
 import type { HRContributionPeriod } from '../types/hrTypes.js';
 
@@ -194,5 +195,22 @@ export async function updateEmploymentStatusHandler(
     res.json(employee);
   } catch (err) {
     res.status(400).json({ error: (err as Error).message });
+  }
+}
+
+export async function searchHRHandler(req: Request, res: Response) {
+  try {
+    const q = (req.query.q as string) || '';
+    if (q.length < 2) {
+      return res
+        .status(400)
+        .json({ error: 'Query must be at least 2 characters' });
+    }
+
+    const hr = await searchHR(q);
+    res.json(hr);
+  } catch (err) {
+    console.error('❌ Error searching HRs:', err);
+    res.status(500).json({ error: 'Failed to search HRs' });
   }
 }

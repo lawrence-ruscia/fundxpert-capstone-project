@@ -6,7 +6,7 @@ import {
   getLoanStatus,
   getLoanHistory,
   getLoanById,
-  cancelLoanRequest,
+  cancelLoanRequestHandler,
 } from '../controllers/loanController.js';
 
 export const empLoanRouter = Router();
@@ -25,5 +25,5 @@ empLoanRouter.get('/:id', authMiddleware('Employee'), getLoanById);
 empLoanRouter.post(
   '/:id/cancel',
   authMiddleware('Employee'),
-  cancelLoanRequest
+  cancelLoanRequestHandler
 );

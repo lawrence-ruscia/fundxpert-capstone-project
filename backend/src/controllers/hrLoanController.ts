@@ -33,7 +33,7 @@ export const markLoanReadyHandler = async (req: Request, res: Response) => {
 
     const { loanId } = req.params;
     const assistantId = req.user.id;
-    
+
     const access = await getLoanAccess(assistantId, Number(loanId));
     if (!access.canMarkReady) {
       return res.status(403).json({
@@ -228,7 +228,7 @@ export const reviewLoanApprovalHandler = async (
   } catch (err) {
     if (err instanceof Error) {
       console.error(err);
-      res.status(500).json({ error: err?.message ?? 'Failed to release loan' });
+      res.status(500).json({ error: err?.message ?? 'Failed to review loan' });
     }
   }
 };
@@ -254,8 +254,8 @@ export const releaseLoanToTrustBankHandler = async (
 
     const loan = await releaseLoanToTrustBank(
       Number(loanId),
-      txRef,
-      releasedBy
+      releasedBy,
+      txRef
     );
     if (!loan)
       return res
@@ -266,7 +266,7 @@ export const releaseLoanToTrustBankHandler = async (
       Number(loanId),
       'Loan released to Trust Bank',
       releasedBy,
-      txRef
+      txRef || null
     );
     res.json({ success: true, loan });
   } catch (err) {
@@ -284,8 +284,9 @@ export const cancelLoanRequestHandler = async (req: Request, res: Response) => {
     }
     const { loanId } = req.params;
     const userId = req.user.id;
+    const { remarks } = req.body;
 
-    const loan = await cancelLoanRequest(Number(loanId), userId, 'HR');
+    const loan = await cancelLoanRequest(Number(loanId), userId, 'HR', remarks);
     if (!loan)
       return res
         .status(400)

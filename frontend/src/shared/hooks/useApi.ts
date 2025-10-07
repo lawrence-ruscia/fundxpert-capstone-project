@@ -1,4 +1,4 @@
-import { useEffect, useReducer } from 'react';
+import { useEffect, useReducer, useCallback } from 'react';
 
 type State<T> = {
   data: T | null;
@@ -31,12 +31,21 @@ export function useApi<T>(fetcher: () => Promise<T>, deps: unknown[] = []) {
     error: null,
   });
 
+  const load = useCallback(async () => {
+    dispatch({ type: 'FETCH_START' });
+    try {
+      const result = await fetcher();
+      dispatch({ type: 'FETCH_SUCCESS', payload: result });
+    } catch (err) {
+      dispatch({ type: 'FETCH_ERROR', payload: err as Error });
+    }
+  }, [fetcher]);
+
   useEffect(() => {
     let mounted = true;
 
-    async function load() {
+    async function fetchData() {
       dispatch({ type: 'FETCH_START' });
-
       try {
         const result = await fetcher();
         if (mounted) {
@@ -49,12 +58,12 @@ export function useApi<T>(fetcher: () => Promise<T>, deps: unknown[] = []) {
       }
     }
 
-    load();
+    fetchData();
 
     return () => {
       mounted = false;
     };
   }, deps);
 
-  return state;
+  return { ...state, refetch: load };
 }

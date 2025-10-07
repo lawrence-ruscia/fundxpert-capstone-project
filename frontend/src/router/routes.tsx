@@ -27,6 +27,8 @@ import RecordContributionForm from '@/features/contributions/hr/components/Recor
 import UpdateContributionForm from '@/features/contributions/hr/components/UpdateContributionForm';
 import { LoansDashboardPage } from '@/features/loans/hr/pages/LoanDashboard';
 import LoanDetailsPage from '@/features/loans/hr/pages/LoanDetailsPage';
+import { RequireAccess } from '@/features/loans/hr/components/RequireAccess';
+import { LoanReviewPage } from '@/features/loans/hr/pages/LoanReviewPage';
 
 export const router = createBrowserRouter([
   {
@@ -119,28 +121,18 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: <LoansDashboardPage /> },
 
-          // Assistants — handle pre-screening
-          // {
-          //   path: 'assistant',
-          //   element: (
-          //     <RequireAccess accessKey='canMarkReady'>
-          //       <LoanAssistantPage />
-          //     </RequireAccess>
-          //   ),
-          // },
-
           // General loan details (any HR can view)
           { path: ':loanId', element: <LoanDetailsPage /> },
 
-          // // Officer review
-          // {
-          //   path: ':loanId/review',
-          //   element: (
-          //     <RequireAccess accessKey='canMoveToReview'>
-          //       <LoanReviewPage />
-          //     </RequireAccess>
-          //   ),
-          // },
+          // Officer review
+          {
+            path: ':loanId/review',
+            element: (
+              <RequireAccess requiredAccess='canMoveToReview'>
+                <LoanReviewPage />
+              </RequireAccess>
+            ),
+          },
 
           // // Approvers (multi-step sequence)
           // {
@@ -148,29 +140,6 @@ export const router = createBrowserRouter([
           //   element: (
           //     <RequireAccess accessKey='canApprove'>
           //       <LoanApprovalPage />
-          //     </RequireAccess>
-          //   ),
-          // },
-
-          // // Loan release (officer only)
-          // {
-          //   path: ':loanId/release',
-          //   element: (
-          //     <RequireAccess accessKey='canRelease'>
-          //       <LoanReleasePage />
-          //     </RequireAccess>
-          //   ),
-          // },
-
-          // // History — all HR can view
-          // { path: ':loanId/history', element: <LoanHistoryPage /> },
-
-          // // Cancel loan
-          // {
-          //   path: ':loanId/cancel',
-          //   element: (
-          //     <RequireAccess accessKey='canCancel'>
-          //       <LoanCancellationPage />
           //     </RequireAccess>
           //   ),
           // },

@@ -3,7 +3,6 @@ import { AlertCircle } from 'lucide-react';
 import { useState } from 'react';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { markLoanIncomplete } from '../services/hrLoanService';
 
@@ -27,7 +26,7 @@ export function MarkIncompleteDialog({
   loanId,
   refetch,
 }: MarkIncompleteDialogProps) {
-  const [value, setValue] = useState('');
+  const [value, setValue] = useState(defaultIncReason);
 
   const handleMarkIncomplete = async () => {
     try {
@@ -59,6 +58,7 @@ export function MarkIncompleteDialog({
       open={open}
       onOpenChange={onOpenChange}
       handleConfirm={handleMarkIncomplete}
+      disabled={value.trim().length <= 0}
       title={
         <span>
           <AlertCircle className='me-1 inline-block' size={18} /> Mark Loan as

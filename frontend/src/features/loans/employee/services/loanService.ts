@@ -1,3 +1,4 @@
+import { api } from '@/shared/api/api';
 import type {
   CancelLoanResponse,
   Loan,
@@ -6,6 +7,7 @@ import type {
   LoanResponse,
 } from '../types/loan';
 
+// TODO: Refactor with axios
 export async function uploadLoanDocument(
   loanId: number,
   fileUrl: string,
@@ -95,18 +97,12 @@ export async function applyForLoan(
   return res.json();
 }
 
-export async function cancelLoan(loanId: number): Promise<CancelLoanResponse> {
-  const res = await fetch(
-    `http://localhost:3000/employee/loan/${loanId}/cancel`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-    }
-  );
-
-  if (!res.ok) {
-    throw new Error((await res.json()).error || 'Loan cancellation failed');
-  }
-  return res.json();
+export async function cancelLoan(
+  loanId: number,
+  reason: string
+): Promise<CancelLoanResponse> {
+  const res = await api.post(`/employee/loan/${loanId}/cancel`, {
+    remarks: reason,
+  });
+  return res.data;
 }

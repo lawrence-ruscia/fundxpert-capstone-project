@@ -30,6 +30,7 @@ export async function checkLoanEligibility(
     WHERE c.user_id = $1
     GROUP BY u.date_hired, u.employment_status;
   `;
+
   const { rows } = await pool.query(vestedQuery, [userId]);
   const row = rows[0];
   if (!row) throw new Error('User not found');
@@ -39,7 +40,7 @@ export async function checkLoanEligibility(
 
   // Check active loan
   const activeLoanRes = await pool.query(
-    `SELECT 1 FROM loans WHERE user_id = $1 AND status IN ('Pending','Approved','Active') LIMIT 1`,
+    `SELECT 1 FROM loans WHERE user_id = $1 AND status IS NOT NULL LIMIT 1`,
     [userId]
   );
 

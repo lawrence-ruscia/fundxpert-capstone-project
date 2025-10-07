@@ -8,7 +8,6 @@ import {
 import {
   AlertTriangle,
   CalendarDays,
-  CheckCircle,
   Clock,
   PhilippinePeso,
   Target,
@@ -16,72 +15,49 @@ import {
 } from 'lucide-react';
 import { LoanDocumentUpload } from '../components/LoanDocumentUpload';
 
-import { useLoanDetails } from '../hooks/useLoanDetails';
 import { Separator } from '@radix-ui/react-select';
 import { LoanStatusBadge } from '../components/LoanStatusBadge';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
 import { DataError } from '@/shared/components/DataError';
 import { NetworkError } from '@/shared/components/NetworkError';
-import { formatCurrency } from '@/features/dashboard/employee/utils/formatters';
-import { ConfirmDialog } from '@/shared/components/confirm-dialog';
-import { useCancelLoan } from '../hooks/useCancelLoan';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { useNavigate } from 'react-router-dom';
-import { toast } from 'sonner';
+import { useParams } from 'react-router-dom';
+import { CancelLoanDialog } from '../components/CancelLoanDialog';
+import type { Loan } from '../types/loan';
+import { useApi } from '@/shared/hooks/useApi';
+import { fetchLoanDetails } from '../services/loanService';
+
+const allowedCancelStatuses = [
+  'Pending',
+  'Incomplete',
+  'UnderReviewOfficer',
+  'AwaitingApprovals',
+];
 
 export default function LoanDetailPage() {
-  const [showCancelDialog, setShowCancelDialog] = useState(false);
-  const { loan, loading, error } = useLoanDetails();
-  const navigate = useNavigate();
+  const { loanId } = useParams<{ loanId: string }>();
+
+  const [openCancel, setOpenCancel] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
   const {
-    cancelLoanRequest,
-    isLoading: isCancelling,
-    error: errorCancel,
-  } = useCancelLoan();
+    data: loan,
+    loading,
+    error,
+    refetch,
+  } = useApi<Loan>(() => fetchLoanDetails(parseInt(loanId ?? '', 10)));
 
-  const handleCancelLoan = async () => {
-    try {
-      if (loan) {
-        await cancelLoanRequest(loan.id);
-
-        toast.success('Loan Request Cancelled', {
-          description: `Loan application # ${loan.id} has been successfully cancelled.`,
-          duration: 4000,
-        });
-
-        // Close dialog
-        setShowCancelDialog(false);
-        navigate(-1);
-      }
-    } catch (err) {
-      // Error is handled by the hook
-      console.error('Failed to cancel withdrawal:', err);
-
-      toast.error('Cancellation Failed', {
-        description:
-          err instanceof Error
-            ? err.message
-            : 'Unable to cancel your loan application. Please try again or contact support.',
-        duration: 5000,
-        action: {
-          label: 'Try Again',
-          onClick: () => handleCancelLoan(),
-        },
-      });
-    }
-  };
-
-  // Add this cancel button section before the "View Withdrawal Details" button
-  const canCancel = loan?.status === 'Pending' || loan?.status === 'Incomplete';
+  const canCancel = allowedCancelStatuses.find(
+    status => loan?.status === status
+  );
 
   if (loading) {
-    return <LoadingSpinner text={'Loading Loan Details'} />;
+    return <LoadingSpinner text={'Loading loan details...'} />;
   }
 
   if (error) {
-    return <NetworkError message={error} />;
+    return <NetworkError message={error.message} />;
   }
 
   if (!loan) {
@@ -198,16 +174,26 @@ export default function LoanDetailPage() {
                   </AlertDescription>
                 </Alert>
               )}
+
+              {loan.status === 'Cancelled' && (
+                <Alert className='rounded-lg border-0 border-l-4 border-red-500 bg-red-50 text-red-800 dark:bg-red-900/20'>
+                  <XCircle className='h-4 w-4' />
+                  <AlertTitle className='font-semibold'>Cancelled</AlertTitle>
+                  <AlertDescription className='text-red-800'>
+                    {loan.notes}
+                  </AlertDescription>
+                </Alert>
+              )}
               {canCancel && (
                 <div className='flex flex-1 gap-2'>
                   <Button
                     variant='destructive'
-                    onClick={() => setShowCancelDialog(true)}
-                    disabled={isCancelling}
+                    onClick={() => setOpenCancel(true)}
+                    disabled={actionLoading}
                     className='mt-8 flex-1'
                     size='lg'
                   >
-                    {isCancelling ? (
+                    {actionLoading ? (
                       <>
                         <div className='mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent' />
                         Cancelling...
@@ -221,58 +207,14 @@ export default function LoanDetailPage() {
                   </Button>
                 </div>
               )}
-              {errorCancel && (
-                <Alert className='rounded-lg border-0 border-l-4 border-red-500 bg-red-50 text-red-800 dark:bg-red-900/20'>
-                  <XCircle className='h-4 w-4' />
-                  <AlertTitle className='font-semibold'>Error</AlertTitle>
-                  <AlertDescription className='text-red-800'>
-                    {errorCancel}
-                  </AlertDescription>
-                </Alert>
-              )}
             </div>
           </CardContent>
-          <ConfirmDialog
-            open={showCancelDialog}
-            onOpenChange={setShowCancelDialog}
-            title='Cancel Loan Request'
-            desc={
-              <div className='space-y-2'>
-                <p>Are you sure you want to cancel this loan request?</p>
-                <div className='text-muted-foreground text-sm'>
-                  <p>
-                    <strong>Loan Amount:</strong>{' '}
-                    {formatCurrency(Number(loan.amount))}
-                  </p>
-                  <p>
-                    <strong>Purpose:</strong> {loan.purpose_category}
-                  </p>
-                  <p>
-                    <strong>Repayment Term:</strong>{' '}
-                    {loan.repayment_term_months} months
-                  </p>
-                </div>
-                <p className='text-destructive text-sm font-medium'>
-                  This action cannot be undone. You will need to submit a new
-                  loan application if you change your mind.
-                </p>
-              </div>
-            }
-            cancelBtnText='Keep Request'
-            confirmText={
-              isCancelling ? (
-                <>
-                  <div className='mr-2 h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent' />
-                  Cancelling...
-                </>
-              ) : (
-                'Cancel Loan Request'
-              )
-            }
-            destructive={true}
-            handleConfirm={handleCancelLoan}
-            isLoading={isCancelling}
-            disabled={isCancelling}
+          <CancelLoanDialog
+            open={openCancel}
+            onOpenChange={setOpenCancel}
+            setActionLoading={setActionLoading}
+            loan={loan}
+            refetch={refetch}
           />
         </Card>
 

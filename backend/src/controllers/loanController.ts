@@ -1,5 +1,9 @@
 import type { Request, Response } from 'express';
 import * as loanService from '../services/empLoanService.js';
+import {
+  cancelLoanRequest,
+  recordLoanHistory,
+} from '../services/hrLoanService.js';
 import { isAuthenticatedRequest } from './employeeControllers.js';
 
 export async function getLoanEligibility(req: Request, res: Response) {
@@ -24,7 +28,6 @@ export async function applyLoan(req: Request, res: Response) {
     }
     const userId = req.user.id;
 
-    console.log(`Request body: ${req.body}`);
     const {
       amount,
       repayment_term_months,
@@ -42,6 +45,12 @@ export async function applyLoan(req: Request, res: Response) {
       consent_acknowledged,
       co_maker_employee_id,
       purpose_detail
+    );
+
+    await recordLoanHistory(
+      Number(loan.id),
+      'Employee applied for loan',
+      userId
     );
 
     res.status(201).json({ success: true, loan });
@@ -109,7 +118,7 @@ export async function getLoanById(req: Request, res: Response) {
   }
 }
 
-export async function cancelLoanRequest(req: Request, res: Response) {
+export async function cancelLoanRequestHandler(req: Request, res: Response) {
   try {
     if (!isAuthenticatedRequest(req)) {
       return res.status(401).json({ error: 'Unauthorized' });
@@ -117,13 +126,22 @@ export async function cancelLoanRequest(req: Request, res: Response) {
 
     const userId = req.user.id;
     const { id } = req.params;
-    const result = await loanService.cancelLoan(userId, Number(id));
+    const { remarks } = req.body;
+    const result = await cancelLoanRequest(
+      Number(id),
+      userId,
+      'Employee',
+      remarks
+    );
 
-    if (!result.success) {
-      return res.status(400).json({ error: 'Cannot cancel loan' });
-    }
+    await recordLoanHistory(
+      Number(id),
+      'Loan cancelled by Employee',
+      userId,
+      remarks
+    );
 
-    res.json({ success: true, message: 'Withdrawal cancelled' });
+    res.json({ success: true, message: 'Loan cancelled' });
   } catch (err) {
     res.status(400).json({ error: (err as Error).message });
   }

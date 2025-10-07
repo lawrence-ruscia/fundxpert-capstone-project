@@ -15,6 +15,7 @@ import {
   getDepartmentsHandler,
   getPositionsHandler,
   deleteEmployeeHandler,
+  searchHRHandler,
 } from '../controllers/hrController.js';
 import { authMiddleware } from '../middleware/authMiddleware.js';
 
@@ -50,3 +51,5 @@ hrRouter.put(
   authMiddleware('HR'),
   updateEmploymentStatusHandler
 );
+
+hrRouter.get('/search', authMiddleware('HR'), searchHRHandler)

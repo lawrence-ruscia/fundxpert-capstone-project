@@ -24,7 +24,7 @@ export async function markLoanReady(
  */
 export async function markLoanIncomplete(
   loanId: number,
-  reason?: string | null
+  reason: string
 ): Promise<{ success: boolean; loan: Loan }> {
   const res = await api.patch(`/hr/loans/${loanId}/mark-incomplete`, {
     remarks: reason,
@@ -38,7 +38,7 @@ export async function markLoanIncomplete(
 export async function moveLoanToReview(
   loanId: number
 ): Promise<{ success: boolean; loan: Loan }> {
-  const res = await api.post(`/hr/loans/${loanId}/move-to-review`);
+  const res = await api.post(`/hr/loans/${loanId}/review`);
   return res.data;
 }
 
@@ -49,7 +49,7 @@ export async function assignLoanApprovers(
   loanId: number,
   approvers: { approverId: number; sequence: number }[]
 ): Promise<{ success: boolean }> {
-  const res = await api.post(`/hr/loans/${loanId}/assign-approvers`, {
+  const res = await api.post(`/hr/loans/${loanId}/approvers`, {
     approvers,
   });
   return res.data;
@@ -75,7 +75,7 @@ export async function reviewLoanApproval(
  */
 export async function releaseLoanToTrustBank(
   loanId: number,
-  txRef: string
+  txRef?: string | null
 ): Promise<{ success: boolean; loan: Loan }> {
   const res = await api.post(`/hr/loans/${loanId}/release`, { txRef });
   return res.data;
@@ -85,9 +85,10 @@ export async function releaseLoanToTrustBank(
  * Cancel a loan request (HR only)
  */
 export async function cancelLoanRequest(
-  loanId: number
+  loanId: number,
+  reason: string
 ): Promise<{ success: boolean; loan: Loan }> {
-  const res = await api.post(`/hr/loans/${loanId}/cancel`);
+  const res = await api.post(`/hr/loans/${loanId}/cancel`, { remarks: reason });
   return res.data;
 }
 
@@ -205,4 +206,10 @@ export async function getLoanDocuments(
 ): Promise<LoanDocument[]> {
   const res = await api.get(`/hr/loans/${loanId}/documents`);
   return res.data.documents;
+}
+
+export async function searchHR(query: string) {
+  const data = api.get(`/hr/search?q=${encodeURIComponent(query)}`);
+
+  return data;
 }

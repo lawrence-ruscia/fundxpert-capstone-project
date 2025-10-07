@@ -43,16 +43,25 @@ import {
 import { LoanStatusBadge } from '../../employee/components/LoanStatusBadge';
 import { Badge } from '@/components/ui/badge';
 import { formatCurrency } from '@/features/dashboard/employee/utils/formatters';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { toast } from 'sonner';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { MarkIncompleteDialog } from '../components/MarkIncompleteDialog';
+import { MarkReadyDialog } from '../components/MarkReadyDialog';
+import { MoveToReviewDialog } from '../components/MoveToReviewDialog';
+import { ReleaseLoanDialog } from '../components/ReleaseLoanDialog';
+import { CancelLoanDialog } from '../components/CancelLoanDialog';
 
 export default function LoanDetailsPage() {
   const { loanId } = useParams();
   const navigate = useNavigate();
 
   const [actionLoading, setActionLoading] = useState(false);
+
+  // Dialog states
   const [openIncomplete, setOpenIncomplete] = useState(false);
+  const [openReady, setOpenReady] = useState(false);
+  const [openMoveReview, setOpenMoveReview] = useState(false);
+  const [openRelease, setOpenRelease] = useState(false);
+  const [openCancel, setOpenCancel] = useState(false);
 
   const { data, loading, error, refetch } = useMultiFetch<{
     loan: Loan;
@@ -88,41 +97,6 @@ export default function LoanDetailsPage() {
     refresh: refreshAccess,
     loading: accessLoading,
   } = useLoanAccess(Number(loanId));
-
-  // --- Action Handlers ---
-  const handleMarkReady = async () => {
-    try {
-      setActionLoading(true);
-      await markLoanReady(Number(loanId));
-      await refreshAccess();
-      setActionLoading(false);
-      toast.success(
-        `Loan #${loanId} marked as ready for review. The HR Officer has been notified.`
-      );
-      refetch();
-    } catch (err) {
-      console.error(err);
-      toast.error(
-        (err as Error).message ??
-          'Failed to mark loan as ready. Please try again or contact system support'
-      );
-      refetch();
-    }
-  };
-
-  const handleMoveToReview = async () => {
-    setActionLoading(true);
-    await moveLoanToReview(Number(loanId));
-    await refreshAccess();
-    setActionLoading(false);
-  };
-
-  const handleCancelLoan = async () => {
-    if (!confirm('Are you sure you want to cancel this loan?')) return;
-    setActionLoading(true);
-    await cancelLoanRequest(Number(loanId));
-    navigate('/hr/loans');
-  };
 
   if (loading || accessLoading)
     return <LoadingSpinner text='Loading loan details...' />;
@@ -246,6 +220,15 @@ export default function LoanDetailsPage() {
                   </div>
                 </div>
               </div>
+              {loan.status === 'Cancelled' && (
+                <Alert className='mt-4 rounded-lg border-0 border-l-4 border-red-500 bg-red-50 text-red-800 dark:bg-red-900/20'>
+                  <XCircle className='h-4 w-4' />
+                  <AlertTitle className='font-semibold'>Cancelled</AlertTitle>
+                  <AlertDescription className='text-red-800'>
+                    {loan.notes}
+                  </AlertDescription>
+                </Alert>
+              )}
             </CardContent>
           </Card>
 
@@ -477,7 +460,7 @@ export default function LoanDetailsPage() {
             <CardContent className='space-y-3'>
               {can('canMarkReady') && (
                 <Button
-                  onClick={handleMarkReady}
+                  onClick={() => setOpenReady(true)}
                   disabled={actionLoading}
                   className='w-full justify-start'
                 >
@@ -498,20 +481,19 @@ export default function LoanDetailsPage() {
                 </Button>
               )}
 
-              {
-                // TODO: Create separate page (LoanReviewPage)
-                /**can('canMoveToReview') &&**/ <Button
-                  onClick={handleMoveToReview}
+              {can('canMoveToReview') && (
+                <Button
+                  onClick={() => setOpenMoveReview(true)}
                   disabled={actionLoading}
                   className='w-full justify-start'
                 >
                   <FileText className='mr-2 h-4 w-4' />
                   Move to Review
                 </Button>
-              }
+              )}
 
-              {
-                /**can('canAssignApprovers') && **/ <Button
+              {can('canAssignApprovers') && (
+                <Button
                   onClick={() => navigate(`/hr/loans/${loan.id}/review`)}
                   disabled={actionLoading}
                   className='w-full justify-start'
@@ -519,7 +501,7 @@ export default function LoanDetailsPage() {
                   <Shield className='mr-2 h-4 w-4' />
                   Assign Approvers
                 </Button>
-              }
+              )}
 
               {
                 /**can('canApprove') && **/ <Button
@@ -535,7 +517,7 @@ export default function LoanDetailsPage() {
               {
                 /** can('canRelease') && **/ <Button
                   variant='secondary'
-                  onClick={() => navigate(`/hr/loans/${loan.id}/release`)}
+                  onClick={() => setOpenRelease(true)}
                   disabled={actionLoading}
                   className='w-full justify-start'
                 >
@@ -544,12 +526,12 @@ export default function LoanDetailsPage() {
                 </Button>
               }
 
-              {
-                /** can('canCancel') && **/ <>
+              {can('canCancel') && (
+                <>
                   <Separator className='my-4' />
                   <Button
                     variant='destructive'
-                    onClick={handleCancelLoan}
+                    onClick={() => setOpenCancel(true)}
                     disabled={actionLoading}
                     className='w-full justify-start'
                   >
@@ -557,7 +539,7 @@ export default function LoanDetailsPage() {
                     Cancel Loan
                   </Button>
                 </>
-              }
+              )}
 
               {!can('canMarkReady') &&
                 !can('canMarkIncomplete') &&
@@ -579,6 +561,42 @@ export default function LoanDetailsPage() {
       <MarkIncompleteDialog
         open={openIncomplete}
         onOpenChange={setOpenIncomplete}
+        setActionLoading={setActionLoading}
+        refreshAccess={refreshAccess}
+        loanId={Number(loanId)}
+        refetch={refetch}
+      />
+
+      <MarkReadyDialog
+        open={openReady}
+        onOpenChange={setOpenReady}
+        setActionLoading={setActionLoading}
+        refreshAccess={refreshAccess}
+        loanId={Number(loanId)}
+        refetch={refetch}
+      />
+
+      <MoveToReviewDialog
+        open={openMoveReview}
+        onOpenChange={setOpenMoveReview}
+        setActionLoading={setActionLoading}
+        refreshAccess={refreshAccess}
+        loanId={Number(loanId)}
+        refetch={refetch}
+      />
+
+      <ReleaseLoanDialog
+        open={openRelease}
+        onOpenChange={setOpenRelease}
+        setActionLoading={setActionLoading}
+        refreshAccess={refreshAccess}
+        loan={loan}
+        refetch={refetch}
+      />
+
+      <CancelLoanDialog
+        open={openCancel}
+        onOpenChange={setOpenCancel}
         setActionLoading={setActionLoading}
         refreshAccess={refreshAccess}
         loanId={Number(loanId)}

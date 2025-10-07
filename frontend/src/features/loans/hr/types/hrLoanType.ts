@@ -44,3 +44,11 @@ export interface LoanSummary {
   status: LoanStatus;
   count: number;
 }
+
+export type SearchHRRecord = {
+  id: number;
+  employee_id: string;
+  name: string;
+  department: string;
+  position: string;
+};

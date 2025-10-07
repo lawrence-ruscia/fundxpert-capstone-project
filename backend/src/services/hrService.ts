@@ -460,3 +460,24 @@ export async function getEmployeeById(id: number) {
   const { rows } = await pool.query(query, [id]);
   return rows[0] || null;
 }
+
+export async function searchHR(query: string) {
+  const sql = `
+    SELECT 
+      u.id,
+      u.employee_id,
+      u.name,
+      d.name AS department,
+      p.title AS position
+    FROM users u
+    LEFT JOIN departments d ON u.department_id = d.id
+    LEFT JOIN positions p ON u.position_id = p.id
+    WHERE u.role = 'HR'
+      AND (u.name ILIKE $1 OR u.employee_id ILIKE $1)
+    ORDER BY u.name
+    LIMIT 10;
+  `;
+
+  const { rows } = await pool.query(sql, [`%${query}%`]);
+  return rows;
+}
