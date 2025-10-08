@@ -128,21 +128,11 @@ export const router = createBrowserRouter([
           {
             path: ':loanId/review',
             element: (
-              <RequireAccess requiredAccess='canMoveToReview'>
+              <RequireAccess requiredAccess='canAssignApprovers'>
                 <LoanReviewPage />
               </RequireAccess>
             ),
           },
-
-          // // Approvers (multi-step sequence)
-          // {
-          //   path: ':loanId/approval',
-          //   element: (
-          //     <RequireAccess accessKey='canApprove'>
-          //       <LoanApprovalPage />
-          //     </RequireAccess>
-          //   ),
-          // },
         ],
       },
     ],

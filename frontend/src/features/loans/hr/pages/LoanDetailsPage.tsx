@@ -5,8 +5,8 @@ import {
   CardContent,
   CardDescription,
 } from '@/components/ui/card';
-import { Separator } from '@radix-ui/react-select';
-import { useState, useEffect } from 'react';
+import { Separator } from '@/components/ui/separator';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useLoanAccess } from '../hooks/useLoanAccess';
@@ -14,10 +14,6 @@ import {
   getLoanById,
   getLoanApprovals,
   getLoanHistory,
-  markLoanReady,
-  markLoanIncomplete,
-  moveLoanToReview,
-  cancelLoanRequest,
   getLoanDocuments,
 } from '../services/hrLoanService';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
@@ -36,7 +32,6 @@ import {
   History,
   Paperclip,
   Shield,
-  Trash2,
   User,
   XCircle,
 } from 'lucide-react';
@@ -49,6 +44,8 @@ import { MarkReadyDialog } from '../components/MarkReadyDialog';
 import { MoveToReviewDialog } from '../components/MoveToReviewDialog';
 import { ReleaseLoanDialog } from '../components/ReleaseLoanDialog';
 import { CancelLoanDialog } from '../components/CancelLoanDialog';
+import { ApproveLoanDialog } from '../components/ApproveLoanDialog';
+import { RejectLoanDialog } from '../components/RejectLoanDialog';
 
 export default function LoanDetailsPage() {
   const { loanId } = useParams();
@@ -60,6 +57,8 @@ export default function LoanDetailsPage() {
   const [openIncomplete, setOpenIncomplete] = useState(false);
   const [openReady, setOpenReady] = useState(false);
   const [openMoveReview, setOpenMoveReview] = useState(false);
+  const [openApprove, setOpenApprove] = useState(false);
+  const [openReject, setOpenReject] = useState(false);
   const [openRelease, setOpenRelease] = useState(false);
   const [openCancel, setOpenCancel] = useState(false);
 
@@ -226,6 +225,17 @@ export default function LoanDetailsPage() {
                   <AlertTitle className='font-semibold'>Cancelled</AlertTitle>
                   <AlertDescription className='text-red-800'>
                     {loan.notes}
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {loan.status === 'Rejected' && (
+                <Alert className='mt-4 rounded-lg border-0 border-l-4 border-red-500 bg-red-50 text-red-800 dark:bg-red-900/20'>
+                  <XCircle className='h-4 w-4' />
+                  <AlertTitle className='font-semibold'>Rejected</AlertTitle>
+                  <AlertDescription className='text-red-800'>
+                    This loan application was rejected during the approval
+                    review process.
                   </AlertDescription>
                 </Alert>
               )}
@@ -468,7 +478,6 @@ export default function LoanDetailsPage() {
                   Mark Ready
                 </Button>
               )}
-
               {can('canMarkIncomplete') && (
                 <Button
                   variant='outline'
@@ -480,7 +489,6 @@ export default function LoanDetailsPage() {
                   Mark Incomplete
                 </Button>
               )}
-
               {can('canMoveToReview') && (
                 <Button
                   onClick={() => setOpenMoveReview(true)}
@@ -491,7 +499,6 @@ export default function LoanDetailsPage() {
                   Move to Review
                 </Button>
               )}
-
               {can('canAssignApprovers') && (
                 <Button
                   onClick={() => navigate(`/hr/loans/${loan.id}/review`)}
@@ -502,20 +509,29 @@ export default function LoanDetailsPage() {
                   Assign Approvers
                 </Button>
               )}
-
-              {
-                /**can('canApprove') && **/ <Button
-                  onClick={() => navigate(`/hr/loans/${loan.id}/approval`)}
+              {can('canApprove') && (
+                <Button
+                  onClick={() => setOpenApprove(true)}
                   disabled={actionLoading}
                   className='w-full justify-start'
                 >
                   <CheckCircle2 className='mr-2 h-4 w-4' />
-                  Approve / Reject
+                  Approve
                 </Button>
-              }
-
-              {
-                /** can('canRelease') && **/ <Button
+              )}
+              {can('canApprove') && (
+                <Button
+                  variant='outline'
+                  onClick={() => setOpenReject(true)}
+                  disabled={actionLoading}
+                  className='text-destructive hover:text-destructive hover:bg-destructive/10 border-destructive/30 w-full justify-start'
+                >
+                  <XCircle className='mr-2 h-4 w-4' />
+                  Reject
+                </Button>
+              )}
+              {can('canRelease') && (
+                <Button
                   variant='secondary'
                   onClick={() => setOpenRelease(true)}
                   disabled={actionLoading}
@@ -524,8 +540,7 @@ export default function LoanDetailsPage() {
                   <DollarSign className='mr-2 h-4 w-4' />
                   Release Loan
                 </Button>
-              }
-
+              )}
               {can('canCancel') && (
                 <>
                   <Separator className='my-4' />
@@ -540,7 +555,6 @@ export default function LoanDetailsPage() {
                   </Button>
                 </>
               )}
-
               {!can('canMarkReady') &&
                 !can('canMarkIncomplete') &&
                 !can('canMoveToReview') &&
@@ -579,6 +593,24 @@ export default function LoanDetailsPage() {
       <MoveToReviewDialog
         open={openMoveReview}
         onOpenChange={setOpenMoveReview}
+        setActionLoading={setActionLoading}
+        refreshAccess={refreshAccess}
+        loanId={Number(loanId)}
+        refetch={refetch}
+      />
+
+      <ApproveLoanDialog
+        open={openApprove}
+        onOpenChange={setOpenApprove}
+        setActionLoading={setActionLoading}
+        refreshAccess={refreshAccess}
+        loan={loan}
+        refetch={refetch}
+      />
+
+      <RejectLoanDialog
+        open={openReject}
+        onOpenChange={setOpenReject}
         setActionLoading={setActionLoading}
         refreshAccess={refreshAccess}
         loanId={Number(loanId)}

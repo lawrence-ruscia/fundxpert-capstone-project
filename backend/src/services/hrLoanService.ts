@@ -201,8 +201,8 @@ export async function reviewLoanApproval(
     // 3️. If rejected → end immediately
     if (decision === 'Rejected') {
       await client.query(
-        `UPDATE loans SET status = 'Rejected', updated_at = NOW() WHERE id = $1`,
-        [loanId]
+        `UPDATE loans SET status = 'Rejected', updated_at = NOW(), notes = $2 WHERE id = $1`,
+        [loanId, comments]
       );
       await client.query('COMMIT');
       return { decision };
@@ -278,7 +278,7 @@ export async function releaseLoanToTrustBank(
   // Proceed to mark as released
   const { rows } = await pool.query(
     `UPDATE loans
-     SET status = 'Active',
+     SET status = 'Released',
          trust_bank_confirmed = true,
          trust_bank_ref = $2,
          approved_by = $3,

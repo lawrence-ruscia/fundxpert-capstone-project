@@ -1,6 +1,7 @@
 import { ConfirmDialog } from '@/shared/components/confirm-dialog';
 import { FileText } from 'lucide-react';
 import { toast } from 'sonner';
+import { moveLoanToReview } from '../services/hrLoanService';
 
 type MoveToReviewDialogProps = {
   open: boolean;
@@ -24,7 +25,7 @@ export function MoveToReviewDialog({
       onOpenChange(false);
 
       setActionLoading(true);
-      await markLoanToReview(Number(loanId));
+      await moveLoanToReview(Number(loanId));
       await refreshAccess();
       setActionLoading(false);
 
@@ -69,7 +70,4 @@ export function MoveToReviewDialog({
       confirmText='Move Loan to Review'
     />
   );
-}
-function markLoanToReview(arg0: number) {
-  throw new Error('Function not implemented.');
 }

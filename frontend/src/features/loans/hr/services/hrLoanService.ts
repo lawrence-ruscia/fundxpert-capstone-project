@@ -63,10 +63,12 @@ export async function reviewLoanApproval(
   decision: 'Approved' | 'Rejected',
   comments?: string
 ): Promise<{ success: boolean; approval: LoanApproval }> {
-  const res = await api.post(`/hr/loans/${loanId}/review`, {
+  console.log('Comments, ', comments);
+  const res = await api.post(`/hr/loans/${loanId}/approve`, {
     decision,
     comments,
   });
+
   return res.data;
 }
 

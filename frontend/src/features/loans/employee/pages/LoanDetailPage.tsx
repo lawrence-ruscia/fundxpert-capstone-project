@@ -175,10 +175,12 @@ export default function LoanDetailPage() {
                 </Alert>
               )}
 
-              {loan.status === 'Cancelled' && (
+              {(loan.status === 'Cancelled' || loan.status === 'Rejected') && (
                 <Alert className='rounded-lg border-0 border-l-4 border-red-500 bg-red-50 text-red-800 dark:bg-red-900/20'>
                   <XCircle className='h-4 w-4' />
-                  <AlertTitle className='font-semibold'>Cancelled</AlertTitle>
+                  <AlertTitle className='font-semibold'>
+                    {loan.status === 'Cancelled' ? 'Cancelled' : 'Rejected'}
+                  </AlertTitle>
                   <AlertDescription className='text-red-800'>
                     {loan.notes}
                   </AlertDescription>
