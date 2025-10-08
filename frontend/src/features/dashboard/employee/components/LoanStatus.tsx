@@ -108,7 +108,7 @@ export const LoanStatus = ({ ...props }) => {
             </div>
 
             {/* View Details Button */}
-            <Link to={`/dashboard/loans/${loan.id}`} className='block w-full'>
+            <Link to={`/employee/loans/${loan.id}`} className='block w-full'>
               <Button
                 size='sm'
                 variant='outline'
