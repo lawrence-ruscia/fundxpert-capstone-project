@@ -62,14 +62,22 @@ export default function EmployeeDashboardPage() {
         <div className='space-y-4'>
           <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5'>
             <BalanceCard
-              label='Employee Contributions'
+              label='Total Balance'
+              value={formatCurrency(Number(overview.balances.total_balance))}
+              icon={PiggyBank}
+              description={formatGrowth(
+                Number(overview.balances.comparisons.growth_percentage)
+              )}
+            />
+            <BalanceCard
+              label='Total Employee Contributions'
               value={formatCurrency(
                 Number(overview.balances.employee_contribution_total)
               )}
               icon={User}
             />
             <BalanceCard
-              label='Employer Contributions'
+              label='Total Employer Contributions'
               value={formatCurrency(
                 Number(overview.balances.employer_contribution_total)
               )}
@@ -90,14 +98,6 @@ export default function EmployeeDashboardPage() {
               description={formatVestingDate(
                 overview.employee.date_hired,
                 overview.balances.unvested_amount
-              )}
-            />
-            <BalanceCard
-              label='Total Balance'
-              value={formatCurrency(Number(overview.balances.total_balance))}
-              icon={PiggyBank}
-              description={formatGrowth(
-                Number(overview.balances.comparisons.growth_percentage)
               )}
             />
           </div>

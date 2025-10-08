@@ -137,89 +137,40 @@ export async function getEmployeeOverview(
   };
 }
 
-export async function getEmployeeContributions(
-  userId: number,
-  period: string = 'year'
-) {
-  // Get user hire date first (needed for vesting)
-  const userRes = await pool.query(
-    `SELECT date_hired FROM users WHERE id = $1`,
-    [userId]
-  );
+export async function getContributionsSummary(userId: number) {
+  const params: unknown[] = [];
+  let whereClause = '';
 
-  if (userRes.rows.length === 0) {
-    throw new Error('User not found');
+  if (userId) {
+    params.push(userId);
+    whereClause = `WHERE user_id = $1`;
   }
 
-  const hireDate = new Date(userRes.rows[0].date_hired);
-
-  const { startDate, endDate } = getDateRange(period);
-
-  let query = `
+  const query = `
+    WITH summary AS (
+      SELECT
+        COALESCE(SUM(employee_amount + employer_amount), 0) AS total_contributions,
+        COALESCE(SUM(employee_amount), 0) AS total_employee,
+        COALESCE(SUM(employer_amount), 0) AS total_employer,
+        COUNT(*) AS contribution_count,
+        MAX(contribution_date) AS last_contribution
+      FROM contributions
+      ${whereClause}
+    )
     SELECT
-      contribution_date,
-      TO_CHAR(contribution_date, 'Month') AS month,
-      EXTRACT(MONTH FROM contribution_date) AS month_number,
-      EXTRACT(YEAR FROM contribution_date) AS year,
-      SUM(employee_amount) AS employee,
-      SUM(employer_amount) AS employer
-    FROM contributions
-    WHERE user_id = $1
-  `;
-
-  const params: (number | Date)[] = [userId];
-  let paramIndex = 2;
-
-  if (startDate && endDate) {
-    query += ` AND contribution_date BETWEEN $${paramIndex} AND $${paramIndex + 1}`;
-    params.push(startDate, endDate);
-    paramIndex += 2;
-  } else if (startDate) {
-    query += ` AND contribution_date >= $${paramIndex}`;
-    params.push(startDate);
-    paramIndex++;
-  }
-
-  query += `
-    GROUP BY contribution_date, month, month_number, year
-    ORDER BY year, month_number
+      total_contributions,
+      total_employee,
+      total_employer,
+      contribution_count,
+      last_contribution,
+      CASE 
+        WHEN contribution_count > 0 
+        THEN ROUND(total_contributions::numeric / contribution_count, 2)
+        ELSE 0
+      END AS average_monthly
+    FROM summary;
   `;
 
   const { rows } = await pool.query(query, params);
-
-  let totalEmployee = 0;
-  let totalEmployer = 0;
-  let totalVested = 0;
-
-  const contributions = rows.map(row => {
-    const employee = Number(row.employee);
-    const employer = Number(row.employer);
-    const date = new Date(row.contribution_date);
-
-    totalEmployee += employee;
-    totalEmployer += employer;
-
-    const vested = isContributionVested(date, hireDate) ? employer : 0;
-    totalVested += vested;
-
-    return {
-      month: row.month.trim(),
-      year: row.year,
-      employee,
-      employer,
-      vested,
-      total: employee + employer,
-    };
-  });
-
-  return {
-    period,
-    contributions,
-    totals: {
-      employee: totalEmployee,
-      employer: totalEmployer,
-      vested: totalVested,
-      grand_total: totalEmployee + totalEmployer,
-    },
-  };
+  return rows[0];
 }

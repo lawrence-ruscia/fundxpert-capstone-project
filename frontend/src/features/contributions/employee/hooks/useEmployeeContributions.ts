@@ -1,12 +1,14 @@
-import { fetchEmployeeContributions } from '@/features/contributions/employee/services/employeeContributionsService.js';
-import type {
-  ContributionPeriod,
-  EmployeeContributionsResponse,
-} from '../types/employeeContributions';
 import { useApi } from '@/shared/hooks/useApi';
+import { fetchEmployeeContributions } from '../services/employeeContributionsService';
+import type {
+  Contribution,
+  ContributionPeriod,
+} from '../../shared/types/contributions';
 
-export const useEmployeeContributions = (period?: ContributionPeriod) => {
-  return useApi<EmployeeContributionsResponse>(
+export const useEmployeeContributions = (
+  period: ContributionPeriod = 'all'
+) => {
+  return useApi<Contribution[]>(
     () => fetchEmployeeContributions(period),
     [period]
   );

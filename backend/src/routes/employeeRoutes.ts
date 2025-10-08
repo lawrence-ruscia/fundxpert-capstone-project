@@ -14,7 +14,13 @@ employeeRouter.get(
 employeeRouter.get(
   '/contributions',
   authMiddleware('Employee'),
-  employeeController.getContributions
+  employeeController.getContributionsHandler
+);
+
+employeeRouter.get(
+  '/contributions/summary',
+  authMiddleware('Employee'),
+  employeeController.getContributionsSummaryHandler
 );
 
 employeeRouter.post(

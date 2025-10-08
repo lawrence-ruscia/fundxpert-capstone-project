@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import useDialogState from '@/shared/hooks/useDialogState';
-import type { Contribution } from '../types/hrContribution';
+import type { Contribution } from '../../shared/types/contributions';
 
 type DialogType = 'add' | 'edit' | 'delete';
 

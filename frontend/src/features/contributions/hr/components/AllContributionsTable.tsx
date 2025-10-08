@@ -6,13 +6,13 @@ import {
   TableCell,
   Table,
 } from '@/components/ui/table';
-import { columns } from '@/features/contributions/employee/components/data-columns';
+import { contributionsColumns } from '@/features/contributions/employee/components/ContributionColumns';
 
 import { type Table as TableType, flexRender } from '@tanstack/react-table';
 import { cn } from '@/lib/utils';
 import { DataTableToolbar } from '@/shared/components/DataTableToolbar';
 import { DataTablePagination } from '@/shared/components/Pagination';
-import type { Contribution } from '../types/hrContribution';
+import type { Contribution } from '../../shared/types/contributions';
 
 type ContributionsTableProps = {
   table: TableType<Contribution>;
@@ -99,7 +99,7 @@ export const AllContributionsTable = ({ table }: ContributionsTableProps) => {
             ) : (
               <TableRow>
                 <TableCell
-                  colSpan={columns.length}
+                  colSpan={contributionsColumns.length}
                   className='h-24 text-center'
                 >
                   No results.

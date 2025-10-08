@@ -100,16 +100,47 @@ export async function updateContribution(
  * Get contribution history for an employee
  */
 export async function getEmployeeContributions(
-  userId: number
+  userId: number,
+  period: string
 ): Promise<Contribution[]> {
-  const query = `
-    SELECT *
+  // Start with the base query.
+  let query = `
+    SELECT 
+      *, 
+      employee_amount + employer_amount AS total,
+      SUM(employee_amount + employer_amount) OVER () AS grand_total,
+      EXTRACT(YEAR FROM contribution_date) AS year,
+      TO_CHAR(contribution_date, 'MM') AS month
     FROM contributions
     WHERE user_id = $1
-    ORDER BY contribution_date DESC;
   `;
+  const params: (number | string)[] = [userId];
 
-  const { rows } = await pool.query(query, [userId]);
+  //  Dynamically add the date filter based on the 'period' parameter.
+  switch (period) {
+    case '1y':
+      query += ` AND contribution_date >= NOW() - INTERVAL '1 year'`;
+      break;
+    case 'year':
+      // This gets all records from the beginning of the current calendar year.
+      query += ` AND EXTRACT(YEAR FROM contribution_date) = EXTRACT(YEAR FROM NOW())`;
+      break;
+    case '6m':
+      query += ` AND contribution_date >= NOW() - INTERVAL '6 months'`;
+      break;
+    case '3m':
+      query += ` AND contribution_date >= NOW() - INTERVAL '3 months'`;
+      break;
+    // For 'all', no additional WHERE clause is needed.
+    case 'all':
+    default:
+      break;
+  }
+
+  // Add the final ordering clause.
+  query += ` ORDER BY contribution_date DESC;`;
+
+  const { rows } = await pool.query(query, params);
   return rows;
 }
 

@@ -8,6 +8,10 @@ export type Contribution = {
   position_title: string;
   employee_amount: number;
   employer_amount: number;
+  total: number;
+  grand_total: number;
+  year: number;
+  month: string;
   created_by: number;
   created_at: string;
   updated_by?: number;
@@ -60,4 +64,22 @@ export type ContributionSummary = {
   average_monthly: number;
   last_contribution: string | null;
   contribution_count: number;
+};
+
+export type ContributionPeriod = '3m' | '6m' | '1y' | 'all' | 'year';
+
+export type ContributionRecord = {
+  month: string;
+  year: string;
+  employee: number;
+  employer: number;
+  vested: number;
+  total: number;
+};
+
+export type ContributionTotals = {
+  employee: number;
+  employer: number;
+  vested: number;
+  grand_total: number;
 };

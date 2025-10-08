@@ -3,8 +3,8 @@ import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { DataTableColumnHeader } from '@/shared/components/DataTableColummHeader';
 import { LongText } from '@/shared/components/LongText';
-import { ContributionsTableRowActions } from './ContributionsTableRowActions';
 import type { Contribution } from '../../shared/types/contributions';
+import { ContributionsTableRowActions } from '../../hr/components/ContributionsTableRowActions';
 
 const formatDisplayDate = (dateString: Date) => {
   return dateString.toLocaleDateString('en-us', {
@@ -21,7 +21,7 @@ const formatCurrency = (amount: number) => {
   }).format(amount);
 };
 
-export const allContributionsColumns: ColumnDef<Contribution>[] = [
+export const contributionsColumns: ColumnDef<Contribution>[] = [
   {
     id: 'select',
     header: ({ table }) => <div className='w-[8px]'> </div>,
@@ -32,7 +32,6 @@ export const allContributionsColumns: ColumnDef<Contribution>[] = [
     enableSorting: false,
     enableHiding: false,
   },
-
   {
     accessorKey: 'id',
     header: ({ column }) => (
@@ -52,72 +51,6 @@ export const allContributionsColumns: ColumnDef<Contribution>[] = [
       ),
     },
     enableSorting: false,
-    enableHiding: false,
-  },
-
-  {
-    accessorKey: 'employee_id',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Employee ID' />
-    ),
-    cell: ({ row }) => {
-      return (
-        <LongText className='max-w-36 text-left font-medium'>
-          {row.getValue('employee_id')}
-        </LongText>
-      );
-    },
-    meta: { className: 'w-36' },
-    enableSorting: false,
-    enableHiding: false,
-  },
-
-  {
-    accessorKey: 'employee_name',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Employee Name' />
-    ),
-    cell: ({ row }) => {
-      return (
-        <LongText className='max-w-36 text-left font-medium'>
-          {row.getValue('employee_name')}
-        </LongText>
-      );
-    },
-    meta: { className: 'w-48' },
-    enableSorting: true,
-  },
-
-  {
-    accessorKey: 'department_name',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Department' />
-    ),
-    cell: ({ row }) => {
-      return (
-        <LongText className='max-w-36 text-left font-medium'>
-          {row.getValue('department_name')}
-        </LongText>
-      );
-    },
-    meta: { className: 'w-48' },
-    enableSorting: true,
-  },
-
-  {
-    accessorKey: 'position_title',
-    header: ({ column }) => (
-      <DataTableColumnHeader column={column} title='Position' />
-    ),
-    cell: ({ row }) => {
-      return (
-        <LongText className='max-w-36 text-left font-medium'>
-          {row.getValue('position_title')}
-        </LongText>
-      );
-    },
-    meta: { className: 'w-48' },
-    enableSorting: true,
   },
 
   {
@@ -201,6 +134,7 @@ export const allContributionsColumns: ColumnDef<Contribution>[] = [
       ),
     },
     enableSorting: true,
+    enableHiding: false,
   },
 
   {
@@ -236,14 +170,14 @@ export const allContributionsColumns: ColumnDef<Contribution>[] = [
       <DataTableColumnHeader column={column} title='Total Contribution' />
     ),
     cell: ({ row }) => {
-      const employeeAmount = row.getValue('employee_amount') as number;
-      const employerAmount = row.getValue('employer_amount') as number;
+      const employeeAmount = Number(row.getValue('employee_amount')) as number;
+      const employerAmount = Number(row.getValue('employer_amount')) as number;
       const total = employeeAmount + employerAmount;
 
       return (
         <div className='flex space-x-2'>
           <div className='text-right font-semibold text-blue-500'>
-            {formatCurrency(total)}
+            {formatCurrency(Number(total))}
           </div>
         </div>
       );
@@ -293,6 +227,7 @@ export const allContributionsColumns: ColumnDef<Contribution>[] = [
     },
 
     enableSorting: false,
+    enableHiding: false,
   },
   {
     id: 'actions',

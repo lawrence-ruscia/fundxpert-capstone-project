@@ -10,7 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useContributions } from './ContributionsProvider.js';
-import type { Contribution } from '../types/hrContribution.js';
+import type { Contribution } from '../../shared/types/contributions.js';
 import { useNavigate } from 'react-router-dom';
 
 type DataTableRowActionsProps = {

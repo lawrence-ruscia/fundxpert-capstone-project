@@ -26,7 +26,7 @@ import {
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { useMemo, useState } from 'react';
 import { useEmployeeContributions } from '@/features/contributions/employee/hooks/useEmployeeContributions';
-import type { ContributionPeriod } from '@/features/contributions/employee/types/employeeContributions';
+import type { ContributionPeriod } from '@/features/contributions/shared/types/contributions';
 
 export const description = 'An interactive area chart';
 
@@ -39,10 +39,7 @@ const chartConfig = {
     label: 'Employer',
     color: 'var(--chart-2)',
   },
-  vested: {
-    label: 'Vested',
-    color: 'var(--chart-3)',
-  },
+
   total: {
     label: 'Total',
     color: 'var(--chart-4)',
@@ -56,20 +53,19 @@ export function FundGrowthChart() {
     data: contributionsData,
     loading,
     error,
-  } = useEmployeeContributions('all');
+  } = useEmployeeContributions(timeRange as ContributionPeriod);
 
   const transformedData = useMemo(() => {
-    if (!contributionsData?.contributions) {
+    if (!contributionsData) {
       return [];
     }
 
-    return contributionsData.contributions
+    return contributionsData
       .map(record => ({
         // Create a proper date string from month and year
         date: `${record.year}-${record.month.padStart(2, '0')}-01`,
-        employee: record.employee,
-        employer: record.employer,
-        vested: record.vested,
+        employee: record.employee_amount,
+        employer: record.employer_amount,
         total: record.total,
       }))
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
@@ -133,19 +129,12 @@ export function FundGrowthChart() {
 
   // Calculate dynamic total based on filtered data
   const latestTotal = useMemo(() => {
-    if (timeRange === 'all') {
-      return contributionsData?.totals.grand_total ?? 0;
+    if (contributionsData && contributionsData.length > 0) {
+      // Every row has the same grand_total (sum of all records in time range)
+      return contributionsData[0].grand_total;
     }
-
-    // Calculate cumulative total from filtered data
-    if (filteredData.length > 0) {
-      return filteredData.reduce((sum, entry) => {
-        return sum + entry.employee + entry.employer + entry.vested;
-      }, 0);
-    }
-
     return 0;
-  }, [filteredData, timeRange, contributionsData?.totals.grand_total]);
+  }, [contributionsData]);
 
   if (loading) {
     return (
@@ -242,7 +231,7 @@ export function FundGrowthChart() {
         </CardAction>
       </CardHeader>
       <CardContent className='px-2 pt-4 sm:px-6 sm:pt-6'>
-        {filteredData.length === 0 ? (
+        {transformedData.length === 0 ? (
           <div className='flex h-[350px] items-center justify-center'>
             <div className='text-muted-foreground'>
               No data available for the selected period
@@ -253,7 +242,7 @@ export function FundGrowthChart() {
             config={chartConfig}
             className='aspect-auto h-[350px] w-full'
           >
-            <AreaChart data={filteredData}>
+            <AreaChart data={transformedData}>
               <defs>
                 <linearGradient id='fillEmployee' x1='0' y1='0' x2='0' y2='1'>
                   <stop
@@ -276,18 +265,6 @@ export function FundGrowthChart() {
                   <stop
                     offset='95%'
                     stopColor='var(--chart-2)'
-                    stopOpacity={0.1}
-                  />
-                </linearGradient>
-                <linearGradient id='fillVested' x1='0' y1='0' x2='0' y2='1'>
-                  <stop
-                    offset='5%'
-                    stopColor='var(--chart-3)'
-                    stopOpacity={0.8}
-                  />
-                  <stop
-                    offset='95%'
-                    stopColor='var(--chart-3)'
                     stopOpacity={0.1}
                   />
                 </linearGradient>
@@ -364,13 +341,7 @@ export function FundGrowthChart() {
                 stroke='var(--chart-2)'
                 stackId='a'
               />
-              <Area
-                dataKey='vested'
-                type='natural'
-                fill='url(#fillVested)'
-                stroke='var(--chart-3)'
-                stackId='a'
-              />
+
               <Area
                 dataKey='total'
                 type='natural'

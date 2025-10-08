@@ -7,7 +7,7 @@ import { hrContributionsService } from '../services/hrContributionService';
 import {
   type Contribution,
   type EmployeeByContributionId,
-} from '../types/hrContribution';
+} from '../../shared/types/contributions';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {

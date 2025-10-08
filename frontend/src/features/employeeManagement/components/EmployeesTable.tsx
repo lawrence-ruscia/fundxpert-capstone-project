@@ -6,7 +6,7 @@ import {
   TableCell,
   Table,
 } from '@/components/ui/table';
-import { columns } from '@/features/contributions/employee/components/data-columns';
+import { contributionsColumns } from '@/features/contributions/employee/components/ContributionColumns';
 
 import { type Table as TableType, flexRender } from '@tanstack/react-table';
 import { cn } from '@/lib/utils';
@@ -109,7 +109,7 @@ export const EmployeesTable = ({ table, metadata }: EmployeesTableProps) => {
             ) : (
               <TableRow>
                 <TableCell
-                  colSpan={columns.length}
+                  colSpan={contributionsColumns.length}
                   className='h-24 text-center'
                 >
                   No results.

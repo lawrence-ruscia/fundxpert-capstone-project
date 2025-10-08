@@ -1481,7 +1481,7 @@ export async function searchEmployeesController(req: Request, res: Response) {
     res.status(500).json({ error: 'Failed to search employees' });
   }
 }
-
+ 
 export async function getEmployeeContributionSummary(
   req: Request,
   res: Response
@@ -1493,7 +1493,7 @@ export async function getEmployeeContributionSummary(
     if (!summary) {
       return res.status(404).json({ error: 'No contributions found' });
     }
-
+ 
     res.json(summary);
   } catch (err) {
     console.error('Error fetching contribution summary:', err);

@@ -1,25 +1,28 @@
+import { api } from '@/shared/api/api';
 import type {
+  Contribution,
   ContributionPeriod,
-  EmployeeContributionsResponse,
-} from '../types/employeeContributions';
+  ContributionSummary,
+} from '../../shared/types/contributions';
+
+export const fetchEmployeeContributionsSummary = async (
+  period?: ContributionPeriod | null
+): Promise<ContributionSummary> => {
+  const res = await api.get('/employee/contributions/summary');
+
+  console.log(res.data);
+
+  return res.data;
+};
 
 export const fetchEmployeeContributions = async (
-  period?: ContributionPeriod | null
-): Promise<EmployeeContributionsResponse> => {
-  const url = new URL('http://localhost:3000/employee/contributions');
-
-  if (period) {
-    url.searchParams.set('period', period.toString());
-  }
-
-  const res = await fetch(url.toString(), {
-    method: 'GET',
-    credentials: 'include',
+  period: ContributionPeriod
+): Promise<Contribution[]> => {
+  const res = await api.get('/employee/contributions', {
+    params: {
+      period,
+    },
   });
 
-  if (!res.ok) {
-    throw new Error('Failed to fetch employee overview');
-  }
-
-  return res.json();
+  return res.data;
 };

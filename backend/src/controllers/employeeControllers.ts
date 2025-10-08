@@ -1,9 +1,10 @@
 import type { Request, Response } from 'express';
 import {
-  getEmployeeContributions,
   getEmployeeOverview,
+  getContributionsSummary,
 } from '../services/employeeService.js';
 import type { UserRequest } from '../middleware/authMiddleware.js';
+import { getEmployeeContributions } from '../services/hrContributionsService.js';
 
 // Type guard
 export function isAuthenticatedRequest(
@@ -33,16 +34,39 @@ export async function getOverview(req: Request, res: Response) {
   }
 }
 
-export async function getContributions(req: Request, res: Response) {
+export async function getContributionsHandler(req: Request, res: Response) {
   try {
     if (!isAuthenticatedRequest(req)) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
 
     const userId = req.user.id;
-    const period = (req.query.period as string) || 'year';
+    const { period } = req.query;
 
-    const contributions = await getEmployeeContributions(userId, period);
+    const contributions = await getEmployeeContributions(
+      userId,
+      period?.toString() ?? 'all'
+    );
+
+    res.json(contributions);
+  } catch (err) {
+    console.error('Error fetching contributions:', err);
+    res.status(500).json({ error: 'Failed to fetch contributions' });
+  }
+}
+
+export async function getContributionsSummaryHandler(
+  req: Request,
+  res: Response
+) {
+  try {
+    if (!isAuthenticatedRequest(req)) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    const userId = req.user.id;
+
+    const contributions = await getContributionsSummary(userId);
 
     res.json(contributions);
   } catch (err) {

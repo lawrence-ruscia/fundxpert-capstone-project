@@ -4,7 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { DataTableColumnHeader } from '@/shared/components/DataTableColummHeader';
 import { LongText } from '@/shared/components/LongText';
 import { ContributionsTableRowActions } from './ContributionsTableRowActions';
-import type { Contribution } from '../types/hrContribution';
+import type { Contribution } from '../../shared/types/contributions';
 
 const formatDisplayDate = (dateString: Date) => {
   return dateString.toLocaleDateString('en-us', {

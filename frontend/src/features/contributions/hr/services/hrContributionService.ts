@@ -3,7 +3,7 @@ import type {
   Contribution,
   ContributionPayload,
   ContributionSummary,
-} from '../types/hrContribution';
+} from '../../shared/types/contributions';
 
 export const hrContributionsService = {
   async findEmployeeByEmployeeId(employeeId: string) {

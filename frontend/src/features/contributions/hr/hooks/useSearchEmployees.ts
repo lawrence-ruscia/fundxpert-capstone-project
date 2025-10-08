@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { hrContributionsService } from '../services/hrContributionService';
-import type { SearchEmployeesRecord } from '../types/hrContribution';
+import type { SearchEmployeesRecord } from '../../shared/types/contributions';
 
 export const useSearchEmployees = (
   query: string,

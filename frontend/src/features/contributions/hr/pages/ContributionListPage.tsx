@@ -1,7 +1,7 @@
 import type {
   Contribution,
   ContributionSummary,
-} from '../types/hrContribution';
+} from '../../shared/types/contributions.js';
 import { hrContributionsService } from '../services/hrContributionService.js';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner.js';
 import { DataError } from '@/shared/components/DataError.js';
@@ -59,7 +59,6 @@ export default function ContributionListPage() {
   const contributions = data?.contributions;
   const summary = data?.summary;
 
-  const navigate = useNavigate();
   // Table states
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
@@ -152,7 +151,7 @@ export default function ContributionListPage() {
             </CardContent>
           </Card>
         )}
- 
+
         {/* Contribution History Table */}
         <Card>
           <CardHeader className='mb-4 flex flex-wrap items-center justify-between gap-4 font-semibold'>

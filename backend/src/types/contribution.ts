@@ -9,6 +9,10 @@ export type Contribution = {
   position_title: string;
   employee_amount: number;
   employer_amount: number;
+  total: number;
+  grand_total: number;
+  year: number;
+  month: string;
   created_by: number;
   created_at: string;
   updated_by?: number;
