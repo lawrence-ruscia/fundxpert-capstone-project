@@ -32,7 +32,7 @@ export const LoanApprovalChain = ({
             {approvals.map((approval, index) => (
               <div
                 key={approval.id}
-                className='hover:bg-muted/50 flex max-h-96 items-center justify-between overflow-y-auto rounded-lg border p-4 transition-colors'
+                className='hover:bg-muted/50 flex max-h-96 flex-wrap items-center justify-between gap-4 overflow-y-auto rounded-lg border p-4 transition-colors'
               >
                 <div className='flex items-center gap-4'>
                   <div className='bg-primary/10 text-primary flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold'>
