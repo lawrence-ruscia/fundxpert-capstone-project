@@ -1,9 +1,11 @@
 export type WithdrawalStatus =
-  | 'Pending'
-  | 'Approved'
-  | 'Rejected'
-  | 'Processed'
-  | 'Cancelled';
+  | 'Pending' // Employee submitted, awaiting HR review
+  | 'Incomplete' // Employee requirements incomplete
+  | 'UnderReviewOfficer' // HR officer currently reviewing / verifying eligibility
+  | 'Approved' // HR officer approved for release
+  | 'Rejected' // HR officer denied the withdrawal
+  | 'Released' // Funds released / confirmed
+  | 'Cancelled'; // Employee withdrew the request before processing
 
 export type WithdrawalType =
   | 'Retirement'
@@ -40,7 +42,9 @@ export interface WithdrawalRequest {
 
   status: WithdrawalStatus;
 
+  officer_id: number;
   created_at: Date;
+  updated_at?: Date | null;
   reviewed_by?: number | null;
   reviewed_at?: Date | null;
   processed_by?: number | null;
@@ -52,6 +56,15 @@ export interface WithdrawalRequest {
   beneficiary_name?: string | null;
   beneficiary_relationship?: string | null;
   beneficiary_contact?: string | null;
+}
+
+export interface WithdrawalAccess {
+  canMarkReady: boolean;
+  canMarkIncomplete: boolean;
+  canMoveToReview: boolean;
+  canApprove: boolean;
+  canRelease: boolean;
+  canCancel: boolean;
 }
 
 export interface WithdrawalDocument {
@@ -87,4 +100,26 @@ export interface WithdrawalApplicationRequest {
 export interface CancelWithdrawalResponse {
   success: boolean;
   message: string;
+}
+
+export interface WithdrawalHistory {
+  id: number;
+  loan_id: number;
+  action: string;
+  performed_by: number;
+  actor_name?: string;
+  created_at: string;
+  comments?: string;
+}
+
+export interface WithdrawalFilters {
+  status?: string;
+  search?: string;
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface WithdrawalSummary {
+  status: WithdrawalStatus;
+  count: number;
 }

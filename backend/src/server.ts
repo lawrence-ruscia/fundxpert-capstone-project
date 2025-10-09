@@ -25,6 +25,7 @@ import { withdrawalDocumentRouter } from './routes/withdrawalDocumentRoutes.js';
 import { hrRouter } from './routes/hrRoutes.js';
 import { hrContributionsRouter } from './routes/hrContributionsRoutes.js';
 import { hrLoanRouter } from './routes/hrLoanRoutes.js';
+import { hrWithdrawalRouter } from './routes/hrWithdrawalRoutes.js';
 // Routes
 app.use('/auth', authRouter);
 app.use('/employee', employeeRouter);
@@ -36,6 +37,7 @@ app.use('/employee/withdrawal', withdrawalDocumentRouter);
 app.use('/hr', hrRouter);
 app.use('/hr/contributions', hrContributionsRouter);
 app.use('/hr/loans', hrLoanRouter);
+app.use('/hr/withdrawals', hrWithdrawalRouter);
 
 app.use('/uploads', express.static('uploads')); // serve uploaded files
 

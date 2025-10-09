@@ -43,13 +43,8 @@ export const hrSidebarData: SidebarData = {
         },
         {
           title: 'Withdrawals',
-          url: '/dashboard/withdrawals',
+          url: '/hr/withdrawals',
           icon: BanknoteArrowDown,
-        },
-        {
-          title: 'Reports',
-          url: '/dashboard/withdrawals',
-          icon: BarChart3,
         },
       ],
     },

@@ -283,7 +283,7 @@ export function WithdrawalItem({
           >
             <Link
               className='flex items-center gap-2'
-              to={`/dashboard/withdrawals/${withdrawal.id}`}
+              to={`/employee/withdrawals/${withdrawal.id}`}
             >
               <Eye className='mr-2 h-4 w-4' />
               View Withdrawal Details

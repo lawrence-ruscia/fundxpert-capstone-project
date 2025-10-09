@@ -283,7 +283,8 @@ export async function releaseLoanToTrustBank(
          trust_bank_ref = $2,
          approved_by = $3,
          active_at = NOW(),
-         updated_at = NOW()
+         updated_at = NOW(),
+         approved_at = NOW()
      WHERE id = $1
      RETURNING *`,
     [loanId, txRef || null, releasedBy]

@@ -4,7 +4,7 @@ import {
   CheckCircle,
   XCircle,
   MinusCircle,
-  CreditCard,
+  AlertCircle,
 } from 'lucide-react';
 import type { WithdrawalStatus } from '../types/withdrawal';
 
@@ -20,35 +20,50 @@ const withdrawalStatusConfig: Record<WithdrawalStatus, WithdrawalStatusConfig> =
     Pending: {
       icon: Clock,
       className:
-        'bg-amber-500 hover:bg-amber-600 text-white dark:bg-amber-600 dark:hover:bg-amber-700',
+        'bg-gray-100 hover:bg-gray-200 text-gray-700 border border-gray-300 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-gray-300 dark:border-gray-600',
+      variant: 'outline',
+      label: 'Pending',
+    },
+    Incomplete: {
+      icon: AlertCircle,
+      className:
+        'bg-orange-100 hover:bg-orange-200 text-orange-700 border border-orange-300 dark:bg-orange-950 dark:hover:bg-orange-900 dark:text-orange-300 dark:border-orange-800',
+      variant: 'secondary',
+      label: 'Incomplete',
+    },
+    UnderReviewOfficer: {
+      icon: Clock,
+      className:
+        'bg-blue-100 hover:bg-blue-200 text-blue-700 border border-blue-300 dark:bg-blue-950 dark:hover:bg-blue-900 dark:text-blue-300 dark:border-blue-800',
       variant: 'secondary',
       label: 'Under Review',
     },
     Approved: {
       icon: CheckCircle,
       className:
-        'bg-blue-500 hover:bg-blue-600 text-white dark:bg-blue-600 dark:hover:bg-blue-700',
+        'bg-green-100 hover:bg-green-200 text-green-700 border border-green-300 dark:bg-green-950 dark:hover:bg-green-900 dark:text-green-300 dark:border-green-800',
       variant: 'secondary',
       label: 'Approved',
     },
-    Processed: {
-      icon: CreditCard,
+    Released: {
+      icon: CheckCircle,
       className:
-        'bg-emerald-500 hover:bg-emerald-600 text-white dark:bg-emerald-600 dark:hover:bg-emerald-700',
+        'bg-teal-100 hover:bg-teal-200 text-teal-700 border border-teal-300 dark:bg-teal-950 dark:hover:bg-teal-900 dark:text-teal-300 dark:border-teal-800',
       variant: 'secondary',
-      label: 'Payment Released',
+      label: 'Released',
     },
     Rejected: {
       icon: XCircle,
       className:
-        'bg-rose-500 hover:bg-rose-600 text-white dark:bg-rose-600 dark:hover:bg-rose-700',
+        'bg-red-100 hover:bg-red-200 text-red-700 border border-red-300 dark:bg-red-950 dark:hover:bg-red-900 dark:text-red-300 dark:border-red-800',
       variant: 'destructive',
-      label: 'Request Denied',
+      label: 'Rejected',
     },
+
     Cancelled: {
       icon: MinusCircle,
       className:
-        'bg-slate-500 hover:bg-slate-600 text-white dark:bg-slate-600 dark:hover:bg-slate-700',
+        'bg-neutral-100 hover:bg-neutral-200 text-neutral-700 border border-neutral-300 dark:bg-neutral-800 dark:hover:bg-neutral-700 dark:text-neutral-300 dark:border-neutral-600',
       variant: 'outline',
       label: 'Cancelled',
     },
@@ -94,107 +109,5 @@ export function WithdrawalStatusBadge({
         <span>{displayLabel}</span>
       </div>
     </Badge>
-  );
-}
-
-// Usage Examples Component
-export function WithdrawalStatusBadgeExamples() {
-  const statuses: WithdrawalStatus[] = [
-    'Pending',
-    'Approved',
-    'Processed',
-    'Rejected',
-    'Cancelled',
-  ];
-
-  return (
-    <div className='space-y-6 p-6'>
-      <div>
-        <h3 className='mb-3 text-lg font-semibold'>All Withdrawal Statuses</h3>
-        <div className='flex flex-wrap gap-2'>
-          {statuses.map(status => (
-            <WithdrawalStatusBadge key={status} status={status} />
-          ))}
-        </div>
-      </div>
-
-      <div>
-        <h3 className='mb-3 text-lg font-semibold'>Without Icons</h3>
-        <div className='flex flex-wrap gap-2'>
-          {statuses.slice(0, 4).map(status => (
-            <WithdrawalStatusBadge
-              key={status}
-              status={status}
-              showIcon={false}
-            />
-          ))}
-        </div>
-      </div>
-
-      <div>
-        <h3 className='mb-3 text-lg font-semibold'>Different Sizes</h3>
-        <div className='flex flex-wrap items-center gap-2'>
-          <WithdrawalStatusBadge status='Processed' size='sm' />
-          <WithdrawalStatusBadge status='Processed' size='md' />
-          <WithdrawalStatusBadge status='Processed' size='lg' />
-        </div>
-      </div>
-
-      <div>
-        <h3 className='mb-3 text-lg font-semibold'>Custom Labels</h3>
-        <div className='flex flex-wrap gap-2'>
-          <WithdrawalStatusBadge
-            status='Pending'
-            customLabel='Awaiting HR Review'
-          />
-          <WithdrawalStatusBadge
-            status='Approved'
-            customLabel='Ready for Payment'
-          />
-          <WithdrawalStatusBadge
-            status='Processed'
-            customLabel='Funds Disbursed'
-          />
-          <WithdrawalStatusBadge
-            status='Rejected'
-            customLabel='Documentation Required'
-          />
-        </div>
-      </div>
-
-      <div>
-        <h3 className='mb-3 text-lg font-semibold'>Contextual Usage</h3>
-        <div className='space-y-3'>
-          <div className='flex items-center gap-3'>
-            <span className='text-muted-foreground text-sm'>
-              Initial submission:
-            </span>
-            <WithdrawalStatusBadge status='Pending' size='sm' />
-          </div>
-          <div className='flex items-center gap-3'>
-            <span className='text-muted-foreground text-sm'>HR approved:</span>
-            <WithdrawalStatusBadge status='Approved' size='sm' />
-          </div>
-          <div className='flex items-center gap-3'>
-            <span className='text-muted-foreground text-sm'>
-              Payment complete:
-            </span>
-            <WithdrawalStatusBadge status='Processed' size='sm' />
-          </div>
-          <div className='flex items-center gap-3'>
-            <span className='text-muted-foreground text-sm'>
-              Request denied:
-            </span>
-            <WithdrawalStatusBadge status='Rejected' size='sm' />
-          </div>
-          <div className='flex items-center gap-3'>
-            <span className='text-muted-foreground text-sm'>
-              User cancelled:
-            </span>
-            <WithdrawalStatusBadge status='Cancelled' size='sm' />
-          </div>
-        </div>
-      </div>
-    </div>
   );
 }

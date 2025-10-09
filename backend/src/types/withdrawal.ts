@@ -1,9 +1,11 @@
 export type WithdrawalStatus =
-  | 'Pending'
-  | 'Approved'
-  | 'Rejected'
-  | 'Processed'
-  | 'Cancelled';
+  | 'Pending' // Employee submitted, awaiting HR review
+  | 'Incomplete' // Employee requirements incomplete
+  | 'UnderReviewOfficer' // HR officer currently reviewing / verifying eligibility
+  | 'Approved' // HR officer approved for release
+  | 'Rejected' // HR officer denied the withdrawal
+  | 'Released' // Funds released / confirmed
+  | 'Cancelled'; // Employee withdrew the request before processing
 
 export type WithdrawalType =
   | 'Retirement'
@@ -27,31 +29,26 @@ export interface WithdrawalRequest {
   request_type: WithdrawalType;
   purpose_detail?: string | null;
 
-  employee_contribution_total: number;
-  employer_contribution_total: number;
-  vested_amount: number;
-  unvested_amount: number;
-  total_balance: number;
-
   payout_amount: number;
   payout_method?: string | null;
 
-  consent_acknowkedged: boolean;
+  consent_acknowledged: boolean;
 
   status: WithdrawalStatus;
 
-  created_at: Date;
-  reviewed_by?: number | null;
-  reviewed_at?: Date | null;
-  processed_by?: number | null;
-  processed_at?: Date | null;
-  payment_reference?: string | null;
-
+  employee_id: string;
+  employee_name: string;
+  department_name: string;
+  position_title: string;
+  assistant_name: string;
+  officer_id: number;
+  officer_name: string;
+  ready_for_review: boolean;
+  assistant_id: number;
   notes?: string | null;
 
-  beneficiary_name?: string | null;
-  beneficiary_relationship?: string | null;
-  beneficiary_contact?: string | null;
+  created_at: Date;
+  updated_at?: Date | null;
 }
 
 export interface WithdrawalDocument {
