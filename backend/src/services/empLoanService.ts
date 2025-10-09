@@ -40,7 +40,7 @@ export async function checkLoanEligibility(
 
   // Check active loan
   const activeLoanRes = await pool.query(
-    `SELECT 1 FROM loans WHERE user_id = $1 AND status NOT IN ('Cancelled', 'Released') LIMIT 1`,
+    `SELECT 1 FROM loans WHERE user_id = $1 AND status NOT IN ('Cancelled', 'Released', 'Rejected') LIMIT 1`,
     [userId]
   );
 

@@ -163,7 +163,7 @@ export function ApprovedLoanItem({ loan }: { loan: Loan }) {
           >
             <Link
               className='flex items-center gap-2'
-              to={`/dashboard/loans/${loan.id}`}
+              to={`/employee/loans/${loan.id}`}
             >
               <Eye className='mr-2 h-4 w-4' />
               View Loan Details

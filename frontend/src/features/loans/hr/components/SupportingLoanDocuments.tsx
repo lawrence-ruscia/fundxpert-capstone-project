@@ -1,5 +1,11 @@
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardContent,
+  CardDescription,
+} from '@/components/ui/card';
 import { Separator } from '@radix-ui/react-select';
 import { Button } from '@/components/ui/button';
 import { Paperclip, AlertCircle, FileText, Download } from 'lucide-react';
@@ -22,6 +28,9 @@ export const SupportingLoanDocuments = ({
             Supporting Documents
           </CardTitle>
         </div>
+        <CardDescription>
+          Documents submitted by the employee to support their loan application.
+        </CardDescription>
       </CardHeader>
 
       <CardContent className='space-y-6'>

@@ -1,4 +1,4 @@
-import { useLoanDocs } from '../hooks/useLoanDocs';
+import { useLoanDocs } from '../../employee/hooks/useLoanDocs';
 import {
   AlertCircle,
   Download,
@@ -20,8 +20,15 @@ import { useCallback, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Separator } from '@radix-ui/react-select';
 import { toast } from 'sonner';
+import type { LoanAccess } from '../types/hrLoanType';
 
-export const LoanDocumentUpload = ({ loanId }: { loanId: number }) => {
+export const VerifiedLoanDocuments = ({
+  loanId,
+  can,
+}: {
+  loanId: number;
+  can(key: keyof LoanAccess): void;
+}) => {
   const {
     documents,
     handleFileChange,
@@ -29,7 +36,7 @@ export const LoanDocumentUpload = ({ loanId }: { loanId: number }) => {
     loading,
     error,
     clearError,
-  } = useLoanDocs(loanId, 'Employee');
+  } = useLoanDocs(loanId, 'HR');
 
   const [dragActive, setDragActive] = useState(false);
 
@@ -84,12 +91,13 @@ export const LoanDocumentUpload = ({ loanId }: { loanId: number }) => {
         <div className='flex items-center space-x-2'>
           <Paperclip className='text-primary h-5 w-5' />
           <CardTitle className='text-lg font-semibold'>
-            Supporting Documents
+            Verified Loan Documents
           </CardTitle>
         </div>
         <CardDescription>
-          Upload required documents for your loan application. Accepted formats:
-          PDF, JPEG, PNG (Max 10MB each)
+          Documents uploaded and officially verified by Human Resources to
+          complete the loan process. Accepted formats: PDF, JPEG, PNG (Max 10MB
+          each)
         </CardDescription>
       </CardHeader>
 
@@ -102,6 +110,7 @@ export const LoanDocumentUpload = ({ loanId }: { loanId: number }) => {
         )}
 
         {/* Upload Area */}
+
         <div
           className={cn(
             'relative rounded-lg border-2 border-dashed p-8 text-center transition-colors',
@@ -148,9 +157,9 @@ export const LoanDocumentUpload = ({ loanId }: { loanId: number }) => {
                 {documents.map(doc => (
                   <div
                     key={doc.id}
-                    className='bg-muted/30 flex flex-wrap items-center justify-between rounded-lg border p-3'
+                    className='bg-muted/30 flex items-center justify-between rounded-lg border p-3'
                   >
-                    <div className='flex min-w-0 flex-1 flex-wrap items-center space-x-3'>
+                    <div className='flex min-w-0 flex-1 items-center space-x-3'>
                       <div className='flex min-w-0 flex-1 items-center gap-3'>
                         <div className='bg-background border-border/50 rounded border p-2'>
                           <FileText className='text-muted-foreground h-4 w-4' />

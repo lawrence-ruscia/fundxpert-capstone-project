@@ -11,7 +11,6 @@ import {
   getLoanAccessHandler,
   getLoanApprovalsHandler,
   getLoanByIdHandler,
-  getLoanDocumentsHandler,
   getLoanHistoryHandler,
   getLoanStatusSummaryHandler,
   markLoanIncompleteHandler,
@@ -20,8 +19,16 @@ import {
   releaseLoanToTrustBankHandler,
   reviewLoanApprovalHandler,
 } from '../controllers/hrLoanController.js';
+import {
+  deleteLoanDocument,
+  getLoanDocuments,
+  uploadLoanDocument,
+} from '../controllers/loanDocumentController.js';
+import { uploadRouterHR } from './hrLoanUploadRoutes.js';
 
 export const hrLoanRouter = Router();
+
+hrLoanRouter.use('/files', uploadRouterHR);
 
 /**
  * GET /hr/loans/status-summary
@@ -152,9 +159,18 @@ hrLoanRouter.get(
  */
 hrLoanRouter.get('/export/pdf', authMiddleware('HR'), exportLoansPDFController);
 
-/** GET  /hr/loans/:loanId/documents */
-hrLoanRouter.get(
+/** GET /hr/loans/:loanId/documents */
+hrLoanRouter.get('/:loanId/documents', authMiddleware('HR'), getLoanDocuments);
+
+hrLoanRouter.post(
   '/:loanId/documents',
   authMiddleware('HR'),
-  getLoanDocumentsHandler
+  uploadLoanDocument
+);
+
+/** DELETE /hr/loans/:loanId/documents/:docId */
+hrLoanRouter.delete(
+  '/:loanId/documents/:docId',
+  authMiddleware('HR'),
+  deleteLoanDocument
 );

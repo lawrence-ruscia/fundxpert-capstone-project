@@ -10,10 +10,14 @@ import {
 } from '../services/hrLoanService';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
 import { DataError } from '@/shared/components/DataError';
-import type { Loan, LoanDocument } from '../../employee/types/loan';
+import type {
+  Loan,
+  LoanDocument,
+  LoanDocumentResponse,
+} from '../../employee/types/loan';
 import type { LoanApproval, LoanHistory } from '../types/hrLoanType';
 import { useMultiFetch } from '@/shared/hooks/useMultiFetch';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, FileText, Paperclip } from 'lucide-react';
 import { LoanStatusBadge } from '../../employee/components/LoanStatusBadge';
 import { MarkIncompleteDialog } from '../components/MarkIncompleteDialog';
 import { MarkReadyDialog } from '../components/MarkReadyDialog';
@@ -27,6 +31,9 @@ import { SupportingLoanDocuments } from '../components/SupportingLoanDocuments';
 import { LoanActions } from '../components/LoanActions';
 import { LoanApprovalChain } from '../components/LoanApprovalChain';
 import { LoanSummary } from '../components/LoanSummary';
+import { VerifiedLoanDocuments } from '../components/VerfiedLoanDocuments';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 
 export default function LoanDetailsPage() {
   const { loanId } = useParams();
@@ -47,7 +54,7 @@ export default function LoanDetailsPage() {
     loan: Loan;
     approvals: LoanApproval[];
     history: LoanHistory[];
-    documents: LoanDocument[];
+    documents: LoanDocumentResponse;
   }>(async () => {
     const [loanRes, approvalsRes, historyRes, documentsRes] = await Promise.all(
       [
@@ -69,7 +76,7 @@ export default function LoanDetailsPage() {
   const loan = data?.loan;
   const approvals = data?.approvals;
   const history = data?.history;
-  const documents = data?.documents;
+  const documents = data?.documents.employeeDocuments;
 
   const {
     can,
@@ -117,8 +124,56 @@ export default function LoanDetailsPage() {
           {/* Activity History */}
           <LoanActivityHistory history={history ?? []} />
 
-          {/* Loan Documents */}
-          <SupportingLoanDocuments documents={documents ?? []} error={error} />
+          {/* Loan Documents Tabs */}
+          {/* TODO: Fix responsiveness */}
+          <Card>
+            <CardHeader className='pb-4'>
+              <CardTitle className='flex items-center gap-2 text-lg'>
+                <div className='bg-primary/10 rounded-lg p-2'>
+                  <Paperclip className='text-primary h-5 w-5' />
+                </div>
+                Documents
+              </CardTitle>
+            </CardHeader>
+            <CardContent className='max-h-[600px] overflow-y-auto'>
+              <Tabs defaultValue='supporting' className='w-full'>
+                <div className='overflow-x-auto'>
+                  <TabsList className='nline-flex w-max min-w-full'>
+                    <TabsTrigger
+                      value='supporting'
+                      className='flex flex-shrink-0 items-center gap-2 px-3 text-sm'
+                    >
+                      <FileText className='h-4 w-4' />
+                      Supporting Documents
+                      {documents && documents.length > 0 && (
+                        <span className='bg-primary/10 ml-1 rounded-full px-2 py-0.5 text-xs font-medium'>
+                          {documents.length}
+                        </span>
+                      )}
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value='verified'
+                      className='flex flex-shrink-0 items-center gap-2 px-3 text-sm'
+                    >
+                      <CheckCircle2 className='h-4 w-4' />
+                      Verified Documents
+                    </TabsTrigger>
+                  </TabsList>
+                </div>
+
+                <TabsContent value='supporting' className='mt-6'>
+                  <SupportingLoanDocuments
+                    documents={documents ?? []}
+                    error={error}
+                  />
+                </TabsContent>
+
+                <TabsContent value='verified' className='mt-6'>
+                  <VerifiedLoanDocuments loanId={loan.id} can={can} />
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
         </div>
 
         {/* Sidebar - Actions */}

@@ -7,7 +7,11 @@ import type {
   LoanSummary,
 } from '../types/hrLoanType';
 
-import type { Loan, LoanDocument } from '../../employee/types/loan';
+import type {
+  Loan,
+  LoanDocument,
+  LoanDocumentResponse,
+} from '../../employee/types/loan';
 
 /**
  * Step 0: Mark loan as ready for HR officer review
@@ -205,9 +209,9 @@ export async function exportLoansDataPDF(params?: {
 
 export async function getLoanDocuments(
   loanId: number
-): Promise<LoanDocument[]> {
+): Promise<LoanDocumentResponse> {
   const res = await api.get(`/hr/loans/${loanId}/documents`);
-  return res.data.documents;
+  return res.data;
 }
 
 export async function searchHR(query: string) {

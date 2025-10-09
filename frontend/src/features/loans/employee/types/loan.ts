@@ -64,7 +64,8 @@ export interface LoanDocument {
 }
 
 export type LoanDocumentResponse = {
-  documents: LoanDocument[];
+  employeeDocuments: LoanDocument[];
+  hrDocuments: LoanDocument[];
 };
 
 export type LoanResponse = Loan & { documents: LoanDocument[] };

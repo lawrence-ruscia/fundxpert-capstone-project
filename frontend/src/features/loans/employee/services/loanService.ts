@@ -3,46 +3,34 @@ import type {
   CancelLoanResponse,
   Loan,
   LoanDocument,
-  LoanDocumentResponse,
   LoanResponse,
 } from '../types/loan';
 
-// TODO: Refactor with axios
 export async function uploadLoanDocument(
   loanId: number,
   fileUrl: string,
-  fileName: string
+  fileName: string,
+  role: 'HR' | 'Employee' = 'Employee'
 ): Promise<{ document: LoanDocument }> {
-  const res = await fetch(
-    `http://localhost:3000/employee/loan/${loanId}/documents`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include', // important for httpOnly cookie
-      body: JSON.stringify({ fileUrl, fileName }),
-    }
-  );
+  const endpoint =
+    role === 'Employee'
+      ? `employee/loan/${loanId}/documents`
+      : `hr/loans/${loanId}/documents`;
 
-  if (!res.ok) {
-    throw new Error((await res.json()).error || 'Failed to upload document');
-  }
-  return res.json();
+  const res = await api.post(endpoint, {
+    fileUrl,
+    fileName,
+  });
+
+  return res.data;
 }
 
 export async function fetchLoanDocuments(
   loanId: number
-): Promise<LoanDocumentResponse> {
-  const res = await fetch(
-    `http://localhost:3000/employee/loan/${loanId}/documents`,
-    {
-      credentials: 'include',
-    }
-  );
+): Promise<LoanDocument[]> {
+  const res = await api.get(`employee/loan/${loanId}/documents`);
 
-  if (!res.ok) {
-    throw new Error((await res.json()).error || 'Failed to fetch documents');
-  }
-  return res.json();
+  return res.data.employeeDocuments;
 }
 
 export async function fetchLoanDetails(loanId: number): Promise<LoanResponse> {

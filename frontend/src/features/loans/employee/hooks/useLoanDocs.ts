@@ -4,12 +4,16 @@ import {
   fetchLoanDocuments,
   uploadLoanDocument,
 } from '../services/loanService';
-import { uploadFile } from '../services/fileService';
+import { deleteFile, uploadFile } from '../services/fileService';
+import { getLoanDocuments } from '../../hr/services/hrLoanService';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 const ALLOWED_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
 
-export const useLoanDocs = (loanId: number) => {
+export const useLoanDocs = (
+  loanId: number,
+  role: 'HR' | 'Employee' = 'Employee'
+) => {
   const [documents, setDocuments] = useState<LoanDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -18,9 +22,15 @@ export const useLoanDocs = (loanId: number) => {
   useEffect(() => {
     async function loadDocs() {
       try {
-        const data = await fetchLoanDocuments(loanId);
-        const { documents } = data;
-        setDocuments(documents);
+        if (role === 'Employee') {
+          const documents = await fetchLoanDocuments(loanId);
+          setDocuments(documents);
+        }
+
+        if (role === 'HR') {
+          const documents = (await getLoanDocuments(loanId)).hrDocuments;
+          setDocuments(documents);
+        }
       } catch (err) {
         setError((err as Error).message);
       } finally {
@@ -28,7 +38,7 @@ export const useLoanDocs = (loanId: number) => {
       }
     }
     loadDocs();
-  }, [loanId]);
+  }, [loanId, role]);
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     if (!e.target.files || e.target.files.length === 0) return;
@@ -50,14 +60,20 @@ export const useLoanDocs = (loanId: number) => {
     try {
       setLoading(true);
       // 1. Upload file to server (returns fileUrl)
-      const uploadedFile = await uploadFile(file);
+
+      const uploadedFile = await uploadFile(file, role);
 
       const fileUrl = uploadedFile.fileUrl;
       const fileName = uploadedFile.fileName;
 
       console.log('File Url: ', fileUrl);
       // 2. Attach fileUrl to loan in DB
-      const resDocument = await uploadLoanDocument(loanId, fileUrl, fileName);
+      const resDocument = await uploadLoanDocument(
+        loanId,
+        fileUrl,
+        fileName,
+        role
+      );
       console.log('Document: ', resDocument.document);
 
       // 3. Update UI
@@ -79,13 +95,7 @@ export const useLoanDocs = (loanId: number) => {
     if (confirm(`Delete ${fileName}?`)) {
       try {
         setLoading(true);
-        await fetch(
-          `http://localhost:3000/employee/loan/${loanId}/documents/${docId}`,
-          {
-            method: 'DELETE',
-            credentials: 'include',
-          }
-        );
+        await deleteFile(loanId, docId, role);
       } catch (err) {
         console.error(`Error: ${(err as Error).message}`);
         setError((err as Error).message);
