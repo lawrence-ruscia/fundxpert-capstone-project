@@ -22,7 +22,7 @@ export function AppTitle() {
         >
           <div>
             <Link
-              to='/dashboard'
+              to='/'
               onClick={() => setOpenMobile(false)}
               className='grid flex-1 text-start text-sm leading-tight'
             >

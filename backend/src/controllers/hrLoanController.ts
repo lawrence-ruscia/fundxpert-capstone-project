@@ -24,6 +24,7 @@ import ExcelJS from 'exceljs';
 import { getEmployeeById } from '../services/hrService.js';
 import path from 'path';
 import { SHEET_PASSWORD } from '../config/security.config.js';
+import { pool } from '../config/db.config.js';
 
 export const markLoanReadyHandler = async (req: Request, res: Response) => {
   try {
@@ -1744,5 +1745,60 @@ export async function exportLoansPDFController(req: Request, res: Response) {
       error: 'Failed to export PDF',
       message: err instanceof Error ? err.message : 'Unknown error occurred',
     });
+  }
+}
+
+// GET /hr/loans/assigned?role=assistant|officer|approver
+export async function getAssignedLoans(req: Request, res: Response) {
+  try {
+    if (!isAuthenticatedRequest(req))
+      return res.status(401).json({ error: 'Unauthorized' });
+
+    const userId = req.user.id;
+
+    // Query for assistant role
+    const assistantQuery = `
+  SELECT l.*, u.employee_id
+  FROM loans l
+  LEFT JOIN users u ON l.user_id = u.id
+  WHERE l.assistant_id = $1
+  ORDER BY l.created_at DESC
+`;
+
+    // Query for officer role
+    const officerQuery = `
+  SELECT l.*, u.employee_id
+  FROM loans l
+  LEFT JOIN users u ON l.user_id = u.id
+  WHERE l.officer_id = $1
+  ORDER BY l.created_at DESC
+`;
+
+    // Query for approver role
+    const approverQuery = `
+  SELECT l.*, u.employee_id
+  FROM loans l
+  JOIN loan_approvals la ON la.loan_id = l.id
+  LEFT JOIN users u ON l.user_id = u.id
+  WHERE la.approver_id = $1
+  ORDER BY l.created_at DESC
+`;
+
+    // Execute all queries in parallel
+    const [assistantResult, officerResult, approverResult] = await Promise.all([
+      pool.query(assistantQuery, [userId]),
+      pool.query(officerQuery, [userId]),
+      pool.query(approverQuery, [userId]),
+    ]);
+
+    // Return structured object with loans for each role
+    res.json({
+      assistant: assistantResult.rows,
+      officer: officerResult.rows,
+      approver: approverResult.rows,
+    });
+  } catch (err) {
+    console.error('❌ Error fetching assigned loans:', err);
+    res.status(500).json({ error: 'Failed to fetch assigned loans' });
   }
 }

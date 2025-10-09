@@ -26,7 +26,7 @@ export const fetchContributionTrends = async (period: string = 'all') => {
 
 export const fetchLoanSummary = async () => {
   try {
-    const { data } = await api.get('/hr/loans/summary');
+    const { data } = await api.get('/hr/loans/');
     return data;
   } catch (err) {
     throw new Error(
@@ -46,20 +46,9 @@ export const fetchWithdrawalSummary = async () => {
   }
 };
 
-export const fetchPendingLoans = async () => {
+export const fetchAssignedLoans = async () => {
   try {
-    const { data } = await api.get('/hr/loans/pending');
-    return data;
-  } catch (err) {
-    throw new Error(
-      (err as Error).message || 'Failed to fetch hr loans pending'
-    );
-  }
-};
-
-export const fetchPendingWithdrawals = async () => {
-  try {
-    const { data } = await api.get('/hr/withdrawals/pending');
+    const { data } = await api.get('/hr/loans/assigned');
     return data;
   } catch (err) {
     throw new Error(

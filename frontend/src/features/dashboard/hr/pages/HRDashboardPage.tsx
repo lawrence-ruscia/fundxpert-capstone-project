@@ -1,19 +1,11 @@
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
 import { useHRDashboardData } from '../hooks/useHrDashboardData';
 import { NetworkError } from '@/shared/components/NetworkError';
-import {
-  ArrowRight,
-  BanknoteArrowDown,
-  Clock,
-  PiggyBank,
-  Users,
-  Wallet,
-} from 'lucide-react';
+import { BanknoteArrowDown, PiggyBank, Users, Wallet } from 'lucide-react';
 import { BalanceCard } from '../../employee/components/BalanceCard';
 import { formatCurrency } from '../../employee/utils/formatters';
 import { ContributionTrends } from '../components/ContributionTrends';
-import { PendingActions } from '../components/PendingActions';
-import { RecentActivity } from '../components/RecentActivity';
+import { AssignedLoans } from '../components/AssignedLoans';
 
 export const HRDashboardPage = () => {
   const { data, loading, error } = useHRDashboardData();
@@ -21,14 +13,7 @@ export const HRDashboardPage = () => {
   if (loading) return <LoadingSpinner text={'Loading Dashboard Data'} />;
   if (error) return <NetworkError message={error} />;
 
-  const {
-    overview,
-    contributions,
-    loanSummary,
-    withdrawalSummary,
-    pendingLoans,
-    pendingWithdrawals,
-  } = data;
+  const { overview, assignedLoans: assignedLoans } = data;
   return (
     <div>
       {/* Header */}
@@ -83,21 +68,8 @@ export const HRDashboardPage = () => {
           </div>
         </div>
 
-        {/* Recent Activity */}
-        <RecentActivity
-          pendingLoans={pendingLoans}
-          pendingWithdrawals={pendingWithdrawals}
-          approved_loans_this_month={overview?.approved_loans_this_month ?? 0}
-          processsed_withdrawals_this_month={
-            overview?.processsed_withdrawals_this_month ?? 0
-          }
-        />
-
         {/* Pending Actions */}
-        <PendingActions
-          pendingLoans={pendingLoans}
-          pendingWithdrawals={pendingWithdrawals}
-        />
+        <AssignedLoans assignedLoans={assignedLoans} />
       </div>
     </div>
   );

@@ -8,6 +8,7 @@ import {
   exportLoansExcelController,
   exportLoansPDFController,
   getAllLoansHandler,
+  getAssignedLoans,
   getLoanAccessHandler,
   getLoanApprovalsHandler,
   getLoanByIdHandler,
@@ -39,6 +40,8 @@ hrLoanRouter.get(
   authMiddleware('HR'),
   getLoanStatusSummaryHandler
 );
+
+hrLoanRouter.get('/assigned', authMiddleware('HR'), getAssignedLoans);
 
 /**
  * STEP 0: HR Assistant / Officer marks application as ready for HR Benfits Officer review

@@ -4,25 +4,22 @@ import {
   fetchContributionTrends,
   fetchLoanSummary,
   fetchWithdrawalSummary,
-  fetchPendingLoans,
-  fetchPendingWithdrawals,
+  fetchAssignedLoans,
 } from '../services/hrDashboardService';
 import type {
   HrOverviewResponse,
   HRLoanSummaryResponse,
   HRWithdrawalSummaryResponse,
-  HRLoanPendingResponse,
-  HRWithdrawalPendingResponse,
   HRContributionsResponse,
 } from '../types/hrDashboardTypes';
+import type { Loan } from '@/features/loans/employee/types/loan';
 
 export interface HRDashboardData {
   overview: HrOverviewResponse | null;
   contributions: HRContributionsResponse | null;
   loanSummary: HRLoanSummaryResponse[] | null;
   withdrawalSummary: HRWithdrawalSummaryResponse[] | null;
-  pendingLoans: HRLoanPendingResponse[];
-  pendingWithdrawals: HRWithdrawalPendingResponse[];
+  assignedLoans: { assistant: Loan[]; officer: Loan[]; approver: Loan[] };
 }
 
 export function useHRDashboardData() {
@@ -31,8 +28,7 @@ export function useHRDashboardData() {
     contributions: null,
     loanSummary: [],
     withdrawalSummary: null,
-    pendingLoans: [],
-    pendingWithdrawals: [],
+    assignedLoans: { assistant: [], officer: [], approver: [] },
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -49,8 +45,7 @@ export function useHRDashboardData() {
           fetchContributionTrends('all'),
           fetchLoanSummary(),
           fetchWithdrawalSummary(),
-          fetchPendingLoans(),
-          fetchPendingWithdrawals(),
+          fetchAssignedLoans(),
         ]);
 
         // Extract successful results and log failures
@@ -60,7 +55,6 @@ export function useHRDashboardData() {
           loanSummaryResult,
           withdrawalSummaryResult,
           pendingLoansResult,
-          pendingWithdrawalsResult,
         ] = results;
 
         // Set data for successful requests, keep defaults for failed ones
@@ -79,13 +73,9 @@ export function useHRDashboardData() {
             withdrawalSummaryResult.status === 'fulfilled'
               ? withdrawalSummaryResult.value
               : null,
-          pendingLoans:
+          assignedLoans:
             pendingLoansResult.status === 'fulfilled'
               ? pendingLoansResult.value
-              : [],
-          pendingWithdrawals:
-            pendingWithdrawalsResult.status === 'fulfilled'
-              ? pendingWithdrawalsResult.value
               : [],
         });
 
@@ -113,8 +103,7 @@ export function useHRDashboardData() {
       contributions: null,
       loanSummary: [],
       withdrawalSummary: [],
-      pendingLoans: [],
-      pendingWithdrawals: [],
+      assignedLoans: { assistant: [], officer: [], approver: [] },
     });
     // The useEffect will run again due to the dependency change
   };
