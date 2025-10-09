@@ -25,8 +25,8 @@ export const EmployeeContributionsTable = ({
     <div className='space-y-4 max-sm:has-[div[role="toolbar"]]:mb-16'>
       <DataTableToolbar
         table={table}
-        searchPlaceholder='Search by contribution date...'
-        searchKey='contribution_date'
+        searchPlaceholder='Search by employee name...'
+        searchKey='employee_name'
         includeSearch={false}
         filters={[
           {

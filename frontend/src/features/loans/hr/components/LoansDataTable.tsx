@@ -23,7 +23,7 @@ export const LoansDataTable = ({ table }: LoansDataTableProps) => {
       <DataTableToolbar
         table={table}
         searchPlaceholder='Search by employee name...'
-        searchKey='employee_name'
+        searchKey='employee_name' 
         includeSearch={true}
         filters={[
           {

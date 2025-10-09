@@ -23,10 +23,9 @@ export const AllContributionsTable = ({ table }: ContributionsTableProps) => {
     <div className='space-y-4 max-sm:has-[div[role="toolbar"]]:mb-16'>
       <DataTableToolbar
         table={table}
-        // TODO: Add employee name search
-        searchPlaceholder='Search by contribution date...'
-        searchKey='contribution_date'
-        includeSearch={false}
+        searchPlaceholder='Search by employee name...'
+        searchKey='employee_name'
+        includeSearch={true}
         filters={[
           {
             columnId: 'is_adjusted',

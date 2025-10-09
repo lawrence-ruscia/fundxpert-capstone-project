@@ -43,6 +43,7 @@ import { Button } from '@/components/ui/button.js';
 import { BalanceCard } from '@/features/dashboard/employee/components/BalanceCard.js';
 import { formatCurrency } from '@/features/dashboard/employee/utils/formatters.js';
 import { useMultiFetch } from '@/shared/hooks/useMultiFetch.js';
+import { AllContributionsTable } from '../components/AllContributionsTable.js';
 export default function ContributionListPage() {
   const { data, loading, error } = useMultiFetch<{
     contributions: Contribution[];
@@ -176,8 +177,7 @@ export default function ContributionListPage() {
           </CardHeader>
           <CardContent>
             <div className='overflow-auto'>
-              {/* Your existing EmployeeContributionsTable component */}
-              <EmployeeContributionsTable table={table} />
+              <AllContributionsTable table={table} />
             </div>
           </CardContent>
         </Card>
