@@ -51,7 +51,6 @@ export const WithdrawalStatusSummary = ({
           label='Rejected '
           value={rejectedCount.toString()}
           icon={XCircle}
-          description={`Rejected: ${rejectedCount}`}
         />
 
         <BalanceCard
@@ -64,7 +63,6 @@ export const WithdrawalStatusSummary = ({
           label='Cancelled'
           value={cancelledCount.toString()}
           icon={XCircle}
-          description={`Cancelled: ${cancelledCount}`}
         />
       </CardContent>
     </Card>

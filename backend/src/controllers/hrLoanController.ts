@@ -1422,7 +1422,7 @@ export async function exportLoansPDFController(req: Request, res: Response) {
           align: 'center',
         })
         .text('Approved', columnPositions.dateApproved + 2, currentY, {
-          width: columnWidths.dateApproved - 4,
+          width: columnWidths.dateReleased - 4,
           align: 'center',
         });
     } else {
@@ -1499,7 +1499,7 @@ export async function exportLoansPDFController(req: Request, res: Response) {
             align: 'center',
           })
           .text('Approved', columnPositions.dateApproved + 2, headerY, {
-            width: columnWidths.dateApproved - 4,
+            width: columnWidths.dateReleased - 4,
             align: 'center',
           });
       } else {
@@ -1620,7 +1620,7 @@ export async function exportLoansPDFController(req: Request, res: Response) {
               : '-',
             columnPositions.dateApproved + 2,
             textY,
-            { width: columnWidths.dateApproved - 4, align: 'center' }
+            { width: columnWidths.dateReleased - 4, align: 'center' }
           );
       } else {
         doc

@@ -108,3 +108,51 @@ export async function getWithdrawalStatusSummary(): Promise<
 
   return res.data.summary;
 }
+
+export async function exportWithdrawalsDataCSV(params?: {
+  userId?: number;
+  start?: string;
+  end?: string;
+}) {
+  const res = await api.get('/hr/withdrawals/export/csv', {
+    responseType: 'blob',
+    params: {
+      user_id: params?.userId,
+      start: params?.start,
+      end: params?.end,
+    },
+  });
+  return res.data;
+}
+
+export async function exportWithdrawalsDataExcel(params?: {
+  userId?: number;
+  start?: string;
+  end?: string;
+}) {
+  const res = await api.get('/hr/withdrawals/export/excel', {
+    responseType: 'blob',
+    params: {
+      user_id: params?.userId,
+      start: params?.start,
+      end: params?.end,
+    },
+  });
+  return res.data;
+}
+
+export async function exportWithdrawalsDataPDF(params?: {
+  userId?: number;
+  start?: string;
+  end?: string;
+}) {
+  const res = await api.get('/hr/withdrawals/export/pdf', {
+    responseType: 'blob',
+    params: {
+      user_id: params?.userId,
+      start: params?.start,
+      end: params?.end,
+    },
+  });
+  return res.data;
+}

@@ -29,6 +29,8 @@ import { withdrawalsColumns } from '../components/WithdrawalsColumn';
 import { WithdrawalDataProvider } from '../components/WithdrawalDataProvider';
 import { WithdrawalsTable } from '../components/WithdrawalsTable';
 import { WithdrawalStatusSummary } from '../components/WithdrawalStatusSummary';
+import { useWithdrawalsExport } from '../hooks/useWithdrawalsExport';
+import { ExportDropdown } from '@/shared/components/ExportDropdown';
 
 export const WithdrawalsDashboardPage = () => {
   const { data, loading, error } = useMultiFetch<{
@@ -61,12 +63,12 @@ export const WithdrawalsDashboardPage = () => {
   console.log('End', dateRange.end);
 
   // Export functionality
-  //   const { handleExport } = useLoansDataExport({
-  //     dateRange: {
-  //       start: dateRange.start,
-  //       end: dateRange.end ?? new Date().toLocaleDateString(),
-  //     },
-  //   });
+  const { handleExport } = useWithdrawalsExport({
+    dateRange: {
+      start: dateRange.start,
+      end: dateRange.end ?? new Date().toLocaleDateString(),
+    },
+  });
 
   const table = useReactTable({
     data: requests ?? [],
@@ -130,7 +132,7 @@ export const WithdrawalsDashboardPage = () => {
               </CardTitle>
             </div>
             <div className='flex items-center gap-4'>
-              {/* <ExportDropdown onExport={handleExport} variant='outline' /> */}
+              <ExportDropdown onExport={handleExport} variant='outline' />
             </div>
           </CardHeader>
           <CardContent>

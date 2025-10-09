@@ -1,6 +1,9 @@
 import { Router } from 'express';
 import {
   cancelWithdrawalRequestHandler,
+  exportWithdrawalsCSVController,
+  exportWithdrawalsExcelController,
+  exportWithdrawalsPDFController,
   getAllWithdrawalsHandler,
   getWithdrawalAccessHandler,
   getWithdrawalHistoryHandler,
@@ -76,7 +79,7 @@ hrWithdrawalRouter.post(
  */
 hrWithdrawalRouter.post(
   '/:withdrawalId/cancel',
-  authMiddleware('HR'), 
+  authMiddleware('HR'),
   cancelWithdrawalRequestHandler
 );
 
@@ -119,29 +122,29 @@ hrWithdrawalRouter.get(
 /**
  * GET /hr/loans/export/csv
  */
-// hrWithdrawalRouter.get(
-//   '/export/csv',
-//   authMiddleware('HR'),
-//   exportLoansCSVController
-// );
+hrWithdrawalRouter.get(
+  '/export/csv',
+  authMiddleware('HR'),
+  exportWithdrawalsCSVController
+);
 
 /**
  * GET /hr/loans/export/excel
  */
-// hrWithdrawalRouter.get(
-//   '/export/excel',
-//   authMiddleware('HR'),
-//   exportLoansExcelController
-// );
+hrWithdrawalRouter.get(
+  '/export/excel',
+  authMiddleware('HR'),
+  exportWithdrawalsExcelController
+);
 
 /**
  * GET /hr/loans/export/pdf
  */
-// hrWithdrawalRouter.get(
-//   '/export/pdf',
-//   authMiddleware('HR'),
-//   exportLoansPDFController
-// );
+hrWithdrawalRouter.get(
+  '/export/pdf',
+  authMiddleware('HR'),
+  exportWithdrawalsPDFController
+);
 
 /** GET /hr/loans/:loanId/documents */
 // hrWithdrawalRouter.get(

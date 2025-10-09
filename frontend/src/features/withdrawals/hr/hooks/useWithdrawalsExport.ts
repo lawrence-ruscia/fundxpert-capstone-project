@@ -2,10 +2,10 @@ import { useCallback } from 'react';
 
 import { toast } from 'sonner';
 import {
-  exportLoansDataCSV,
-  exportLoansDataExcel,
-  exportLoansDataPDF,
-} from '../services/hrLoanService';
+  exportWithdrawalsDataCSV,
+  exportWithdrawalsDataExcel,
+  exportWithdrawalsDataPDF,
+} from '../services/hrWithdrawalService';
 
 interface DateRange {
   start?: string;
@@ -17,17 +17,17 @@ interface Employee {
   employee_id?: string | number;
 }
 
-interface UseLoansDataExportParams {
+interface UseWithdrawalsExportParams {
   userId?: number; // Optional now - if not provided, exports all employees
   dateRange?: DateRange;
   employee?: Employee;
 }
 
-export function useLoansDataExport({
+export function useWithdrawalsExport({
   userId,
   dateRange,
   employee,
-}: UseLoansDataExportParams = {}) {
+}: UseWithdrawalsExportParams = {}) {
   const handleExport = useCallback(
     async (type: 'csv' | 'xlsx' | 'pdf') => {
       try {
@@ -39,11 +39,11 @@ export function useLoansDataExport({
         };
         // Call unified export functions with optional employeeId
         if (type === 'csv') {
-          blob = await exportLoansDataCSV(exportParams);
+          blob = await exportWithdrawalsDataCSV(exportParams);
         } else if (type === 'xlsx') {
-          blob = await exportLoansDataExcel(exportParams);
+          blob = await exportWithdrawalsDataExcel(exportParams);
         } else if (type === 'pdf') {
-          blob = await exportLoansDataPDF(exportParams);
+          blob = await exportWithdrawalsDataPDF(exportParams);
         }
 
         if (!blob) {
@@ -100,9 +100,9 @@ function generateFilename(
     // Single employee export
     const employeeName = employee.name.toLowerCase().replace(/\s+/g, '_');
     const employeeId = employee.employee_id || userId;
-    return `loans_${employeeName}_${employeeId}${dateRangeStr}_${timestamp}.${type}`;
+    return `withdrawals_${employeeName}_${employeeId}${dateRangeStr}_${timestamp}.${type}`;
   } else {
     // All employees export
-    return `loans_all_employees${dateRangeStr}_${timestamp}.${type}`;
+    return `withdrawals_all_employees${dateRangeStr}_${timestamp}.${type}`;
   }
 }
