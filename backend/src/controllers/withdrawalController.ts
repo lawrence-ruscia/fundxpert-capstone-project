@@ -7,6 +7,7 @@ import {
   cancelWithdrawal,
 } from '../services/withdrawalService.js';
 import { isAuthenticatedRequest } from './employeeControllers.js';
+import { recordWithdrawalHistory } from '../services/hrWithdrawalService.js';
 
 export async function getEligibility(req: Request, res: Response) {
   try {
@@ -30,6 +31,13 @@ export async function createWithdrawal(req: Request, res: Response) {
 
     const userId = req.user.id;
     const withdrawal = await applyWithdrawal(userId, req.body);
+
+    await recordWithdrawalHistory(
+      Number(withdrawal.id),
+      'Employee requested a withdrawal',
+      userId
+    );
+
     res.status(201).json(withdrawal);
   } catch (err) {
     res.status(400).json({ error: (err as Error).message });
@@ -78,6 +86,13 @@ export async function cancelWithdrawalRequest(req: Request, res: Response) {
     if (!result.success) {
       return res.status(400).json({ error: 'Cannot cancel withdrawal' });
     }
+
+    await recordWithdrawalHistory(
+      Number(id),
+      'Withdrawal request cancelled by Employee',
+      userId
+      // remarks
+    );
 
     res.json({ success: true, message: 'Withdrawal cancelled' });
   } catch (err) {

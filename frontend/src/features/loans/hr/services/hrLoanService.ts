@@ -21,7 +21,7 @@ export async function markLoanReady(
 ): Promise<{ success: boolean; loan: Loan }> {
   const res = await api.patch(`/hr/loans/${loanId}/mark-ready`);
   return res.data;
-} 
+}
 
 /**
  * Step 0: Mark loan as incomplete for HR officer review

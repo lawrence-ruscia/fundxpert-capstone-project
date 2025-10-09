@@ -20,7 +20,7 @@ import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
 import { DataError } from '@/shared/components/DataError';
 import { NetworkError } from '@/shared/components/NetworkError';
 import { WithdrawalStatusBadge } from '../components/WithdrawalStatusBadge';
-import { WithdrawalDocumentUpload } from '../components/LoanDocumentUpload';
+import { WithdrawalDocumentUpload } from '../components/WithdrawalDocumentUpload';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useCancelWithdrawal } from '../hooks/useCancelWithdrawal';

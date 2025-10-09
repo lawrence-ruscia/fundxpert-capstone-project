@@ -48,11 +48,13 @@ export async function reviewWithdrawalDecision(
   return res.data;
 }
 
-export async function releaseWithdrawalFundsHandler(
+export async function releaseWithdrawalFunds(
   withdrawalId: number,
   txRef?: string | null
 ): Promise<{ success: boolean; withdrawal: WithdrawalType }> {
-  const res = await api.post(`/hr/loans/${withdrawalId}/release`, { txRef });
+  const res = await api.post(`/hr/withdrawals/${withdrawalId}/release`, {
+    txRef,
+  });
   return res.data;
 }
 
@@ -99,6 +101,7 @@ export async function getWithdrawalById(
   withdrawalId: number
 ): Promise<WithdrawalRequest> {
   const res = await api.get(`/hr/withdrawals/${withdrawalId}`);
+  console.log(res.data);
   return res.data;
 }
 export async function getWithdrawalStatusSummary(): Promise<
@@ -138,6 +141,7 @@ export async function exportWithdrawalsDataExcel(params?: {
       end: params?.end,
     },
   });
+
   return res.data;
 }
 

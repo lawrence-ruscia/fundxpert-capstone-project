@@ -38,7 +38,7 @@ export function WithdrawalTableRowActions({ row }: DataTableRowActionsProps) {
         <DropdownMenuContent align='end' className='w-[160px]'>
           <DropdownMenuItem
             onClick={() => {
-              navigate(`/hr/withdrawal/${row.original.id}`);
+              navigate(`/hr/withdrawals/${row.original.id}`);
             }}
           >
             Manage

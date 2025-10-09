@@ -30,6 +30,7 @@ import LoanDetailsPage from '@/features/loans/hr/pages/LoanDetailsPage';
 import { RequireAccess } from '@/features/loans/hr/components/RequireAccess';
 import { LoanReviewPage } from '@/features/loans/hr/pages/LoanReviewPage';
 import { WithdrawalsDashboardPage } from '@/features/withdrawals/hr/pages/WithdrawalsDashboard';
+import WithdrawalDetailsPage from '@/features/withdrawals/hr/pages/WithdrawalDetailsPage';
 
 export const router = createBrowserRouter([
   {
@@ -141,7 +142,7 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: <WithdrawalsDashboardPage /> },
 
-          // { path: ':withdrawalId', element: <WithdrawalDetailsPage /> },
+          { path: ':withdrawalId', element: <WithdrawalDetailsPage /> },
         ],
       },
     ],

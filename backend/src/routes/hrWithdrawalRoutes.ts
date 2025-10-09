@@ -6,6 +6,7 @@ import {
   exportWithdrawalsPDFController,
   getAllWithdrawalsHandler,
   getWithdrawalAccessHandler,
+  getWithdrawalByIdHandler,
   getWithdrawalHistoryHandler,
   getWithdrawalStatusSummaryHandler,
   markWithdrawalIncompleteHandler,
@@ -15,7 +16,6 @@ import {
   reviewWithdrawalDecisionHandler,
 } from '../controllers/hrWithdrawalController.js';
 import { authMiddleware } from '../middleware/authMiddleware.js';
-import { getLoanByIdHandler } from '../controllers/hrLoanController.js';
 
 export const hrWithdrawalRouter = Router();
 
@@ -96,7 +96,7 @@ hrWithdrawalRouter.get('/', authMiddleware('HR'), getAllWithdrawalsHandler);
 hrWithdrawalRouter.get(
   '/:withdrawalId',
   authMiddleware('HR'),
-  getLoanByIdHandler
+  getWithdrawalByIdHandler
 );
 
 /**

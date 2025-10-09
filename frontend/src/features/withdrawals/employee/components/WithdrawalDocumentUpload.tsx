@@ -19,14 +19,21 @@ import { Button } from '@/components/ui/button';
 import { useCallback, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Separator } from '@radix-ui/react-select';
+import { toast } from 'sonner';
 
 export const WithdrawalDocumentUpload = ({
   withdrawalId,
 }: {
   withdrawalId: number;
 }) => {
-  const { documents, handleFileChange, handleFileDelete, loading, error } =
-    useWithdrawalDocs(withdrawalId);
+  const {
+    documents,
+    handleFileChange,
+    handleFileDelete,
+    loading,
+    error,
+    clearError,
+  } = useWithdrawalDocs(withdrawalId);
 
   const [dragActive, setDragActive] = useState(false);
 
@@ -71,14 +78,8 @@ export const WithdrawalDocumentUpload = ({
   }
 
   if (error) {
-    return (
-      <Alert className='border-destructive/50 bg-destructive/5'>
-        <AlertCircle className='h-4 w-4' />
-        <AlertDescription className='text-destructive'>
-          {error}
-        </AlertDescription>
-      </Alert>
-    );
+    toast.error(error ?? 'Failed to upload file');
+    clearError();
   }
 
   return (

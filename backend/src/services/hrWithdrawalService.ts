@@ -40,7 +40,6 @@ export async function markWithdrawalReady(
          notes = NULL
      WHERE id = $1
        AND status IN ('Pending', 'Incomplete')
-     RETURNING *
      RETURNING *`,
     [withdrawalId, assistantId]
   );
@@ -72,7 +71,7 @@ export async function moveWithdrawalToReview(
 
   const { rows: updated } = await pool.query(
     `UPDATE withdrawal_requests
-     SET status = 'UnderReview',
+     SET status = 'UnderReviewOfficer',
          officer_id = $2,
          updated_at = NOW()
      WHERE id = $1
@@ -173,7 +172,7 @@ export async function releaseWithdrawalFunds(
     );
 
   const { rows } = await pool.query(
-    `UPDATE withdrawals
+    `UPDATE withdrawal_requests
      SET status = 'Released',
          processed_by = $2,
          processed_at = NOW(),
@@ -356,11 +355,21 @@ export async function getWithdrawalAccess(
     case 'Incomplete':
       // Assistant pre-screens the request
       if (!request.assistant_id || request.assistant_id === userId) {
-        access.canMarkReady = request.status === 'Incomplete'; // can only mark ready if incomplete
-        access.canMarkIncomplete = request.status === 'Pending'; // can only mark incomplete if pending
+        access.canMarkReady = true;
+        access.canMarkIncomplete = true;
       }
 
       // Officer can move to review if ready and not the same as assistant
+      if (request.ready_for_review) {
+        access.canMarkReady = false;
+        access.canMarkIncomplete = false;
+      }
+
+      if (request.status === 'Incomplete') {
+        access.canMarkIncomplete = false;
+      }
+
+      // Officer can move to review, but NOT the same assistant
       if (request.ready_for_review && request.assistant_id !== userId) {
         access.canMoveToReview = true;
       }
@@ -368,7 +377,7 @@ export async function getWithdrawalAccess(
       access.canCancel = true;
       break;
 
-    case 'UnderReview':
+    case 'UnderReviewOfficer':
       // Only assigned HR officer can take these actions
       if (request.officer_id === userId) {
         access.canApprove = true;

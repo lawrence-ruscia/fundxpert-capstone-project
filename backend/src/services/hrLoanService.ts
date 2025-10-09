@@ -477,7 +477,7 @@ export async function getLoanAccess(userId: number, loanId: number) {
 
   switch (loan.status) {
     case 'Pending':
-    case 'Incomplete':
+    case 'Incomplete': 
       // Assistant actions
       if (!loan.assistant_id || loan.assistant_id === userId) {
         access.canMarkReady = true;

@@ -29,11 +29,12 @@ export interface WithdrawalRequest {
   request_type: WithdrawalType;
   purpose_detail?: string | null;
 
-  employee_contribution_total: number;
-  employer_contribution_total: number;
-  vested_amount: number;
-  unvested_amount: number;
-  total_balance: number;
+  employee_id: string;
+  employee_name: string;
+  department_name: string;
+  position_title: string;
+  assistant_name: string;
+  officer_name: string;
 
   payout_amount: number;
   payout_method?: string | null;

@@ -59,16 +59,18 @@ export const WithdrawalsDashboardPage = () => {
   // Sync pagination changes to URL
   const { pagination, handlePaginationChange } = useTablePagination();
 
-  console.log('Start', dateRange.start);
-  console.log('End', dateRange.end);
-
   // Export functionality
+  // TODO: BUGFIX Daterange filter always rounds off
   const { handleExport } = useWithdrawalsExport({
     dateRange: {
       start: dateRange.start,
-      end: dateRange.end ?? new Date().toLocaleDateString(),
+      end: dateRange.end,
     },
   });
+
+  console.log('Start date: ', dateRange.start);
+
+  console.log('End date: ', dateRange.end);
 
   const table = useReactTable({
     data: requests ?? [],

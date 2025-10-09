@@ -10,18 +10,15 @@ import {
   CheckCircle2,
   AlertCircle,
   FileText,
-  Shield,
   XCircle,
   DollarSign,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
 import type { WithdrawalAccess } from '../../employee/types/withdrawal';
 
-export const LoanActions = ({
+export const WithdrawalActions = ({
   can,
   actionLoading,
-  loanId,
   setOpenReady,
   setOpenIncomplete,
   setOpenMoveReview,
@@ -32,7 +29,6 @@ export const LoanActions = ({
 }: {
   can: (key: keyof WithdrawalAccess) => boolean;
   actionLoading: boolean;
-  loanId: number;
   setOpenReady: (open: boolean) => void;
   setOpenIncomplete: (open: boolean) => void;
   setOpenMoveReview: (open: boolean) => void;
@@ -41,14 +37,13 @@ export const LoanActions = ({
   setOpenRelease: (open: boolean) => void;
   setOpenCancel: (open: boolean) => void;
 }) => {
-  const navigate = useNavigate();
   return (
     <div className='lg:col-span-1'>
       <Card className='sticky top-6'>
         <CardHeader>
           <CardTitle className='text-lg'>Actions</CardTitle>
           <CardDescription>
-            Manage the loan's current status and process flow
+            Manage the withdrawal request's current status and process flow
           </CardDescription>
         </CardHeader>
         <CardContent className='space-y-3'>
@@ -83,16 +78,7 @@ export const LoanActions = ({
               Move to Review
             </Button>
           )}
-          {can('canAssignApprovers') && (
-            <Button
-              onClick={() => navigate(`/hr/loans/${loanId}/review`)}
-              disabled={actionLoading}
-              className='w-full justify-start'
-            >
-              <Shield className='mr-2 h-4 w-4' />
-              Assign Approvers
-            </Button>
-          )}
+
           {can('canApprove') && (
             <Button
               onClick={() => setOpenApprove(true)}
@@ -123,7 +109,7 @@ export const LoanActions = ({
               className='w-full justify-start'
             >
               <DollarSign className='mr-2 h-4 w-4' />
-              Release Loan
+              Release Funds
             </Button>
           )}
           {can('canCancel') && (
@@ -136,20 +122,20 @@ export const LoanActions = ({
                 className='w-full justify-start'
               >
                 <XCircle className='mr-2 h-4 w-4' />
-                Cancel Loan
+                Cancel Request
               </Button>
             </>
           )}
           {!can('canMarkReady') &&
             !can('canMarkIncomplete') &&
             !can('canMoveToReview') &&
-            !can('canAssignApprovers') &&
             !can('canApprove') &&
             !can('canRelease') &&
             !can('canCancel') && (
               <div className='py-6 text-center'>
                 <p className='text-muted-foreground text-sm'>
-                  No actions available for this loan at the moment.
+                  No actions available for this withdrawal request at the
+                  moment.
                 </p>
               </div>
             )}

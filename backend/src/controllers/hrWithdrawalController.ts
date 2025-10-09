@@ -162,11 +162,11 @@ export const reviewWithdrawalDecisionHandler = async (
     if (!isAuthenticatedRequest(req)) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
-    const { withdrawalID } = req.params;
+    const { withdrawalId } = req.params;
     const approverId = req.user.id;
     const { decision, comments } = req.body; // 'Approved' | 'Rejected'
 
-    const access = await getWithdrawalAccess(approverId, Number(withdrawalID));
+    const access = await getWithdrawalAccess(approverId, Number(withdrawalId));
     if (!access.canApprove) {
       return res.status(403).json({
         error: 'You are not authorized to approve this withdrawal request',
@@ -174,7 +174,7 @@ export const reviewWithdrawalDecisionHandler = async (
     }
 
     const approval = await reviewWithdrawalDecision(
-      Number(withdrawalID),
+      Number(withdrawalId),
       approverId,
       decision,
       comments
@@ -184,7 +184,7 @@ export const reviewWithdrawalDecisionHandler = async (
       return res.status(403).json({ error: 'Not authorized or invalid stage' });
 
     await recordWithdrawalHistory(
-      Number(withdrawalID),
+      Number(withdrawalId),
       `Decision: ${decision}`,
       approverId,
       comments
@@ -395,12 +395,12 @@ export async function exportWithdrawalsCSVController(
   try {
     const {
       userId: employee_id,
-      startDate,
-      endDate,
+      start,
+      end,
     } = req.query as {
       userId?: string;
-      startDate?: string;
-      endDate?: string;
+      start?: string;
+      end?: string;
     };
 
     // Determine if this is a single employee or all employees export
@@ -412,8 +412,8 @@ export async function exportWithdrawalsCSVController(
       : null;
 
     const withdrawals = await getAllWithdrawals({
-      startDate: startDate ?? '',
-      endDate: endDate ?? '',
+      startDate: start ?? '',
+      endDate: end ?? '',
     });
 
     if (withdrawals.length === 0) {
@@ -472,10 +472,10 @@ export async function exportWithdrawalsCSVController(
     }
 
     // Report period
-    if (startDate && endDate) {
+    if (start && end) {
       csvData.push([
         'Report Period',
-        `${new Date(startDate).toLocaleDateString()} - ${new Date(endDate).toLocaleDateString()}`,
+        `${new Date(start).toLocaleDateString()} - ${new Date(end).toLocaleDateString()}`,
       ]);
     } else {
       csvData.push(['Report Period', 'All Time']);
@@ -616,7 +616,7 @@ export async function exportWithdrawalsCSVController(
 
     // ========== GENERATE FILENAME ==========
     const timestamp = new Date().toISOString().split('T')[0];
-    const dateRange = startDate && endDate ? `_${startDate}_to_${endDate}` : '';
+    const dateRange = start && end ? `_${start}_to_${end}` : '';
 
     let filename: string;
     if (isSingleEmployee && employee) {
@@ -666,11 +666,9 @@ export async function exportWithdrawalsExcelController(
     const employee = isSingleEmployee
       ? await getEmployeeById(Number(employee_id))
       : null;
-
     const withdrawals = await getAllWithdrawals({
-      userId: employee_id ? Number(employee_id) : undefined,
-      startDate: start,
-      endDate: end,
+      startDate: start ?? '',
+      endDate: end ?? '',
     });
 
     if (withdrawals.length === 0) {
@@ -994,9 +992,8 @@ export async function exportWithdrawalsPDFController(
       : null;
 
     const withdrawals = await getAllWithdrawals({
-      employeeId: employee_id ? Number(employee_id) : undefined,
-      startDate: start,
-      endDate: end,
+      startDate: start ?? '',
+      endDate: end ?? '',
     });
 
     if (withdrawals.length === 0) {
