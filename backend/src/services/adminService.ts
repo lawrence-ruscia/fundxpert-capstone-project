@@ -7,12 +7,13 @@ export async function logAdminAction(
   adminId: number,
   action: string,
   targetId?: number,
-  details?: Record<string, unknown>
+  details?: Record<string, unknown> | null,
+  ipAddres?: string
 ) {
   await pool.query(
     `INSERT INTO audit_logs (user_id, action, target_id, details, ip_address)
      VALUES ($1, $2, $3, $4, $5)`,
-    [adminId, action, targetId || null, details || null, '::1']
+    [adminId, action, targetId || null, details || null, ipAddres || null]
   );
 }
 
@@ -42,14 +43,31 @@ export async function getAllUsers(
   }
 
   const query = `
-      SELECT id, employee_id, name, email, role, employment_status, department_id, position_id, created_at
-      FROM users
+      SELECT u.id, u.employee_id, u.name, u.email, u.role, u.employment_status, d.name AS department, p.title AS position, u.created_at
+      FROM users u 
+      LEFT JOIN departments d ON u.department_id = d.id
+      LEFT JOIN positions p ON u.position_id = p.id
       ${filters.length ? `WHERE ${filters.join(' AND ')}` : ''}
       ORDER BY created_at DESC
     `;
 
   const { rows } = await pool.query(query, params);
   return rows;
+}
+
+export async function getUserById(userId: number) {
+  const query = `
+      SELECT 
+        u.id, u.employee_id, u.name, u.email, u.role, u.employment_status, 
+        d.name AS department, p.title AS position, u.created_at
+      FROM users u 
+      LEFT JOIN departments d ON u.department_id = d.id
+      LEFT JOIN positions p ON u.position_id = p.id
+      WHERE u.id = $1
+  `;
+
+  const { rows } = await pool.query(query, [userId]);
+  return rows[0];
 }
 
 export async function createUser(

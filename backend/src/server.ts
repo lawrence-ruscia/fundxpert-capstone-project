@@ -27,6 +27,10 @@ import { hrContributionsRouter } from './routes/hrContributionsRoutes.js';
 import { hrLoanRouter } from './routes/hrLoanRoutes.js';
 import { hrWithdrawalRouter } from './routes/hrWithdrawalRoutes.js';
 import { adminRouter } from './routes/adminRoutes.js';
+
+// To return client's true IP
+// app.set('trust proxy', true);
+
 // Auth routes
 app.use('/auth', authRouter);
 

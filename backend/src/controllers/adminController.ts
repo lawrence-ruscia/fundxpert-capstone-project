@@ -2,6 +2,7 @@ import {
   createUser,
   getAllUsers,
   getAuditLogs,
+  getUserById,
   logAdminAction,
   resetUserPassword,
   toggleLockuser,
@@ -10,8 +11,9 @@ import {
 import type { User } from '../types/user.js';
 import { isAuthenticatedRequest } from './employeeControllers.js';
 import type { Request, Response } from 'express';
+
 /**
- *  GET /admin/users
+ * GET /admin/users
  * List all users (filter by role, status, or search)
  */
 export async function getAllUsersHandler(req: Request, res: Response) {
@@ -32,6 +34,27 @@ export async function getAllUsersHandler(req: Request, res: Response) {
   } catch (err) {
     console.error('❌ Error fetching users:', err);
     res.status(500).json({ error: 'Failed to fetch users' });
+  }
+}
+
+/**
+ * GET /admin/users/:userId
+ * Get user by id
+ */
+export async function getUserByIdHandler(req: Request, res: Response) {
+  try {
+    if (!isAuthenticatedRequest(req) || req.user.role !== 'Admin') {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    const { userId } = req.params;
+
+    const users = await getUserById(Number(userId));
+
+    res.json({ users });
+  } catch (err) {
+    console.error('❌ Error fetching user:', err);
+    res.status(500).json({ error: 'Failed to fetch user' });
   }
 }
 
@@ -86,10 +109,16 @@ export async function updateUserHandler(req: Request, res: Response) {
 
     await updateUser(userId ?? '', role, employment_status);
 
-    await logAdminAction(req.user.id, 'Updated user', Number(userId), {
-      role,
-      employment_status,
-    });
+    await logAdminAction(
+      req.user.id,
+      'Updated user',
+      Number(userId),
+      {
+        role,
+        employment_status,
+      },
+      req.ip
+    );
 
     res.json({ success: true });
   } catch (err) {
@@ -116,7 +145,9 @@ export async function toggleLockUserHandler(req: Request, res: Response) {
     await logAdminAction(
       req.user.id,
       locked ? 'Locked account' : 'Unlocked account',
-      Number(userId)
+      Number(userId),
+      null,
+      req.ip
     );
 
     res.json({ success: true });
@@ -140,7 +171,13 @@ export async function resetUserPasswordHandler(req: Request, res: Response) {
 
     const tempPassword = await resetUserPassword(userId ?? '');
 
-    await logAdminAction(req.user.id, 'Reset password', Number(userId));
+    await logAdminAction(
+      req.user.id,
+      'Reset password',
+      Number(userId),
+      null,
+      req.ip
+    );
 
     res.json({ success: true, tempPassword });
   } catch (err) {
