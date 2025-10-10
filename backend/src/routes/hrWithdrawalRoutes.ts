@@ -16,10 +16,16 @@ import {
   reviewWithdrawalDecisionHandler,
 } from '../controllers/hrWithdrawalController.js';
 import { authMiddleware } from '../middleware/authMiddleware.js';
+import { uploadWithdrawalRouterHR } from './hrWithdrawalUploadRoutes.js';
+import {
+  deleteWithdrawalDocument,
+  getWithdrawalDocuments,
+  uploadWithdrawalDocument,
+} from '../controllers/withdrawalDocumentController.js';
 
 export const hrWithdrawalRouter = Router();
 
-// hrWithdrawalRouter.use('/files', uploadRouterHR);
+hrWithdrawalRouter.use('/files', uploadWithdrawalRouterHR);
 
 /**
  * GET /hr/withdrawals/status-summary
@@ -147,21 +153,20 @@ hrWithdrawalRouter.get(
 );
 
 /** GET /hr/loans/:loanId/documents */
-// hrWithdrawalRouter.get(
-//   '/:loanId/documents',
-//   authMiddleware('HR'),
-//   getLoanDocuments
-// );
+hrWithdrawalRouter.get(
+  '/:withdrawalId/documents',
+  authMiddleware('HR'),
+  getWithdrawalDocuments
+);
 
-// hrWithdrawalRouter.post(
-//   '/:loanId/documents',
-//   authMiddleware('HR'),
-//   uploadLoanDocument
-// );
+hrWithdrawalRouter.post(
+  '/:withdrawalId/documents',
+  authMiddleware('HR'),
+  uploadWithdrawalDocument
+);
 
-/** DELETE /hr/loans/:loanId/documents/:docId */
-// hrWithdrawalRouter.delete(
-//   '/:loanId/documents/:docId',
-//   authMiddleware('HR'),
-//   deleteLoanDocument
-// );
+hrWithdrawalRouter.delete(
+  '/:withdrawalId/documents/:docId',
+  authMiddleware('HR'),
+  deleteWithdrawalDocument
+);

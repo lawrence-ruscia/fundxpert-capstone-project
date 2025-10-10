@@ -1,6 +1,7 @@
 import { api } from '@/shared/api/api';
 import type {
   WithdrawalAccess,
+  WithdrawalDocumentResponse,
   WithdrawalFilters,
   WithdrawalHistory,
   WithdrawalRequest,
@@ -101,7 +102,7 @@ export async function getWithdrawalById(
   withdrawalId: number
 ): Promise<WithdrawalRequest> {
   const res = await api.get(`/hr/withdrawals/${withdrawalId}`);
-  console.log(res.data);
+  console.log('Response ', res.data);
   return res.data;
 }
 export async function getWithdrawalStatusSummary(): Promise<
@@ -158,5 +159,12 @@ export async function exportWithdrawalsDataPDF(params: {
       end: params?.end,
     },
   });
+  return res.data;
+}
+
+export async function getWithdrawalDocumentsHR(
+  withdrawalId: number
+): Promise<WithdrawalDocumentResponse> {
+  const res = await api.get(`/hr/withdrawals/${withdrawalId}/documents`);
   return res.data;
 }

@@ -1,4 +1,3 @@
-import { useWithdrawalDocs } from '../hooks/useWithdrawalDocs';
 import {
   AlertCircle,
   Download,
@@ -20,8 +19,9 @@ import { useCallback, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Separator } from '@radix-ui/react-select';
 import { toast } from 'sonner';
+import { useWithdrawalDocs } from '../../employee/hooks/useWithdrawalDocs';
 
-export const WithdrawalDocumentUpload = ({
+export const VerifiedWithdrawalDocuments = ({
   withdrawalId,
 }: {
   withdrawalId: number;
@@ -33,7 +33,7 @@ export const WithdrawalDocumentUpload = ({
     loading,
     error,
     clearError,
-  } = useWithdrawalDocs(withdrawalId, 'Employee');
+  } = useWithdrawalDocs(withdrawalId, 'HR');
 
   const [dragActive, setDragActive] = useState(false);
 
@@ -88,12 +88,13 @@ export const WithdrawalDocumentUpload = ({
         <div className='flex items-center space-x-2'>
           <Paperclip className='text-primary h-5 w-5' />
           <CardTitle className='text-lg font-semibold'>
-            Supporting Documents
+            Verified Withdrawal Documents
           </CardTitle>
         </div>
         <CardDescription>
-          Upload required documents for your loan application. Accepted formats:
-          PDF, JPEG, PNG (Max 10MB each)
+          Documents uploaded and officially verified by Human Resources to
+          complete the withdrawal process. Accepted formats: PDF, JPEG, PNG (Max
+          10MB each)
         </CardDescription>
       </CardHeader>
 
@@ -106,6 +107,7 @@ export const WithdrawalDocumentUpload = ({
         )}
 
         {/* Upload Area */}
+
         <div
           className={cn(
             'relative rounded-lg border-2 border-dashed p-8 text-center transition-colors',

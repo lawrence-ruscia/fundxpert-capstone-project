@@ -1,15 +1,19 @@
 import { useEffect, useState } from 'react';
 import {
   fetchWithdrawalDocuments,
-  uploadLoanDocument,
+  uploadWithdrawalDocument,
 } from '../services/withdrawalService';
 import { uploadFile } from '../services/fileService';
 import type { WithdrawalDocument } from '../types/withdrawal';
-
+import { getWithdrawalDocumentsHR } from '../../hr/services/hrWithdrawalService';
+import { deleteWithdrawalFile } from '../services/fileService';
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 const ALLOWED_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
 
-export const useWithdrawalDocs = (withdrawalId: number) => {
+export const useWithdrawalDocs = (
+  withdrawalId: number,
+  role: 'HR' | 'Employee' = 'Employee'
+) => {
   const [documents, setDocuments] = useState<WithdrawalDocument[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -18,9 +22,18 @@ export const useWithdrawalDocs = (withdrawalId: number) => {
   useEffect(() => {
     async function loadDocs() {
       try {
-        const data = await fetchWithdrawalDocuments(withdrawalId);
-        const { documents } = data;
-        setDocuments(documents);
+        if (role === 'Employee') {
+          const documents = await fetchWithdrawalDocuments(withdrawalId);
+
+          setDocuments(documents);
+        }
+
+        if (role === 'HR') {
+          const documents = (await getWithdrawalDocumentsHR(withdrawalId))
+            .hrDocuments;
+
+          setDocuments(documents);
+        }
       } catch (err) {
         setError((err as Error).message);
       } finally {
@@ -28,7 +41,7 @@ export const useWithdrawalDocs = (withdrawalId: number) => {
       }
     }
     loadDocs();
-  }, [withdrawalId]);
+  }, [withdrawalId, role, documents]);
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     if (!e.target.files || e.target.files.length === 0) return;
@@ -50,17 +63,18 @@ export const useWithdrawalDocs = (withdrawalId: number) => {
     try {
       setLoading(true);
       // 1. Upload file to server (returns fileUrl)
-      const uploadedFile = await uploadFile(file);
+      const uploadedFile = await uploadFile(file, role);
 
       const fileUrl = uploadedFile.fileUrl;
       const fileName = uploadedFile.fileName;
 
       console.log('File Url: ', fileUrl);
       // 2. Attach fileUrl to loan in DB
-      const resDocument = await uploadLoanDocument(
+      const resDocument = await uploadWithdrawalDocument(
         withdrawalId,
         fileUrl,
-        fileName
+        fileName,
+        role
       );
       console.log('Document: ', resDocument.document);
 
@@ -83,13 +97,7 @@ export const useWithdrawalDocs = (withdrawalId: number) => {
     if (confirm(`Delete ${fileName}?`)) {
       try {
         setLoading(true);
-        await fetch(
-          `http://localhost:3000/employee/withdrawal/${withdrawalId}/documents/${docId}`,
-          {
-            method: 'DELETE',
-            credentials: 'include',
-          }
-        );
+        await deleteWithdrawalFile(withdrawalId, docId, role);
       } catch (err) {
         console.error(`Error: ${(err as Error).message}`);
         setError((err as Error).message);

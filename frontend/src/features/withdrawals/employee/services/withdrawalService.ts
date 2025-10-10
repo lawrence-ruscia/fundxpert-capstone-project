@@ -1,3 +1,4 @@
+import { api } from '@/shared/api/api';
 import type {
   CancelWithdrawalResponse,
   WithdrawalApplicationRequest,
@@ -6,25 +7,23 @@ import type {
   WithdrawalRequest,
 } from '../types/withdrawal';
 
-export async function uploadLoanDocument(
+export async function uploadWithdrawalDocument(
   withdrawalId: number,
   fileUrl: string,
-  fileName: string
+  fileName: string,
+  role: 'HR' | 'Employee' = 'Employee'
 ): Promise<{ document: WithdrawalDocument }> {
-  const res = await fetch(
-    `http://localhost:3000/employee/withdrawal/${withdrawalId}/documents`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include', // important for httpOnly cookie
-      body: JSON.stringify({ fileUrl, fileName }),
-    }
-  );
+  const endpoint =
+    role === 'Employee'
+      ? `employee/withdrawal/${withdrawalId}/documents`
+      : `hr/withdrawals/${withdrawalId}/documents`;
 
-  if (!res.ok) {
-    throw new Error((await res.json()).error || 'Failed to upload document');
-  }
-  return res.json();
+  const res = await api.post(endpoint, {
+    fileUrl,
+    fileName,
+  });
+
+  return res.data;
 }
 
 export async function fetchWithdrawalEligibility(): Promise<WithdrawalEligibility> {
@@ -43,18 +42,10 @@ export async function fetchWithdrawalEligibility(): Promise<WithdrawalEligibilit
 
 export async function fetchWithdrawalDocuments(
   withdrawalId: number
-): Promise<{ documents: WithdrawalDocument[] }> {
-  const res = await fetch(
-    `http://localhost:3000/employee/withdrawal/${withdrawalId}/documents`,
-    {
-      credentials: 'include',
-    }
-  );
+): Promise<WithdrawalDocument[]> {
+  const res = await api.get(`employee/withdrawal/${withdrawalId}/documents`);
 
-  if (!res.ok) {
-    throw new Error((await res.json()).error || 'Failed to fetch documents');
-  }
-  return res.json();
+  return res.data.employeeDocuments;
 }
 
 export async function fetchWithdrawalDetails(

@@ -216,7 +216,7 @@ async function createRandomUser(role) {
     );
     const positionTitle = getRandomElement(bankData[departmentName]);
     const hireDate = getRandomHireDate();
-    const tempPassword = generateTempPassword();
+    const tempPassword = 'EMPPass123!';
 
     userData = {
       name: fullName,

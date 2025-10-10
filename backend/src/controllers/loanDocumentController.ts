@@ -25,7 +25,7 @@ export async function uploadLoanDocument(req: Request, res: Response) {
        FROM loans WHERE id = $1`,
       [loanId]
     );
-
+    
     const loan = rows[0];
     if (!loan) return res.status(404).json({ error: 'Loan not found' });
 
@@ -80,7 +80,7 @@ export async function uploadLoanDocument(req: Request, res: Response) {
       }
 
       bucketName = 'hr-loan-documents';
-      uploadedByRole = 'HR';
+      uploadedByRole = 'HR';  
     } else {
       return res
         .status(403)
@@ -92,7 +92,7 @@ export async function uploadLoanDocument(req: Request, res: Response) {
       Number(loanId),
       fileUrl,
       fileName,
-      uploadedByRole,
+      uploadedByRole, 
       bucketName
     );
 

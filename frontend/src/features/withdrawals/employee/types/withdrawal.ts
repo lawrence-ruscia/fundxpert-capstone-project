@@ -124,3 +124,8 @@ export interface WithdrawalSummary {
   status: WithdrawalStatus;
   count: number;
 }
+
+export type WithdrawalDocumentResponse = {
+  employeeDocuments: WithdrawalDocument[];
+  hrDocuments: WithdrawalDocument[];
+};

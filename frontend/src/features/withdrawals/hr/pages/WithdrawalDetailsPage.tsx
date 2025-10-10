@@ -7,9 +7,13 @@ import { useMultiFetch } from '@/shared/hooks/useMultiFetch';
 import { ArrowLeft, CheckCircle2, FileText, Paperclip } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import type { WithdrawalRequest } from '../../employee/types/withdrawal';
+import type {
+  WithdrawalDocumentResponse,
+  WithdrawalRequest,
+} from '../../employee/types/withdrawal';
 import {
   getWithdrawalById,
+  getWithdrawalDocumentsHR,
   getWithdrawalHistory,
 } from '../services/hrWithdrawalService';
 import { WithdrawalActions } from '../components/WithdrawalActions';
@@ -18,16 +22,19 @@ import { useWithdrawalAccess } from '../hooks/useWithdrawalAccess';
 import { MarkIncompleteDialog } from '../components/MarkIncompleteDialog';
 import { MarkReadyDialog } from '../components/MarkReadyDialog';
 import { MoveToReviewDialog } from '../components/MoveToReviewDialog';
-import { ApproveWithdrawalDialog } from '../components/ApproveLoanDialog';
+import { ApproveWithdrawalDialog } from '../components/ApproveWithdrawalDialog';
 import { RejectWithdrawalDialog } from '../components/RejectWithdrawalDialog';
 import { ReleaseWithdrawalDialog } from '../components/ReleaseWithdrawalDialog';
-import { CancelWithdrawalDialog } from '../components/CancelLoanDialog';
+import { CancelWithdrawalDialog } from '../components/CancelWithdrawalDialog';
 import { WithdrawalStatusBadge } from '../../employee/components/WithdrawalStatusBadge';
 import { WithdrawalActivityHistory } from '../components/WithdrawalActivityHistory';
 import { WithdrawalSummary } from '../components/WithdrawalSummary';
+import { SupportingWithdrawalDocuments } from '../components/SupportingWithdrawalDocuments';
+import { VerifiedWithdrawalDocuments } from '../components/VerfiedWithdrawalDocuments';
 
 export default function WithdrawalDetailsPage() {
   const { withdrawalId } = useParams();
+
   const navigate = useNavigate();
 
   const [actionLoading, setActionLoading] = useState(false);
@@ -44,23 +51,29 @@ export default function WithdrawalDetailsPage() {
   const { data, loading, error, refetch } = useMultiFetch<{
     request: WithdrawalRequest;
     history: LoanHistory[];
+    documents: WithdrawalDocumentResponse;
   }>(async () => {
-    const [loanRes, historyRes] = await Promise.all([
-      getWithdrawalById(Number(withdrawalId)),
-      getWithdrawalHistory(Number(withdrawalId)),
-      //   getLoanDocuments(Number(loanId)),
-    ]);
+    try {
+      const [withdrawalRes, historyRes, documentsRes] = await Promise.all([
+        getWithdrawalById(Number(withdrawalId)),
+        getWithdrawalHistory(Number(withdrawalId)),
+        getWithdrawalDocumentsHR(Number(withdrawalId)),
+      ]);
 
-    return {
-      request: loanRes,
-      history: historyRes,
-    };
+      return {
+        request: withdrawalRes,
+        history: historyRes,
+        documents: documentsRes,
+      };
+    } catch (err) {
+      console.error('❌ Error in fetch:', err);
+      throw err;
+    }
   }, [withdrawalId]);
 
   const request = data?.request;
   const history = data?.history;
-  // const documents = data?.documents.employeeDocuments;
-
+  const documents = data?.documents.employeeDocuments ?? [];
   const {
     can,
     refresh: refreshAccess,
@@ -128,11 +141,11 @@ export default function WithdrawalDetailsPage() {
                     >
                       <FileText className='h-4 w-4' />
                       Supporting Documents
-                      {/* {documents && documents.length > 0 && (
+                      {documents && documents.length > 0 && (
                         <span className='bg-primary/10 ml-1 rounded-full px-2 py-0.5 text-xs font-medium'>
                           {documents.length}
                         </span>
-                      )} */}
+                      )}
                     </TabsTrigger>
                     <TabsTrigger
                       value='verified'
@@ -145,14 +158,14 @@ export default function WithdrawalDetailsPage() {
                 </div>
 
                 <TabsContent value='supporting' className='mt-6'>
-                  {/* <SupportingLoanDocuments
+                  <SupportingWithdrawalDocuments
                     documents={documents ?? []}
                     error={error}
-                  /> */}
+                  />
                 </TabsContent>
 
                 <TabsContent value='verified' className='mt-6'>
-                  {/* <VerifiedLoanDocuments loanId={request.id} can={can} /> */}
+                  <VerifiedWithdrawalDocuments withdrawalId={request.id} />
                 </TabsContent>
               </Tabs>
             </CardContent>

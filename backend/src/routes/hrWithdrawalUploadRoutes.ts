@@ -4,11 +4,11 @@ import { authMiddleware } from '../middleware/authMiddleware.js';
 import { supabase } from '../config/supabaseClient.config.js';
 import { isAuthenticatedRequest } from '../controllers/employeeControllers.js';
 
-export const uploadRouterHR = Router();
+export const uploadWithdrawalRouterHR = Router();
 
 const upload = multer({ storage: multer.memoryStorage() }); // keep file in memory
 
-uploadRouterHR.post(
+uploadWithdrawalRouterHR.post(
   '/upload',
   authMiddleware('HR'),
   upload.single('file'),
@@ -22,15 +22,15 @@ uploadRouterHR.post(
         return res.status(401).json({ error: 'Unauthorized' });
       }
 
-      const bucket = 'hr-loan-documents';
- 
+      const bucket = 'hr-withdrawals-documents';
+
       const originalName = req.file.originalname;
       const fileExt = originalName.split('.').pop();
       const baseName = originalName.substring(0, originalName.lastIndexOf('.'));
       const generateFileName = async () => {
         let fileName = originalName;
         let counter = 1;
-
+ 
         while (true) {
           // Check if file exists
           const { data: existingFile } = await supabase.storage
