@@ -112,7 +112,7 @@ export async function checkWithdrawalEligibility(
   const existingWithdrawalRes = await pool.query(
     `SELECT 1 FROM withdrawal_requests 
    WHERE user_id = $1 
-     AND status IN ('Pending', 'Approved','Released')
+     AND status IN ('Pending', 'Incomplete','UnderReviewOfficer', 'Approved', 'Released')
    LIMIT 1`,
     [userId]
   );

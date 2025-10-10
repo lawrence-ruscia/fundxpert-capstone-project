@@ -27,23 +27,15 @@ export async function uploadWithdrawalDocument(
 }
 
 export async function fetchWithdrawalEligibility(): Promise<WithdrawalEligibility> {
-  const res = await fetch(
-    `http://localhost:3000/employee/withdrawal/eligibility`,
-    {
-      credentials: 'include',
-    }
-  );
+  const res = await api.get(`/employee/withdrawal/eligibility`);
 
-  if (!res.ok) {
-    throw new Error((await res.json()).error || 'Failed to fetch documents');
-  }
-  return res.json();
+  return res.data;
 }
 
 export async function fetchWithdrawalDocuments(
   withdrawalId: number
 ): Promise<WithdrawalDocument[]> {
-  const res = await api.get(`employee/withdrawal/${withdrawalId}/documents`);
+  const res = await api.get(`/employee/withdrawal/${withdrawalId}/documents`);
 
   return res.data.employeeDocuments;
 }
@@ -51,65 +43,33 @@ export async function fetchWithdrawalDocuments(
 export async function fetchWithdrawalDetails(
   withdrawalId: number
 ): Promise<WithdrawalRequest & { documents: WithdrawalDocument[] }> {
-  const res = await fetch(
-    `http://localhost:3000/employee/withdrawal/${withdrawalId}`,
-    {
-      method: 'GET',
-      credentials: 'include', // ensure cookies (auth) are sent
-    }
-  );
+  const res = await api.get(`/employee/withdrawal/${withdrawalId}`);
 
-  if (!res.ok) {
-    throw new Error(`Failed to fetch loan details: ${res.statusText}`);
-  }
-
-  return res.json();
+  return res.data;
 }
 
 export async function fetchWithdrawalHistory(): Promise<WithdrawalRequest[]> {
-  const res = await fetch(`http://localhost:3000/employee/withdrawal/history`, {
-    method: 'GET',
-    credentials: 'include',
-  });
+  const res = await api.get(`/employee/withdrawal/history`);
 
-  if (!res.ok) {
-    throw new Error(`Failed to fetch loans: ${res.statusText}`);
-  }
-  const data = await res.json();
-  return data;
+  return res.data;
 }
 
 export async function applyWithdrawal(
   payload: WithdrawalApplicationRequest
 ): Promise<WithdrawalRequest> {
-  const res = await fetch('http://localhost:3000/employee/withdrawal/apply', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
-    body: JSON.stringify(payload),
-  });
+  try {
+    const res = await api.post('/employee/withdrawal/apply', payload);
 
-  if (!res.ok) {
-    throw new Error((await res.json()).error || 'Loan application failed');
+    return res.data;
+  } catch (err) {
+    console.error(err);
   }
-
-  return res.json();
 }
 
 export async function cancelWithdrawal(
   withdrawalId: number
 ): Promise<CancelWithdrawalResponse> {
-  const res = await fetch(
-    `http://localhost:3000/employee/withdrawal/${withdrawalId}/cancel`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-    }
-  );
+  const res = await api.post(`/employee/withdrawal/${withdrawalId}/cancel`);
 
-  if (!res.ok) {
-    throw new Error((await res.json()).error || 'Loan application failed');
-  }
-  return res.json();
+  return res.data;
 }

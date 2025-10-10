@@ -91,21 +91,22 @@ export default function WithdrawalsPage() {
     );
   }
   // FIX: Filter for active withdrawals and get the latest one
-  const pendingWithdrawals =
+  const activeWithdrawals =
     withdrawals?.filter(
       w =>
-        w.status !== 'Approved' &&
-        w.status !== 'Cancelled' &&
-        w.status !== 'Processed' &&
-        w.status !== 'Rejected'
+        w.status === 'Pending' ||
+        w.status === 'Incomplete' ||
+        w.status === 'UnderReviewOfficer' ||
+        w.status === 'Approved' ||
+        w.status === 'Released'
     ) || [];
 
   // Show active withdrawal or latest withdrawal
   const withdrawalToShow =
-    pendingWithdrawals.length > 0 ? pendingWithdrawals[0] : withdrawals?.[0];
+    activeWithdrawals.length > 0 ? activeWithdrawals[0] : withdrawals?.[0];
 
   const latest = withdrawals && withdrawals.length > 0 ? withdrawals[0] : null;
-  const hasActiveWithdrawal = pendingWithdrawals.length > 0;
+  const hasActiveWithdrawal = activeWithdrawals.length > 0;
 
   // FIX: Button should be disabled if not eligible OR if there's already an active withdrawal
   const canRequestNewWithdrawal = eligibility.eligible && !hasActiveWithdrawal;
@@ -159,7 +160,7 @@ export default function WithdrawalsPage() {
               value={latest ? latest.status : 'No Request'}
               icon={
                 latest
-                  ? latest.status === 'Processed'
+                  ? latest.status === 'Released'
                     ? CheckCircle
                     : latest.status === 'Approved'
                       ? Clock
@@ -174,7 +175,7 @@ export default function WithdrawalsPage() {
                     ? 'Awaiting review'
                     : latest.status === 'Approved'
                       ? 'Approved, pending payment'
-                      : latest.status === 'Processed'
+                      : latest.status === 'Released'
                         ? 'Payment completed'
                         : latest.status === 'Rejected'
                           ? 'Request was denied'
