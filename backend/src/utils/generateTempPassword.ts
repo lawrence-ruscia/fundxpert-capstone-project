@@ -2,7 +2,7 @@ import crypto from 'crypto';
 
 /**
  * Generate a temporary password that follows these rules:
- * - At least 8 characters
+ * - At least 8 characters 
  * - At least one uppercase letter
  * - At least one lowercase letter
  * - At least one digit
