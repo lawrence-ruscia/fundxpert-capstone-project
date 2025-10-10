@@ -34,29 +34,15 @@ export async function fetchLoanDocuments(
 }
 
 export async function fetchLoanDetails(loanId: number): Promise<LoanResponse> {
-  const res = await fetch(`http://localhost:3000/employee/loan/${loanId}`, {
-    method: 'GET',
-    credentials: 'include', // ensure cookies (auth) are sent
-  });
+  const res = await api.get(`/employee/loan/${loanId}`);
 
-  if (!res.ok) {
-    throw new Error(`Failed to fetch loan details: ${res.statusText}`);
-  }
-
-  return res.json();
+  return res.data;
 }
 
 export async function fetchEmployeeLoans(): Promise<Loan[]> {
-  const res = await fetch(`http://localhost:3000/employee/loan/history`, {
-    method: 'GET',
-    credentials: 'include',
-  });
+  const res = await api.get(`/employee/loan/history`);
 
-  if (!res.ok) {
-    throw new Error(`Failed to fetch loans: ${res.statusText}`);
-  }
-  const data = await res.json();
-  return data.loans;
+  return res.data.loans;
 }
 
 type LoanApplicationRequest = {
@@ -71,18 +57,9 @@ type LoanApplicationRequest = {
 export async function applyForLoan(
   payload: LoanApplicationRequest
 ): Promise<Loan> {
-  const res = await fetch('http://localhost:3000/employee/loan/apply', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    credentials: 'include',
-    body: JSON.stringify(payload),
-  });
+  const res = await api.post('/employee/loan/apply', payload);
 
-  if (!res.ok) {
-    throw new Error((await res.json()).error || 'Loan application failed');
-  }
-
-  return res.json();
+  return res.data;
 }
 
 export async function cancelLoan(
