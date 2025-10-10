@@ -79,32 +79,12 @@ const lastNames = [
   'Flores',
 ];
 
+const employmentStatuses = ['Active', 'Resigned', 'Retired', 'Terminated'];
+
 // --- HELPER FUNCTIONS ---
 
 function getRandomElement(array) {
   return array[Math.floor(Math.random() * array.length)];
-}
-
-function generateTempPassword(length = 12) {
-  // Generates a password with at least one uppercase, one lowercase, one number, and one special character
-  const lower = 'abcdefghijklmnopqrstuvwxyz';
-  const upper = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  const numbers = '0123456789';
-  const special = '!@#$%^&*()_+~`|}{[]:;?><,./-=';
-  const all = lower + upper + numbers + special;
-  let password = '';
-  password += getRandomElement(lower);
-  password += getRandomElement(upper);
-  password += getRandomElement(numbers);
-  password += getRandomElement(special);
-  for (let i = password.length; i < length; i++) {
-    password += getRandomElement(all);
-  }
-  // Shuffle the password to ensure randomness
-  return password
-    .split('')
-    .sort(() => 0.5 - Math.random())
-    .join('');
 }
 
 function getRandomSalary(min = 25000, max = 120000) {
@@ -113,11 +93,11 @@ function getRandomSalary(min = 25000, max = 120000) {
 }
 
 function getRandomHireDate() {
-  // Hire date between 3 years ago and 6 months ago
+  // Hire date between 7 years ago and 6 months ago
   const sixMonthsAgo = new Date();
   sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
   const threeYearsAgo = new Date();
-  threeYearsAgo.setFullYear(threeYearsAgo.getFullYear() - 3);
+  threeYearsAgo.setFullYear(threeYearsAgo.getFullYear() - 7);
   const randomDate = new Date(
     threeYearsAgo.getTime() +
       Math.random() * (sixMonthsAgo.getTime() - threeYearsAgo.getTime())
@@ -183,7 +163,7 @@ async function generateAndInsertContributions(userId, hireDate, salary) {
     await pool.query(
       `INSERT INTO contributions
          (user_id, contribution_date, employee_amount, employer_amount, created_by)
-         VALUES ($1, $2, $3, $4, 30)`, // Assuming created by Admin ID 1
+         VALUES ($1, $2, $3, $4, 30)`, // Assuming created by Admin ID 30
       [
         userId,
         lastDayOfMonth.toISOString().split('T')[0],
@@ -195,12 +175,172 @@ async function generateAndInsertContributions(userId, hireDate, salary) {
 }
 
 /**
+ * Generates and inserts a random loan for a user.
+ */
+async function generateAndInsertLoan(userId) {
+  const purposeCategories = [
+    'Medical',
+    'Education',
+    'Housing',
+    'Emergency',
+    'Debt',
+    'Others',
+  ];
+  const purposeDetails = {
+    Education: ['Tuition Fee', 'School Supplies', 'Training Course'],
+    Medical: ['Hospital Bill', 'Surgery', 'Medication'],
+    Housing: ['Home Repair', 'Down Payment', 'Renovation'],
+    Emergency: ['Family Emergency', 'Urgent Needs'],
+    Personal: ['Debt Consolidation', 'Travel', 'Electronics'],
+  };
+
+  const category = getRandomElement(purposeCategories);
+  const detail = getRandomElement(purposeDetails[category]);
+  const amount = getRandomSalary(10000, 100000);
+  const termMonths = getRandomElement([12, 18, 24]);
+  const monthlyAmortization = Math.round(amount / termMonths);
+
+  // Get a random co-maker (another active employee)
+  const coMakerResult = await pool.query(
+    `SELECT employee_id FROM users WHERE role = 'Employee' AND employment_status = 'Active' AND id != $1 ORDER BY RANDOM() LIMIT 1`,
+    [userId]
+  );
+  const coMakerId = coMakerResult.rows[0]?.id || null;
+
+  const statuses = [
+    'Pending',
+    'Incomplete',
+    'UnderReviewOfficer',
+    'AwaitingApprovals',
+    'PendingNextApproval',
+    'Approved',
+    'Released',
+    'Rejected',
+    'Cancelled',
+  ];
+  const status = getRandomElement(statuses);
+
+  await pool.query(
+    `INSERT INTO loans 
+      (user_id, amount, repayment_term_months, purpose_category, purpose_detail, co_maker_employee_id,
+       consent_acknowledged, status, monthly_amortization)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+    [
+      userId,
+      amount,
+      termMonths,
+      category,
+      detail,
+      coMakerId,
+      true,
+      status,
+      monthlyAmortization,
+    ]
+  );
+}
+
+/**
+ * Generates and inserts a random withdrawal request for a user.
+ */
+async function generateAndInsertWithdrawal(userId, hireDate, salary) {
+  const requestTypes = [
+    'Retirement',
+    'Resignation',
+    'Redundancy',
+    'Disability',
+    'Death',
+    'Other',
+  ];
+  const requestType = getRandomElement(requestTypes);
+
+  const purposeDetails = [
+    'Retirement',
+    'Resignation',
+    'Medical Emergency',
+    'Education Expenses',
+    'Housing Purchase',
+    'Debt Payment',
+  ];
+  const purposeDetail = getRandomElement(purposeDetails);
+
+  // Calculate contribution totals based on hire date
+  const monthsWorked = Math.floor(
+    (new Date() - new Date(hireDate)) / (1000 * 60 * 60 * 24 * 30)
+  );
+  const monthlyContribution = Math.round(salary * 0.05);
+  const employeeTotal = monthlyContribution * monthsWorked;
+  const employerTotal = monthlyContribution * monthsWorked;
+
+  // Calculate vesting (assuming 2-year vesting period)
+  const vestedPercentage = monthsWorked >= 24 ? 1.0 : monthsWorked / 24;
+  const vestedAmount = Math.round(employerTotal * vestedPercentage);
+  const unvestedAmount = employerTotal - vestedAmount;
+  const totalBalance = employeeTotal + employerTotal;
+
+  // Payout amount based on request type
+  let payoutAmount;
+  if (requestType === 'Full Withdrawal') {
+    payoutAmount = employeeTotal + vestedAmount;
+  } else if (requestType === 'Partial Withdrawal') {
+    payoutAmount = Math.round((employeeTotal + vestedAmount) * 0.5);
+  } else {
+    payoutAmount = Math.round((employeeTotal + vestedAmount) * 0.3);
+  }
+
+  const payoutMethods = ['Bank Transfer', 'Check', 'Cash'];
+  const payoutMethod = getRandomElement(payoutMethods);
+
+  const relationships = ['Spouse', 'Child', 'Parent', 'Sibling'];
+  const beneficiaryName = `${getRandomElement(firstNames)} ${getRandomElement(lastNames)}`;
+  const beneficiaryRelationship = getRandomElement(relationships);
+  const beneficiaryContact = `+63${Math.floor(9000000000 + Math.random() * 1000000000)}`;
+
+  const statuses = [
+    'Pending',
+    'Incomplete',
+    'UnderReviewOfficer',
+    'Approved',
+    'Released',
+    'Rejected',
+    'Cancelled',
+  ];
+  const status = getRandomElement(statuses);
+
+  await pool.query(
+    `INSERT INTO withdrawal_requests
+     (user_id, request_type, status, purpose_detail,
+      employee_contribution_total, employer_contribution_total,
+      vested_amount, unvested_amount, total_balance,
+      payout_amount, payout_method, consent_acknowledged,
+      beneficiary_name, beneficiary_relationship, beneficiary_contact)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
+    [
+      userId,
+      requestType,
+      status,
+      purposeDetail,
+      employeeTotal,
+      employerTotal,
+      vestedAmount,
+      unvestedAmount,
+      totalBalance,
+      payoutAmount,
+      payoutMethod,
+      true,
+      beneficiaryName,
+      beneficiaryRelationship,
+      beneficiaryContact,
+    ]
+  );
+}
+
+/**
  * Creates a single user with a specified role.
  */
 async function createRandomUser(role) {
   const firstName = getRandomElement(firstNames);
   const lastName = getRandomElement(lastNames);
-  let email = `${firstName.toLowerCase()}.${lastName.toLowerCase()}${Math.floor(Math.random() * 100)}@metrobank.com.ph`;
+  let email = `${firstName.toLowerCase()}.${lastName.toLowerCase()}@metrobank.com.ph`;
   const fullName = `${firstName} ${lastName}`;
 
   let userData = {};
@@ -217,18 +357,21 @@ async function createRandomUser(role) {
     const positionTitle = getRandomElement(bankData[departmentName]);
     const hireDate = getRandomHireDate();
     const tempPassword = 'EMPPass123!';
+    const status = getRandomElement(employmentStatuses);
 
+    const prefix = String(Math.floor(Math.random() * 99)).padStart(2, '0');
+    const suffix = String(Math.floor(10000 + Math.random() * 90000));
     userData = {
       name: fullName,
       email: email,
       password_hash: await bcrypt.hash(tempPassword, 10),
       role: 'Employee',
       date_hired: hireDate,
-      employee_id: `E-${Math.floor(10000 + Math.random() * 90000)}`,
+      employee_id: `${prefix}-${suffix}`,
       temp_password: true,
       temp_password_expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
       salary: getRandomSalary(),
-      employment_status: 'Active',
+      employment_status: status,
       department_id: departments.rows.find(d => d.name === departmentName)?.id,
       position_id: positions.rows.find(p => p.title === positionTitle)?.id,
       logInfo: `Email: ${email}, Temp Password: ${tempPassword}`,
@@ -237,13 +380,15 @@ async function createRandomUser(role) {
     email = `hr.${lastName.toLowerCase()}@metrobank.com.ph`;
     const positionTitle = getRandomElement(bankData['Human Resources']);
 
+    const prefix = String(Math.floor(Math.random() * 99)).padStart(2, '0');
+    const suffix = String(Math.floor(10000 + Math.random() * 90000));
     userData = {
       name: `${fullName} (HR)`,
       email: email,
       password_hash: await bcrypt.hash('HRPass123!', 10), // Permanent password for testing
       role: 'HR',
       date_hired: '2021-01-10',
-      employee_id: `H-${Math.floor(10000 + Math.random() * 90000)}`,
+      employee_id: `${prefix}-${suffix}`,
       temp_password: false,
       temp_password_expires: null,
       salary: getRandomSalary(60000, 150000),
@@ -303,6 +448,18 @@ async function createRandomUser(role) {
   // If the user is an employee, seed their contributions
   if (role === 'Employee') {
     await generateAndInsertContributions(
+      newUserId,
+      userData.date_hired,
+      userData.salary
+    );
+
+    await generateAndInsertWithdrawal(
+      newUserId,
+      userData.date_hired,
+      userData.salary
+    );
+
+    await generateAndInsertLoan(
       newUserId,
       userData.date_hired,
       userData.salary
