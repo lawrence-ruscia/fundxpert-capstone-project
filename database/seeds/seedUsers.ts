@@ -183,7 +183,7 @@ async function generateAndInsertContributions(userId, hireDate, salary) {
     await pool.query(
       `INSERT INTO contributions
          (user_id, contribution_date, employee_amount, employer_amount, created_by)
-         VALUES ($1, $2, $3, $4, 1)`, // Assuming created by Admin ID 1
+         VALUES ($1, $2, $3, $4, 30)`, // Assuming created by Admin ID 1
       [
         userId,
         lastDayOfMonth.toISOString().split('T')[0],

@@ -145,10 +145,10 @@ export async function exportWithdrawalsDataExcel(params?: {
   return res.data;
 }
 
-export async function exportWithdrawalsDataPDF(params?: {
+export async function exportWithdrawalsDataPDF(params: {
   userId?: number;
   start?: string;
-  end?: string;
+  end?: string | null;
 }) {
   const res = await api.get('/hr/withdrawals/export/pdf', {
     responseType: 'blob',

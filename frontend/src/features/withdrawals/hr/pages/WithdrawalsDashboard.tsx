@@ -60,17 +60,22 @@ export const WithdrawalsDashboardPage = () => {
   const { pagination, handlePaginationChange } = useTablePagination();
 
   // Export functionality
-  // TODO: BUGFIX Daterange filter always rounds off
   const { handleExport } = useWithdrawalsExport({
     dateRange: {
       start: dateRange.start,
-      end: dateRange.end,
+      end: (() => {
+        const endDate = dateRange.end || new Date().toISOString().split('T')[0];
+        return `${endDate}T23:59:59.999`; // End of day
+      })(),
     },
   });
 
   console.log('Start date: ', dateRange.start);
-
   console.log('End date: ', dateRange.end);
+  console.log(
+    'End date (with default): ',
+    dateRange.end || new Date().toISOString().split('T')[0]
+  );
 
   const table = useReactTable({
     data: requests ?? [],
