@@ -19,7 +19,7 @@ export const QuickActions = ({ ...props }) => {
       <CardContent className='flex flex-col gap-4'>
         <Button size='lg' className='justify-start gap-3 px-4'>
           <Link
-            to='/dashboard/contributions'
+            to='/employee/contributions'
             className='flex items-center gap-4'
           >
             <TrendingUp />
@@ -27,19 +27,19 @@ export const QuickActions = ({ ...props }) => {
           </Link>
         </Button>
         <Button size='lg' className='justify-start gap-3 px-4'>
-          <Link to='/dashboard/projection' className='flex items-center gap-4'>
+          <Link to='/employee/projection' className='flex items-center gap-4'>
             <Target />
             <span>Project Fund Growth</span>
           </Link>
         </Button>
         <Button size='lg' className='justify-start gap-3 px-4'>
-          <Link to='/dashboard/loans' className='flex items-center gap-4'>
+          <Link to='/employee/loans' className='flex items-center gap-4'>
             <Banknote />
             <span>Request Loan</span>
           </Link>
         </Button>
         <Button size='lg' className='justify-start gap-3 px-4'>
-          <Link to='/dashboard/withdrawals' className='flex items-center gap-4'>
+          <Link to='/employee/withdrawals' className='flex items-center gap-4'>
             <ArrowDownCircle />
             <span>Request Withdrawal</span>
           </Link>
