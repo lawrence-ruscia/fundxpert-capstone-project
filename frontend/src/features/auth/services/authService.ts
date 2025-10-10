@@ -1,96 +1,52 @@
 import type { LoginSchema } from '../schemas/loginSchema';
 import type { LoginResponse, UserResponse } from '../types/loginResponse';
 import { logout } from '@/utils/auth';
+import { api } from '@/shared/api/api';
 
 // TODO: Move these to global shared/types folder
 
 export const authService = {
   login: async (data: LoginSchema): Promise<LoginResponse> => {
-    const res = await fetch('http://localhost:3000/auth/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-      credentials: 'include',
-    });
+    const res = await api.post('/auth/login', data);
 
-    const responseData = await res.json();
-
-    if (!res.ok) {
-      throw new Error(responseData.error || 'Login failed');
-    }
-
-    return responseData;
+    return res.data;
   },
 
   setup2FA: async (userId: number) => {
-    const res = await fetch('http://localhost:3000/auth/2fa/setup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId }),
-    });
-    return res.json();
+    const res = await api.post('/auth/2fa/setup', { userId });
+
+    return res.data;
   },
 
   verify2FA: async (
     userId: number | null,
     otp: string
   ): Promise<LoginResponse> => {
-    const res = await fetch('http://localhost:3000/auth/2fa/verify-setup', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, token: otp }),
-      credentials: 'include',
+    const res = await api.post('/auth/2fa/verify-setup', {
+      userId,
+      token: otp,
     });
 
-    const responseData = await res.json();
-
-    if (!res.ok) {
-      throw new Error(responseData.error || '2FA failed');
-    }
-
-    return responseData;
+    return res.data;
   },
 
   login2FA: async (
     userId: number | null,
     otp: string
   ): Promise<LoginResponse> => {
-    const res = await fetch('http://localhost:3000/auth/2fa/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ userId, token: otp }),
-      credentials: 'include',
-    });
+    const res = await api.post('/auth/2fa/login', { userId, token: otp });
 
-    const responseData = await res.json();
-
-    if (!res.ok) {
-      throw new Error(responseData.error || '2FA failed');
-    }
-
-    return responseData;
+    return res.data;
   },
 
   reset2FA: async () => {
-    const res = await fetch('http://localhost:3000/auth/2fa/reset', {
-      method: 'POST',
-      credentials: 'include', // send cookies
-    });
+    const res = await api.post('/auth/2fa/reset');
 
-    if (!res.ok) {
-      throw new Error('Failed to reset 2FA');
-    }
-
-    return res.json(); // { message, qrCode }
+    return res.data;
   },
 
   fetchCurrentUser: async (): Promise<UserResponse> => {
-    const res = await fetch('http://localhost:3000/auth/me', {
-      method: 'GET',
-      credentials: 'include', // include cookies
-    });
-
-    const responseData = await res.json();
+    const res = await api.get('/auth/me');
 
     if (res.status === 401) {
       //  auto logout if unauthorized
@@ -98,36 +54,21 @@ export const authService = {
       throw new Error('Session expired. Please log in again.');
     }
 
-    if (!res.ok) {
-      throw new Error(responseData.error || 'Not Authenticated');
-    }
-
-    return responseData;
+    return res.data;
   },
 
   logoutUser: async () => {
-    const res = await fetch('http://localhost:3000/auth/logout', {
-      method: 'POST',
-      credentials: 'include', //
-    });
+    const res = await api.post('/auth/logout');
 
-    if (!res.ok) {
-      throw new Error('Logout failed');
-    }
-
-    return res.json();
+    return res.data;
   },
 
   refreshSession: async (): Promise<{
     success: string;
     tokenExpiry: number;
   }> => {
-    const res = await fetch('http://localhost:3000/auth/refresh', {
-      method: 'POST',
-      credentials: 'include',
-    });
+    const res = await api.post('/auth/refresh');
 
-    if (!res.ok) throw new Error('Failed to refresh session');
-    return res.json();
+    return res.data;
   },
 };
