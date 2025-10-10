@@ -7,9 +7,10 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { TrendingUp, Banknote, ArrowDownCircle, Target } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export const QuickActions = ({ ...props }) => {
+  const navigate = useNavigate();
   return (
     <Card {...props}>
       <CardHeader>
@@ -17,32 +18,37 @@ export const QuickActions = ({ ...props }) => {
         <CardDescription>Quick access to common tasks</CardDescription>
       </CardHeader>
       <CardContent className='flex flex-col gap-4'>
-        <Button size='lg' className='justify-start gap-3 px-4'>
-          <Link
-            to='/employee/contributions'
-            className='flex items-center gap-4'
-          >
-            <TrendingUp />
-            <span>View Contributions</span>
-          </Link>
+        <Button
+          size='lg'
+          className='flex items-center justify-start gap-4 px-4'
+          onClick={() => navigate('/employee/contributions')}
+        >
+          <TrendingUp />
+          <span>View Contributions</span>
         </Button>
-        <Button size='lg' className='justify-start gap-3 px-4'>
-          <Link to='/employee/projection' className='flex items-center gap-4'>
-            <Target />
-            <span>Project Fund Growth</span>
-          </Link>
+        <Button
+          size='lg'
+          className='gap- flex items-center justify-start px-4'
+          onClick={() => navigate('/employee/projection')}
+        >
+          <Target />
+          <span>Project Fund Growth</span>
         </Button>
-        <Button size='lg' className='justify-start gap-3 px-4'>
-          <Link to='/employee/loans' className='flex items-center gap-4'>
-            <Banknote />
-            <span>Request Loan</span>
-          </Link>
+        <Button
+          size='lg'
+          className='flex items-center justify-start gap-4 px-4'
+          onClick={() => navigate('/employee/loans')}
+        >
+          <Banknote />
+          <span>Request Loan</span>
         </Button>
-        <Button size='lg' className='justify-start gap-3 px-4'>
-          <Link to='/employee/withdrawals' className='flex items-center gap-4'>
-            <ArrowDownCircle />
-            <span>Request Withdrawal</span>
-          </Link>
+        <Button
+          size='lg'
+          className='flex items-center justify-start gap-4 px-4'
+          onClick={() => navigate('/employee/withdrawals')}
+        >
+          <ArrowDownCircle />
+          <span>Request Withdrawal</span>
         </Button>
       </CardContent>
     </Card>
