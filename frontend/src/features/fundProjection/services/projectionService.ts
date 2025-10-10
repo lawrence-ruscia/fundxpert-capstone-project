@@ -1,21 +1,11 @@
-import type { ProjectionSchema } from '../pages/FundProjectionPage';
+import { api } from '@/shared/api/api';
+import type { ProjectionSchema } from '../components/ProjectionParameters';
 import type { ProjectionResponse } from '../types/projectionTypes';
 
 export const projectionService = {
   async getProjection(formData: ProjectionSchema): Promise<ProjectionResponse> {
-    const res = await fetch('http://localhost:3000/employee/projection', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(formData),
-      credentials: 'include',
-    });
+    const res = await api.post('/employee/projection', formData);
 
-    const responseData = await res.json();
-
-    if (!res.ok) {
-      throw new Error(responseData.error || 'Login failed');
-    }
-
-    return responseData;
+    return res.data;
   },
 };
