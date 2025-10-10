@@ -7,11 +7,9 @@ import type {
 
 export const hrContributionsService = {
   async findEmployeeByEmployeeId(employeeId: string) {
-    const res = await fetch(`/hr/employees/lookup/${employeeId}`, {
-      credentials: 'include',
-    });
-    if (!res.ok) throw new Error('Employee not found');
-    return res.json();
+    const res = await api.get(`/hr/employees/lookup/${employeeId}`);
+
+    return res.data();
   },
 
   async getEmployeeByContributionId(contributionId: number) {
