@@ -59,7 +59,7 @@ export default function AdminDashboardPage() {
     setIsRefreshing(false);
   };
 
-  if (loading) {
+  if (loading && !stats) {
     return <LoadingSpinner text=' Loading system overview...' />;
   }
 
@@ -81,7 +81,7 @@ export default function AdminDashboardPage() {
     <div className=''>
       {/* Header */}
       <div className='mb-8'>
-        <div className='flex items-start justify-between'>
+        <div className='flex flex-wrap items-start justify-between gap-4'>
           <div>
             <h1 className='text-3xl font-bold tracking-tight'>
               System Overview
@@ -92,7 +92,7 @@ export default function AdminDashboardPage() {
           </div>
 
           {/* Refresh Controls */}
-          <div className='flex items-center gap-3'>
+          <div className='flex flex-wrap items-center gap-3'>
             {/* Auto-refresh Toggle */}
             <div className='flex items-center gap-2 rounded-lg border px-3 py-2'>
               <div className='flex items-center gap-2'>

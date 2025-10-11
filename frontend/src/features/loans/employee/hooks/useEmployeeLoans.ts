@@ -27,7 +27,9 @@ export const useEmployeeLoans = () => {
     if (loans.length === 0) return null;
 
     // First, look for Active loans
-    const activeLoan = loans.find(loan => loan.status === 'Active');
+    const activeLoan = loans.find(
+      loan => loan.status === 'Pending' || loan.status === 'Incomplete'
+    );
     if (activeLoan) return activeLoan;
 
     // Then, look for Approved loans

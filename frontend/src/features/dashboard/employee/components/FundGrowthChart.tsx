@@ -24,9 +24,12 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { useMemo, useState } from 'react';
-import { useEmployeeContributions } from '@/features/contributions/employee/hooks/useEmployeeContributions';
-import type { ContributionPeriod } from '@/features/contributions/shared/types/contributions';
+import { useMemo } from 'react';
+
+import type {
+  Contribution,
+  ContributionPeriod,
+} from '@/features/contributions/shared/types/contributions';
 
 export const description = 'An interactive area chart';
 
@@ -46,14 +49,16 @@ const chartConfig = {
   },
 };
 
-export function FundGrowthChart() {
+export function FundGrowthChart({
+  contributionsData,
+  timeRange,
+  setTimeRange,
+}: {
+  contributionsData: Contribution[];
+  timeRange: ContributionPeriod;
+  setTimeRange: (period: ContributionPeriod) => void;
+}) {
   const isMobile = useIsMobile();
-  const [timeRange, setTimeRange] = useState('year');
-  const {
-    data: contributionsData,
-    loading,
-    error,
-  } = useEmployeeContributions(timeRange as ContributionPeriod);
 
   const transformedData = useMemo(() => {
     if (!contributionsData) {
@@ -135,38 +140,6 @@ export function FundGrowthChart() {
     }
     return 0;
   }, [contributionsData]);
-
-  if (loading) {
-    return (
-      <Card className='@container/card'>
-        <CardHeader>
-          <CardTitle>Provident Fund Growth</CardTitle>
-          <CardDescription>Loading chart data...</CardDescription>
-        </CardHeader>
-        <CardContent className='px-2 pt-4 sm:px-6 sm:pt-6'>
-          <div className='flex h-[350px] items-center justify-center'>
-            <div className='text-muted-foreground'>Loading...</div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card className='@container/card'>
-        <CardHeader>
-          <CardTitle>Provident Fund Growth</CardTitle>
-          <CardDescription>Error loading chart data</CardDescription>
-        </CardHeader>
-        <CardContent className='px-2 pt-4 sm:px-6 sm:pt-6'>
-          <div className='flex h-[350px] items-center justify-center'>
-            <div className='text-destructive'>Failed to load data</div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <Card className='@container/card'>
