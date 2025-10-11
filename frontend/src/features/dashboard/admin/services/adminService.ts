@@ -1,6 +1,6 @@
 import { api } from '@/shared/api/api';
-import type { AuditLog, Role, User } from '@/shared/types/User';
 import type { EmploymentStatus } from '../../employee/types/employeeOverview';
+import type { AuditLog, Role, User } from '@/shared/types/user';
 
 /**
  * Fetch all users with optional filters (role, status, search)
@@ -80,5 +80,15 @@ export async function resetUserPassword(
  */
 export async function getAuditLogs(): Promise<AuditLog[]> {
   const res = await api.get('/admin/logs');
+  return res.data.logs;
+}
+
+export async function getAdminStats() {
+  const res = await api.get('/admin/stats');
+  return res.data;
+}
+
+export async function getRecentAuditLogs(limit = 10) {
+  const res = await api.get(`/admin/logs?limit=${limit}`);
   return res.data.logs;
 }

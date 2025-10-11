@@ -5,6 +5,7 @@ import speakeasy from 'speakeasy';
 import qrcode from 'qrcode';
 import jwt, { type JwtPayload } from 'jsonwebtoken';
 import { isAuthenticatedRequest } from './employeeControllers.js';
+import { logUserAction } from '../services/adminService.js';
 
 export async function register(req: Request, res: Response) {
   try {
@@ -28,7 +29,7 @@ export async function register(req: Request, res: Response) {
 export async function login(req: Request, res: Response) {
   try {
     const { email, password } = req.body.data ?? req.body;
-    const result = await authService.loginUser(email, password);
+    const result = await authService.loginUser(email, password, req.ip);
 
     if ('twofaSetupRequired' in result) {
       return res.json(result); // { twofaSetupRequired: true, userId }
@@ -197,6 +198,11 @@ export async function loginWith2FA(req: Request, res: Response) {
       maxAge: expiresInMs,
     });
 
+    await logUserAction(user.id, 'Successful Login', 'Auth', 'System', {
+      details: { role: user.role },
+      ipAddress: req.ip ?? '::1',
+    });
+
     return res.json({
       message: '2FA login successfull',
       user: {
@@ -275,11 +281,23 @@ export async function getCurrentUser(req: Request, res: Response) {
 }
 
 export async function logout(req: Request, res: Response) {
+  if (!isAuthenticatedRequest(req)) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  const userId = req.user.id;
+  const role = req.user.role;
+
   // Clear the JWT cookie
   res.clearCookie('token', {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict',
+  });
+
+  await logUserAction(userId, 'Successful Logout', 'Auth', 'System', {
+    details: { role },
+    ipAddress: req.ip ?? '::1',
   });
 
   res.json({ message: 'Logged out successfully' });

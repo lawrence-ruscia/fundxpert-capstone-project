@@ -18,6 +18,8 @@ import {
   searchHR,
 } from '../services/hrService.js';
 import type { HRContributionPeriod } from '../types/hrTypes.js';
+import { logUserAction } from '../services/adminService.js';
+import { isAuthenticatedRequest } from './employeeControllers.js';
 
 // Overview
 export async function getOverviewHandler(req: Request, res: Response) {
@@ -96,7 +98,27 @@ export async function getPendingWithdrawalsHandler(
 
 export async function createEmployeeHandler(req: Request, res: Response) {
   try {
+    if (!isAuthenticatedRequest(req)) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
     const employee = await createEmployee(req.body);
+
+    await logUserAction(
+      req.user.id,
+      'Created employee',
+      'UserManagement',
+      'HR',
+      {
+        targetId: Number(employee.id),
+        details: {
+          department: employee.department,
+          position: employee.position,
+        },
+        ipAddress: req.ip ?? '::1',
+      }
+    );
+
     res.status(201).json(employee);
   } catch (err) {
     res.status(400).json({ error: (err as Error).message });
@@ -142,8 +164,28 @@ export async function getEmployeeByIdHandler(req: Request, res: Response) {
 
 export async function updateEmployeeHandler(req: Request, res: Response) {
   try {
+    if (!isAuthenticatedRequest(req)) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
     const employee = await updateEmployee(Number(req.params.id), req.body);
     if (!employee) return res.status(404).json({ error: 'Employee not found' });
+
+    await logUserAction(
+      req.user.id,
+      'Updated employee',
+      'UserManagement',
+      'HR',
+      {
+        targetId: Number(employee.id),
+        details: {
+          changedFields: Object.keys(req.body),
+        },
+
+        ipAddress: req.ip ?? '::1',
+      }
+    );
+
     res.json(employee);
   } catch (err) {
     res.status(400).json({ error: (err as Error).message });
@@ -152,8 +194,23 @@ export async function updateEmployeeHandler(req: Request, res: Response) {
 
 export async function deleteEmployeeHandler(req: Request, res: Response) {
   try {
+    if (!isAuthenticatedRequest(req)) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
     const employee = await deleteEmployee(Number(req.params.id));
     if (!employee) return res.status(404).json({ error: 'Employee not found' });
+
+    await logUserAction(
+      req.user.id,
+      'Deleted employee',
+      'UserManagement',
+      'HR',
+      {
+        targetId: Number(req.params.id),
+        ipAddress: req.ip ?? '::1',
+      }
+    );
+
     res.json(employee);
   } catch (err) {
     res.status(400).json({ error: (err as Error).message });
@@ -165,11 +222,28 @@ export async function resetEmployeePasswordHandler(
   res: Response
 ) {
   try {
+    if (!isAuthenticatedRequest(req)) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
     const result = await resetEmployeePassword(
       Number(req.params.id),
       req.body.generatedTempPassword
     );
+
     if (!result) return res.status(404).json({ error: 'Employee not found' });
+
+    await logUserAction(
+      req.user.id,
+      'Reset employee password',
+      'System',
+      'HR',
+      {
+        targetId: Number(req.params.id),
+
+        ipAddress: req.ip ?? '::1',
+      }
+    );
 
     // Send temp password back to HR (they will relay securely to employee)
     res.json({
@@ -187,11 +261,30 @@ export async function updateEmploymentStatusHandler(
   res: Response
 ) {
   try {
+    if (!isAuthenticatedRequest(req)) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+
     const employee = await updateEmploymentStatus(
       Number(req.params.id),
       req.body.status
     );
+
     if (!employee) return res.status(404).json({ error: 'Employee not found' });
+
+    await logUserAction(
+      req.user.id,
+      'Update employee employment status',
+      'UserManagement',
+      'HR',
+      {
+        targetId: Number(req.params.id),
+        details: {
+          updatedStatus: req.body.status,
+        },
+        ipAddress: req.ip ?? '::1',
+      }
+    );
     res.json(employee);
   } catch (err) {
     res.status(400).json({ error: (err as Error).message });

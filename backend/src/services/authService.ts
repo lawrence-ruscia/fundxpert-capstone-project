@@ -63,7 +63,8 @@ export async function registerUser(
 
 export async function loginUser(
   email: string,
-  password: string
+  password: string,
+  ipAddress?: string | null
 ): Promise<LoginResponse> {
   // 1. Find User
   const user = await findUserByEmail(email);
@@ -81,7 +82,7 @@ export async function loginUser(
   );
 
   if (!isValidPassword) {
-    await handleFailedLoginAttempt(user);
+    await handleFailedLoginAttempt(user, ipAddress);
   }
   // validate temp pass expiry
   if (user.temp_password) {

@@ -6,6 +6,7 @@ import {
   MAX_FAILED_ATTEMPTS,
   PASSWORD_EXPIRY_DAYS,
 } from '../../config/security.config.js';
+import { logUserAction } from '../adminService.js';
 
 export const findUserByEmail = async (email: string): Promise<User | null> => {
   const result = await pool.query(`SELECT * FROM users WHERE email = $1`, [
@@ -48,7 +49,10 @@ export const validateTemporaryPassword = (user: User) => {
   }
 };
 
-export const handleFailedLoginAttempt = async (user: User): Promise<never> => {
+export const handleFailedLoginAttempt = async (
+  user: User,
+  ipAddress?: string | null
+): Promise<never> => {
   const failedAttempts = user.failed_attempts + 1;
 
   if (failedAttempts >= MAX_FAILED_ATTEMPTS) {
@@ -57,6 +61,17 @@ export const handleFailedLoginAttempt = async (user: User): Promise<never> => {
     await pool.query(
       `UPDATE users SET failed_attempts = $1, locked_until = $2 WHERE id = $3`,
       [failedAttempts, lockedUntil, user.id]
+    );
+
+    await logUserAction(
+      user.id,
+      'Account locked due to failed attempts',
+      'Auth',
+      'System',
+      {
+        details: { role: user.role },
+        ipAddress: ipAddress ?? '::1',
+      }
     );
 
     throw new Error(
@@ -68,6 +83,11 @@ export const handleFailedLoginAttempt = async (user: User): Promise<never> => {
     failedAttempts,
     user.id,
   ]);
+
+  await logUserAction(user.id, 'Failed Login Attempt', 'Auth', 'System', {
+    details: { role: user.role, failedAttempts },
+    ipAddress: ipAddress ?? '::1',
+  });
 
   throw new Error(
     `Invalid email or password. ${MAX_FAILED_ATTEMPTS - failedAttempts} attempts left.`

@@ -2,18 +2,28 @@ import bcrypt from 'bcryptjs';
 import { pool } from '../config/db.config.js';
 import { generateTempPassword } from '../utils/generateTempPassword.js';
 
-// Utility function for logging admin actions
-export async function logAdminAction(
-  adminId: number,
+export async function logUserAction(
+  userId: number,
   action: string,
-  targetId?: number,
-  details?: Record<string, unknown> | null,
-  ipAddres?: string
+  category: 'Auth' | 'UserManagement' | 'System',
+  performed_by_role: 'Admin' | 'HR' | 'Employee' | 'System',
+  meta: {
+    targetId?: number | null;
+    details?: Record<string, unknown> | null;
+    ipAddress?: string | null;
+  }
 ) {
   await pool.query(
-    `INSERT INTO audit_logs (user_id, action, target_id, details, ip_address)
-     VALUES ($1, $2, $3, $4, $5)`,
-    [adminId, action, targetId || null, details || null, ipAddres || null]
+    `INSERT INTO audit_logs (user_id, category, action, target_id, details, ip_address)
+     VALUES ($1, $2, $3, $4, $5, $6)`,
+    [
+      userId,
+      category,
+      action,
+      meta.targetId || null,
+      meta.details || null,
+      meta.ipAddress || null,
+    ]
   );
 }
 
@@ -159,4 +169,45 @@ export async function getAuditLogs() {
   );
 
   return rows;
+}
+
+export async function getAdminStats() {
+  const query = `
+    WITH user_counts AS (
+      SELECT 
+        COUNT(*) AS total_users,
+        COUNT(*) FILTER (WHERE employment_status = 'Active') AS active_users,
+        COUNT(*) FILTER (WHERE locked_until > NOW()) AS locked_accounts,
+        COUNT(*) FILTER (WHERE temp_password = TRUE) AS temp_password_users
+      FROM users
+    ),
+    role_distribution AS (
+      SELECT role, COUNT(*) AS count FROM users GROUP BY role
+    ),
+    login_activity AS (
+      SELECT 
+        DATE(timestamp) AS date,
+        SUM(CASE WHEN action = 'Successful Login' THEN 1 ELSE 0 END) AS success_count,
+        SUM(CASE WHEN action = 'Failed Login Attempt' THEN 1 ELSE 0 END) AS failed_count
+      FROM audit_logs
+      WHERE timestamp >= NOW() - INTERVAL '7 days'
+      GROUP BY DATE(timestamp)
+      ORDER BY DATE(timestamp)
+    ),
+    recent_admin_actions AS (
+      SELECT user_id, action, details, timestamp
+      FROM audit_logs
+      WHERE category = 'UserManagement'
+      ORDER BY timestamp DESC
+      LIMIT 10
+    )
+    SELECT 
+     (SELECT row_to_json(uc) FROM user_counts uc) AS user_summary,
+      (SELECT json_agg(role_distribution) FROM role_distribution) AS role_summary,
+      (SELECT json_agg(login_activity) FROM login_activity) AS login_trends,
+      (SELECT json_agg(recent_admin_actions) FROM recent_admin_actions) AS recent_actions;
+  `;
+
+  const { rows } = await pool.query(query);
+  return rows[0];
 }

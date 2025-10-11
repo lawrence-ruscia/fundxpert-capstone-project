@@ -5,8 +5,9 @@ import {
   updateUserHandler,
   toggleLockUserHandler,
   resetUserPasswordHandler,
-  getAuditLogsHandler,
   getUserByIdHandler,
+  getAdminStatsHandler,
+  getAuditLogsHandler,
 } from '../controllers/adminController.js';
 import { authMiddleware } from '../middleware/authMiddleware.js';
 
@@ -20,3 +21,4 @@ adminRouter.patch('/users/:userId', updateUserHandler);
 adminRouter.post('/users/:userId/lock', toggleLockUserHandler);
 adminRouter.post('/users/:userId/reset-password', resetUserPasswordHandler);
 adminRouter.get('/logs', getAuditLogsHandler);
+adminRouter.get('/stats', getAdminStatsHandler);

@@ -1,9 +1,10 @@
 import {
   createUser,
+  getAdminStats,
   getAllUsers,
   getAuditLogs,
   getUserById,
-  logAdminAction,
+  logUserAction,
   resetUserPassword,
   toggleLockuser,
   updateUser,
@@ -81,7 +82,19 @@ export async function createUserHandler(req: Request, res: Response) {
       role
     )) as Partial<User>;
 
-    await logAdminAction(req.user.id, 'Created user', user.id, { role });
+    await logUserAction(
+      req.user.id,
+      'Created user',
+      'UserManagement',
+      'Admin',
+      {
+        targetId: Number(user.id),
+        details: {
+          role,
+        },
+        ipAddress: req.ip ?? '::1',
+      }
+    );
 
     res.status(201).json({ user });
   } catch (err) {
@@ -109,15 +122,19 @@ export async function updateUserHandler(req: Request, res: Response) {
 
     await updateUser(userId ?? '', role, employment_status);
 
-    await logAdminAction(
+    await logUserAction(
       req.user.id,
       'Updated user',
-      Number(userId),
+      'UserManagement',
+      'Admin',
       {
-        role,
-        employment_status,
-      },
-      req.ip
+        targetId: Number(userId),
+        details: {
+          role,
+          employment_status,
+        },
+        ipAddress: req.ip ?? '::1',
+      }
     );
 
     res.json({ success: true });
@@ -142,12 +159,15 @@ export async function toggleLockUserHandler(req: Request, res: Response) {
 
     await toggleLockuser(userId ?? '', locked);
 
-    await logAdminAction(
+    await logUserAction(
       req.user.id,
       locked ? 'Locked account' : 'Unlocked account',
-      Number(userId),
-      null,
-      req.ip
+      'System',
+      'Admin',
+      {
+        targetId: Number(userId),
+        ipAddress: req.ip ?? '::1',
+      }
     );
 
     res.json({ success: true });
@@ -171,13 +191,10 @@ export async function resetUserPasswordHandler(req: Request, res: Response) {
 
     const tempPassword = await resetUserPassword(userId ?? '');
 
-    await logAdminAction(
-      req.user.id,
-      'Reset password',
-      Number(userId),
-      null,
-      req.ip
-    );
+    await logUserAction(req.user.id, 'Reset password', 'System', 'Admin', {
+      targetId: Number(userId),
+      ipAddress: req.ip ?? '::1',
+    });
 
     res.json({ success: true, tempPassword });
   } catch (err) {
@@ -192,15 +209,26 @@ export async function resetUserPasswordHandler(req: Request, res: Response) {
  */
 export async function getAuditLogsHandler(req: Request, res: Response) {
   try {
-    if (!isAuthenticatedRequest(req) || req.user.role !== 'Admin') {
-      return res.status(403).json({ error: 'Forbidden' });
-    }
-
     const logs = await getAuditLogs();
 
     res.json({ logs });
   } catch (err) {
     console.error('❌ Error fetching audit logs:', err);
-    res.status(500).json({ error: 'Failed to fetch logs' });
+    res.status(500).json({ error: 'Failed to fetch audit logs' });
+  }
+}
+
+/**
+ * GET /admin/stats
+ * Returns summary statistics for dashboard cards
+ */
+export async function getAdminStatsHandler(req: Request, res: Response) {
+  try {
+    const stats = await getAdminStats();
+
+    return res.json(stats);
+  } catch (err) {
+    console.error('❌ Error fetching admin stats:', err);
+    return res.status(500).json({ error: 'Failed to fetch system stats' });
   }
 }

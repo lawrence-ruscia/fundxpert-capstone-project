@@ -29,7 +29,7 @@ import { hrWithdrawalRouter } from './routes/hrWithdrawalRoutes.js';
 import { adminRouter } from './routes/adminRoutes.js';
 
 // To return client's true IP
-// app.set('trust proxy', true);
+app.set('trust proxy', true);
 
 // Auth routes
 app.use('/auth', authRouter);

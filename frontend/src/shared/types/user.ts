@@ -19,6 +19,8 @@ export type Role = User['role'];
 export interface AuditLog {
   id: number;
   user_id?: number | null;
+  category: 'Auth' | 'UserManagement' | 'System';
+  performed_by_role: 'Admin' | 'HR' | 'Employee' | 'System';
   action: string;
   target_id?: number | null;
   ip_address?: string | null;
