@@ -14,7 +14,7 @@ import type { Request, Response } from 'express';
 
 /**
  * GET /admin/users
- * List all users (filter by role, status, or search)
+ * List all users (fil`ter by role, status, or search)
  */
 export async function getAllUsersHandler(req: Request, res: Response) {
   try {

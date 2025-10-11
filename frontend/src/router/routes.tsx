@@ -31,6 +31,7 @@ import { RequireAccess } from '@/features/loans/hr/components/RequireAccess';
 import { LoanReviewPage } from '@/features/loans/hr/pages/LoanReviewPage';
 import { WithdrawalsDashboardPage } from '@/features/withdrawals/hr/pages/WithdrawalsDashboard';
 import WithdrawalDetailsPage from '@/features/withdrawals/hr/pages/WithdrawalDetailsPage';
+import AdminLayout from '@/shared/layout/AdminLayout';
 
 export const router = createBrowserRouter([
   {
@@ -149,12 +150,18 @@ export const router = createBrowserRouter([
   },
 
   {
-    path: '/admin-dashboard',
+    path: '/admin',
     element: (
       <ProtectedRoute allowedRoles={['Admin']}>
-        <AdminDashboard />
+        <AdminLayout />
       </ProtectedRoute>
     ),
+    children: [
+      {
+        index: true,
+        element: <AdminDashboard />,
+      },
+    ],
   },
 
   {

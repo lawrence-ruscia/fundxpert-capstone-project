@@ -34,7 +34,7 @@ export default function ProtectedRoute({
       case 'HR':
         return <Navigate to='/hr' replace />;
       case 'Admin':
-        return <Navigate to='/admin-dashboard' replace />;
+        return <Navigate to='/admin' replace />;
       default:
         return <Navigate to='/employee' replace />;
     }

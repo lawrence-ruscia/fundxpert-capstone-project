@@ -21,5 +21,9 @@ export default function AuthRedirect({ children }: AuthRedirectProps) {
     return <Navigate to='/hr' replace />;
   }
 
+  if (user && user.role === 'Admin') {
+    return <Navigate to='/admin' replace />;
+  }
+
   return <>{children}</>;
 }

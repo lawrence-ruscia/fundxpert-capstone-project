@@ -399,6 +399,8 @@ async function createRandomUser(role) {
       logInfo: `Email: ${email}, Password: HRPass123!`,
     };
   } else if (role === 'Admin') {
+    const prefix = String(Math.floor(Math.random() * 99)).padStart(2, '0');
+    const suffix = String(Math.floor(10000 + Math.random() * 90000));
     email = `admin.${lastName.toLowerCase()}@metrobank.com.ph`;
 
     userData = {
@@ -407,7 +409,7 @@ async function createRandomUser(role) {
       password_hash: await bcrypt.hash('AdminPass123!', 10), // Permanent password for testing
       role: 'Admin',
       date_hired: '2020-01-10',
-      employee_id: `A-${Math.floor(10000 + Math.random() * 90000)}`,
+      employee_id: `${prefix}-${suffix}`,
       temp_password: false,
       temp_password_expires: null,
       salary: getRandomSalary(80000, 200000),

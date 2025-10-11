@@ -35,7 +35,6 @@ export const hrSidebarData: SidebarData = {
           url: '/hr/contributions',
           icon: PiggyBank,
         },
-
         {
           title: 'Loans',
           url: '/hr/loans',
