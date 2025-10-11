@@ -12,7 +12,6 @@ import {
   Users,
   Lock,
   KeyRound,
-  Shield,
   BarChart3,
   TrendingUp,
 } from 'lucide-react';
@@ -22,46 +21,22 @@ import { BalanceCard } from '../../employee/components/BalanceCard';
 import { RoleDistribution } from '../components/RoleDistribution';
 import { RecentActions } from '../components/RecentActions';
 import { LoginTrendsChart } from '../components/LoginTrendsChart';
+import { DataError } from '@/shared/components/DataError';
+import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
 
 export default function AdminDashboardPage() {
   const { data: stats, loading } = useApi<AdminStats | null>(getAdminStats);
 
   if (loading) {
-    return (
-      <div className='container px-4 py-8'>
-        <div className='flex min-h-[400px] items-center justify-center'>
-          <Card className='mx-auto max-w-md'>
-            <CardContent className='flex items-center justify-center py-12'>
-              <div className='flex flex-col items-center gap-4'>
-                <div className='border-primary h-8 w-8 animate-spin rounded-full border-b-2' />
-                <span className='text-muted-foreground text-sm'>
-                  Loading system overview...
-                </span>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
-    );
+    return <LoadingSpinner text=' Loading system overview...' />;
   }
 
   if (!stats) {
     return (
-      <div className='container px-4 py-8'>
-        <div className='flex min-h-[400px] items-center justify-center'>
-          <Card className='mx-auto max-w-md'>
-            <CardContent className='py-12 text-center'>
-              <Shield className='text-destructive mx-auto mb-4 h-12 w-12' />
-              <p className='text-destructive mb-2 text-sm font-medium'>
-                Failed to load admin dashboard
-              </p>
-              <p className='text-muted-foreground text-xs'>
-                Please try refreshing the page or contact support
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+      <DataError
+        title='Failed to load admin dashboard'
+        message='Please try refreshing the page or contact support'
+      />
     );
   }
 
@@ -71,7 +46,7 @@ export default function AdminDashboardPage() {
   const recent_actions = stats.recent_actions ?? [];
 
   return (
-    <div className='container'>
+    <div className=''>
       {/* Header */}
       <div className='mb-8'>
         <h1 className='text-3xl font-bold tracking-tight'>System Overview</h1>
