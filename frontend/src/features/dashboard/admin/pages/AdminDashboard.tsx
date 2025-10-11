@@ -29,9 +29,14 @@ import { useCallback, useState } from 'react';
 import { useAutoRefresh } from '@/shared/hooks/useAuthRefresh';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
+import { usePersistedState } from '@/shared/hooks/usePersistedState';
 
 export default function AdminDashboardPage() {
-  const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true);
+  const [autoRefreshEnabled, setAutoRefreshEnabled] = usePersistedState(
+    'admin-dashboard-auto-refresh',
+    true // default value
+  );
+
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const fetchStats = useCallback(async () => {

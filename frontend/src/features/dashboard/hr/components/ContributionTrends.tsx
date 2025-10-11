@@ -22,11 +22,13 @@ import {
 } from '@/components/ui/select';
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 import { AreaChart } from 'recharts';
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import { CartesianGrid, XAxis, YAxis, Area } from 'recharts';
-import type { HRContributionPeriod } from '../types/hrDashboardTypes';
+import type {
+  HRContributionPeriod,
+  HRContributionsResponse,
+} from '../types/hrDashboardTypes';
 import { useIsMobile } from '@/shared/hooks/use-mobile';
-import { useContributionTrends } from '../hooks/useContributionTrends';
 
 const chartConfig = {
   employee: {
@@ -43,11 +45,16 @@ const chartConfig = {
   },
 };
 
-export function ContributionTrends() {
+export function ContributionTrends({
+  contributions,
+  timeRange,
+  setTimeRange,
+}: {
+  contributions: HRContributionsResponse;
+  timeRange: HRContributionPeriod;
+  setTimeRange: (period: HRContributionPeriod) => void;
+}) {
   const isMobile = useIsMobile();
-  const [timeRange, setTimeRange] = useState<HRContributionPeriod>('year');
-
-  const { data: contributions, loading, error } = useContributionTrends('all');
 
   const transformedData = useMemo(() => {
     if (!contributions?.contributions) {
@@ -137,38 +144,6 @@ export function ContributionTrends() {
         return 'Current Year';
     }
   };
-
-  if (loading) {
-    return (
-      <Card className='@container/card'>
-        <CardHeader>
-          <CardTitle>Provident Fund Growth</CardTitle>
-          <CardDescription>Loading chart data...</CardDescription>
-        </CardHeader>
-        <CardContent className='px-2 pt-4 sm:px-6 sm:pt-6'>
-          <div className='flex h-[350px] items-center justify-center'>
-            <div className='text-muted-foreground'>Loading...</div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  if (error) {
-    return (
-      <Card className='@container/card'>
-        <CardHeader>
-          <CardTitle>Provident Fund Growth</CardTitle>
-          <CardDescription>Error loading chart data</CardDescription>
-        </CardHeader>
-        <CardContent className='px-2 pt-4 sm:px-6 sm:pt-6'>
-          <div className='flex h-[350px] items-center justify-center'>
-            <div className='text-destructive'>Failed to load data</div>
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <Card className='@container/card'>
