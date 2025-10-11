@@ -27,33 +27,45 @@ export async function logUserAction(
   );
 }
 
-export async function getAllUsers(
-  role?: string | null,
-  status?: string | null,
-  search?: string | null
-) {
+export async function getAllUsers(query: {
+  role?: string | null;
+  status?: string | null;
+  search?: string | null;
+  startDate?: string | null;
+  endDate?: string | null;
+}) {
   const params: unknown[] = [];
   const filters: string[] = [];
 
-  if (role) {
-    params.push(role);
+  if (query.role) {
+    params.push(query.role);
     filters.push(`role = $${params.length}`);
   }
 
-  if (status) {
-    params.push(status);
+  if (query.status) {
+    params.push(query.status);
     filters.push(`employment_status = $${params.length}`);
   }
 
-  if (search) {
-    params.push(`%${search}%`);
+  if (query.search) {
+    params.push(`%${query.search}%`);
     filters.push(
       `(name ILIKE $${params.length} OR email ILIKE $${params.length} OR employee_id ILIKE $${params.length})`
     );
   }
 
-  const query = `
-      SELECT u.id, u.employee_id, u.name, u.email, u.role, u.employment_status, d.name AS department, p.title AS position, u.created_at
+  if (query.startDate) {
+    params.push(query.startDate);
+    filters.push(`u.created_at >= $${params.length}`);
+  }
+
+  if (query.endDate) {
+    params.push(query.endDate);
+    filters.push(`u.created_at <= $${params.length}`);
+  }
+
+  const sqlquery = `
+      SELECT u.id, u.employee_id, u.name, u.email, u.role, u.employment_status, u.failed_attempts, u.locked_until, u.password_expired, u.temp_password, u.is_twofa_enabled, u.password_last_changed, u.created_at, u.last_login, d.name AS department, p.title AS position
       FROM users u 
       LEFT JOIN departments d ON u.department_id = d.id
       LEFT JOIN positions p ON u.position_id = p.id
@@ -61,7 +73,7 @@ export async function getAllUsers(
       ORDER BY created_at DESC
     `;
 
-  const { rows } = await pool.query(query, params);
+  const { rows } = await pool.query(sqlquery, params);
   return rows;
 }
 
@@ -209,5 +221,17 @@ export async function getAdminStats() {
   `;
 
   const { rows } = await pool.query(query);
+  return rows[0];
+}
+
+export async function getUserSummary() {
+  const query = `SELECT 
+        COUNT(*) AS total_users,
+        COUNT(*) FILTER (WHERE employment_status = 'Active') AS active_users,
+        COUNT(*) FILTER (WHERE (locked_until AT TIME ZONE 'UTC') >= NOW()) AS locked_accounts,
+        COUNT(*) FILTER (WHERE temp_password = TRUE) AS temp_password_users
+      FROM users`;
+  const { rows } = await pool.query(query);
+
   return rows[0];
 }

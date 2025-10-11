@@ -198,6 +198,15 @@ export async function loginWith2FA(req: Request, res: Response) {
       maxAge: expiresInMs,
     });
 
+    await pool.query(
+      `UPDATE users 
+     SET last_login = NOW(),
+         failed_attempts = 0,
+         locked_until = NULL
+     WHERE id = $1`,
+      [userId]
+    );
+
     await logUserAction(user.id, 'Successful Login', 'Auth', 'System', {
       details: { role: user.role },
       ipAddress: req.ip ?? '::1',

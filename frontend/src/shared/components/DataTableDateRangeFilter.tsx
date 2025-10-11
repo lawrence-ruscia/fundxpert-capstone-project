@@ -109,7 +109,7 @@ export function DataTableDateRangeFilter<TData>({
           <div className='space-y-2'>
             <h4 className='leading-none font-medium'>{title}</h4>
             <p className='text-muted-foreground text-sm'>
-              Set a date range to filter contributions
+              Set a date range to filter {title.toLowerCase()}
             </p>
           </div>
 

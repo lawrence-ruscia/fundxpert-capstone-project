@@ -2,6 +2,7 @@ import type { EmploymentStatus } from '@/features/dashboard/employee/types/emplo
 
 export interface User {
   id: number;
+  // Employement fields
   employee_id: string;
   name: string;
   email: string;
@@ -11,6 +12,14 @@ export interface User {
   salary: number;
   employment_status: EmploymentStatus;
   date_hired: string;
+
+  // Security fields
+  failed_attempts: number;
+  locked_until?: string | null;
+  password_expired: boolean;
+  temp_password: boolean;
+  is_twofa_enabled: boolean;
+  passsword_last_changed?: string | null;
   created_at: string;
 }
 
@@ -29,3 +38,5 @@ export interface AuditLog {
 
   actor_name: string;
 }
+
+export type AccountStatus = 'Locked' | 'Temp Password' | 'Expired' | 'Active';

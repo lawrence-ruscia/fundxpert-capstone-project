@@ -1,0 +1,54 @@
+import { Ellipsis } from 'lucide-react';
+import { type Row } from '@tanstack/react-table';
+import { UserPen } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuShortcut,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { useContributions } from './ContributionsProvider.js';
+import type { Contribution } from '../../shared/types/contributions.js';
+import { useNavigate } from 'react-router-dom';
+
+type DataTableRowActionsProps = {
+  row: Row<Contribution>;
+};
+
+export function UsersTableRowActions({
+  row,
+}: DataTableRowActionsProps) {
+  const { setOpen, setCurrentRow } = useContributions();
+  const navigate = useNavigate();
+  return (
+    <>
+      <DropdownMenu modal={false}>
+        <DropdownMenuTrigger asChild>
+          <Button
+            variant='ghost'
+            className='data-[state=open]:bg-muted flex h-8 w-8 p-0'
+          >
+            <Ellipsis className='h-4 w-4' />
+            <span className='sr-only'>Open menu</span>
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align='end' className='w-[160px]'>
+          <DropdownMenuItem
+            onClick={() => {
+              setCurrentRow(row.original);
+              setOpen('edit');
+              navigate(`/admin/detail/${row.original.id}/edit`);
+            }}
+          >
+            Manage
+            <DropdownMenuShortcut>
+              <UserPen size={16} />
+            </DropdownMenuShortcut>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </>
+  );
+}

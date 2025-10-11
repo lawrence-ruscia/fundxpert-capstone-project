@@ -32,6 +32,7 @@ import { LoanReviewPage } from '@/features/loans/hr/pages/LoanReviewPage';
 import { WithdrawalsDashboardPage } from '@/features/withdrawals/hr/pages/WithdrawalsDashboard';
 import WithdrawalDetailsPage from '@/features/withdrawals/hr/pages/WithdrawalDetailsPage';
 import AdminLayout from '@/shared/layout/AdminLayout';
+import AdminUserManagementPage from '@/features/userManagement/pages/AdminUserManagementPage';
 
 export const router = createBrowserRouter([
   {
@@ -160,6 +161,10 @@ export const router = createBrowserRouter([
       {
         index: true,
         element: <AdminDashboard />,
+      },
+      {
+        path: 'users',
+        element: <AdminUserManagementPage />,
       },
     ],
   },

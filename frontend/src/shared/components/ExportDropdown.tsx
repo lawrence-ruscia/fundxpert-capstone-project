@@ -19,20 +19,15 @@ import {
 
 type ExportType = 'csv' | 'xlsx' | 'pdf';
 
-interface ExportDropdownProps {
-  onExport: (type: ExportType) => Promise<void> | void;
+export interface ExportDropdownProps {
+  onExport: (type: ExportType) => Promise<void>;
   disabled?: boolean;
   className?: string;
-  variant?:
-    | 'default'
-    | 'outline'
-    | 'secondary'
-    | 'ghost'
-    | 'link'
-    | 'destructive';
+  variant?: 'default' | 'outline' | 'ghost' | 'secondary';
   size?: 'default' | 'sm' | 'lg' | 'icon';
   showLabel?: boolean;
   label?: string;
+  enablePdf?: boolean; // Add this prop
 }
 
 export function ExportDropdown({
@@ -43,6 +38,7 @@ export function ExportDropdown({
   size = 'default',
   showLabel = true,
   label = 'Export',
+  enablePdf = false, // Default to false
 }: ExportDropdownProps) {
   const [isExporting, setIsExporting] = useState<ExportType | null>(null);
 
@@ -57,7 +53,7 @@ export function ExportDropdown({
     }
   };
 
-  const exportOptions = [
+  const allExportOptions = [
     {
       type: 'csv' as const,
       label: 'Export as CSV',
@@ -75,8 +71,14 @@ export function ExportDropdown({
       label: 'Export as PDF',
       description: 'Portable document format',
       icon: FileText,
+      enabled: enablePdf, // Add enabled flag
     },
   ];
+
+  // Filter options based on enabled flag
+  const exportOptions = allExportOptions.filter(
+    option => option.enabled !== false
+  );
 
   return (
     <DropdownMenu>
@@ -108,7 +110,6 @@ export function ExportDropdown({
         {exportOptions.map(option => {
           const Icon = option.icon;
           const isCurrentlyExporting = isExporting === option.type;
-
           return (
             <DropdownMenuItem
               key={option.type}

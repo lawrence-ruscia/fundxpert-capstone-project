@@ -4,6 +4,7 @@ import {
   getAllUsers,
   getAuditLogs,
   getUserById,
+  getUserSummary,
   logUserAction,
   resetUserPassword,
   toggleLockuser,
@@ -15,7 +16,7 @@ import type { Request, Response } from 'express';
 
 /**
  * GET /admin/users
- * List all users (fil`ter by role, status, or search)
+ * List all users (fil`ter by ro  , status, or search)
  */
 export async function getAllUsersHandler(req: Request, res: Response) {
   try {
@@ -23,13 +24,15 @@ export async function getAllUsersHandler(req: Request, res: Response) {
       return res.status(403).json({ error: 'Forbidden' });
     }
 
-    const { role, status, search } = req.query;
+    const { role, status, search, startDate, endDate } = req.query;
 
-    const users = await getAllUsers(
-      role?.toString(),
-      status?.toString(),
-      search?.toString()
-    );
+    const users = await getAllUsers({
+      role: role?.toString(),
+      status: status?.toString(),
+      search: search?.toString(),
+      startDate: startDate?.toString(),
+      endDate: endDate?.toString(),
+    });
 
     res.json({ users });
   } catch (err) {
@@ -230,5 +233,16 @@ export async function getAdminStatsHandler(req: Request, res: Response) {
   } catch (err) {
     console.error('❌ Error fetching admin stats:', err);
     return res.status(500).json({ error: 'Failed to fetch system stats' });
+  }
+}
+
+export async function getUserSummaryHandler(req: Request, res: Response) {
+  try {
+    const summary = await getUserSummary();
+
+    return res.json(summary);
+  } catch (err) {
+    console.error('❌ Error fetching user summary:', err);
+    return res.status(500).json({ error: 'Failed to fetch user summary' });
   }
 }

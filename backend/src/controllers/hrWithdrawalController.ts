@@ -603,6 +603,21 @@ export async function exportWithdrawalsCSVController(
       'This report is generated directly from the system database',
     ]);
 
+    csvData.push(['']); // Empty row
+
+    csvData.push(['LEGAL NOTICE']);
+    csvData.push([
+      'This report contains confidential user information and financial data.',
+    ]);
+    csvData.push([
+      '',
+      'Unauthorized access, disclosure, or distribution is strictly prohibited.',
+    ]);
+    csvData.push([
+      '',
+      'All access to this document is logged and monitored for compliance purposes.',
+    ]);
+
     // Convert to CSV format
     const parser = new Json2CsvParser({
       fields: undefined,
@@ -721,6 +736,21 @@ export async function exportWithdrawalsExcelController(
       cover.addRow(['REPORT SCOPE']);
       cover.addRow(['Coverage:', 'All Employees']);
       cover.addRow(['Total Records:', withdrawals.length]);
+
+      cover.addRow(['']);
+      cover.addRow(['LEGAL NOTICE']);
+      cover.addRow([
+        '',
+        'This report contains confidential user information and financial data.',
+      ]);
+      cover.addRow([
+        '',
+        'Unauthorized access, disclosure, or distribution is strictly prohibited.',
+      ]);
+      cover.addRow([
+        '',
+        'All access to this document is logged and monitored for compliance purposes.',
+      ]);
 
       // Get unique employee count
       const uniqueEmployees = new Set(withdrawals.map(l => l.employee_id)).size;

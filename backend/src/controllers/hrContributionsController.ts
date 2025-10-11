@@ -390,6 +390,21 @@ export async function exportContributionsCSVController(
       'This report is generated directly from the system database',
     ]);
 
+    csvData.push(['']); // Empty row
+
+    csvData.push(['LEGAL NOTICE']);
+    csvData.push([
+      'This report contains confidential user information and financial data.',
+    ]);
+    csvData.push([
+      '',
+      'Unauthorized access, disclosure, or distribution is strictly prohibited.',
+    ]);
+    csvData.push([
+      '',
+      'All access to this document is logged and monitored for compliance purposes.',
+    ]);
+
     // Convert to CSV format
     const parser = new Json2CsvParser({
       fields: undefined, // Let it auto-detect
@@ -534,6 +549,21 @@ export async function exportContributionsExcelController(
     if (!isSingleEmployee) {
       cover.addRow(['Total Records:', contributions.length]);
     }
+
+    cover.addRow(['']);
+    cover.addRow(['LEGAL NOTICE']);
+    cover.addRow([
+      '',
+      'This report contains confidential user information and financial data.',
+    ]);
+    cover.addRow([
+      '',
+      'Unauthorized access, disclosure, or distribution is strictly prohibited.',
+    ]);
+    cover.addRow([
+      '',
+      'All access to this document is logged and monitored for compliance purposes.',
+    ]);
 
     // Style cover sheet
     cover.getRow(1).font = { bold: true, size: 16 };
@@ -1481,7 +1511,7 @@ export async function searchEmployeesController(req: Request, res: Response) {
     res.status(500).json({ error: 'Failed to search employees' });
   }
 }
- 
+
 export async function getEmployeeContributionSummary(
   req: Request,
   res: Response
@@ -1493,7 +1523,7 @@ export async function getEmployeeContributionSummary(
     if (!summary) {
       return res.status(404).json({ error: 'No contributions found' });
     }
- 
+
     res.json(summary);
   } catch (err) {
     console.error('Error fetching contribution summary:', err);
