@@ -29,6 +29,7 @@ export default function EmployeeDashboardPage() {
       />
     );
 
+  // TODO: show a “Refresh” or “Sync” button beside a “Last updated at” timestamp.
   return (
     <>
       <div className='mb-2 flex flex-wrap items-center justify-between space-y-2'>

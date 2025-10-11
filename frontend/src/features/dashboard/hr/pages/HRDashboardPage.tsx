@@ -14,6 +14,9 @@ export const HRDashboardPage = () => {
   if (error) return <NetworkError message={error} />;
 
   const { overview, assignedLoans: assignedLoans } = data;
+
+  // TODO: show a “Refresh” or “Sync” button beside a “Last updated at” timestamp.
+  // TODO: Auto-refresh interval of 3–5 minutes works best (configurable toggle).
   return (
     <div>
       {/* Header */}

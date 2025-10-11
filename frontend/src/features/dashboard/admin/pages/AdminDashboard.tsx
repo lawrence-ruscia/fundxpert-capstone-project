@@ -14,18 +14,45 @@ import {
   KeyRound,
   BarChart3,
   TrendingUp,
+  RefreshCw,
+  Timer,
+  AlertCircle,
 } from 'lucide-react';
 import { getAdminStats } from '../services/adminService';
-import { useApi } from '@/shared/hooks/useApi';
 import { BalanceCard } from '../../employee/components/BalanceCard';
 import { RoleDistribution } from '../components/RoleDistribution';
 import { RecentActions } from '../components/RecentActions';
 import { LoginTrendsChart } from '../components/LoginTrendsChart';
 import { DataError } from '@/shared/components/DataError';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
+import { useCallback, useState } from 'react';
+import { useAutoRefresh } from '@/shared/hooks/useAuthRefresh';
+import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 
 export default function AdminDashboardPage() {
-  const { data: stats, loading } = useApi<AdminStats | null>(getAdminStats);
+  const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const fetchStats = useCallback(async () => {
+    return await getAdminStats();
+  }, []);
+
+  const {
+    data: stats,
+    loading,
+    refresh,
+    lastUpdated,
+  } = useAutoRefresh<AdminStats>(fetchStats, {
+    interval: 300000, // 5 minutes
+    enabled: autoRefreshEnabled,
+  });
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await refresh();
+    setIsRefreshing(false);
+  };
 
   if (loading) {
     return <LoadingSpinner text=' Loading system overview...' />;
@@ -49,11 +76,81 @@ export default function AdminDashboardPage() {
     <div className=''>
       {/* Header */}
       <div className='mb-8'>
-        <h1 className='text-3xl font-bold tracking-tight'>System Overview</h1>
-        <p className='text-muted-foreground mt-2'>
-          Monitor user activity, roles, and system health
-        </p>
+        <div className='flex items-start justify-between'>
+          <div>
+            <h1 className='text-3xl font-bold tracking-tight'>
+              System Overview
+            </h1>
+            <p className='text-muted-foreground mt-2'>
+              Monitor user activity, roles, and system health
+            </p>
+          </div>
+
+          {/* Refresh Controls */}
+          <div className='flex items-center gap-3'>
+            {/* Auto-refresh Toggle */}
+            <div className='flex items-center gap-2 rounded-lg border px-3 py-2'>
+              <div className='flex items-center gap-2'>
+                <Timer className='text-muted-foreground h-4 w-4' />
+                <span className='text-sm font-medium'>Auto-refresh</span>
+              </div>
+              <Switch
+                checked={autoRefreshEnabled}
+                onCheckedChange={setAutoRefreshEnabled}
+                aria-label='Toggle auto-refresh'
+              />
+            </div>
+
+            {/* Last Updated */}
+            {lastUpdated && (
+              <div className='text-muted-foreground text-right text-sm'>
+                <p className='font-medium'>Last updated</p>
+                <p className='text-xs'>
+                  {lastUpdated.toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </p>
+              </div>
+            )}
+
+            {/* Manual Refresh Button */}
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className='gap-2'
+            >
+              <RefreshCw
+                className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
+              />
+              {isRefreshing ? 'Refreshing...' : 'Refresh'}
+            </Button>
+          </div>
+        </div>
+
+        {/* Auto-refresh Status Banner */}
+        {!autoRefreshEnabled && (
+          <div className='bg-muted/50 mt-4 flex items-center gap-2 rounded-lg border border-dashed px-4 py-2.5'>
+            <AlertCircle className='text-muted-foreground h-4 w-4' />
+            <p className='text-muted-foreground text-sm'>
+              Auto-refresh is disabled. Data will only update when manually
+              refreshed.
+            </p>
+          </div>
+        )}
       </div>
+
+      {/* Loading Overlay for Background Refresh */}
+      {loading && stats && (
+        <div className='bg-background/80 fixed inset-0 z-50 flex items-start justify-center pt-20 backdrop-blur-sm'>
+          <div className='bg-card flex items-center gap-2 rounded-lg border p-4 shadow-lg'>
+            <RefreshCw className='h-4 w-4 animate-spin' />
+            <span className='text-sm font-medium'>Updating data...</span>
+          </div>
+        </div>
+      )}
 
       <div className='space-y-6'>
         {/* Summary Cards */}
