@@ -87,8 +87,3 @@ export async function getAdminStats() {
   const res = await api.get('/admin/stats');
   return res.data;
 }
-
-export async function getRecentAuditLogs(limit = 10) {
-  const res = await api.get(`/admin/logs?limit=${limit}`);
-  return res.data.logs;
-}

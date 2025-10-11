@@ -177,7 +177,7 @@ export async function getAdminStats() {
       SELECT 
         COUNT(*) AS total_users,
         COUNT(*) FILTER (WHERE employment_status = 'Active') AS active_users,
-        COUNT(*) FILTER (WHERE locked_until > NOW()) AS locked_accounts,
+        COUNT(*) FILTER (WHERE (locked_until AT TIME ZONE 'UTC') >= NOW()) AS locked_accounts,
         COUNT(*) FILTER (WHERE temp_password = TRUE) AS temp_password_users
       FROM users
     ),
