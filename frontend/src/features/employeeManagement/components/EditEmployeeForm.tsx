@@ -122,7 +122,7 @@ export const EditEmployeeForm = ({ id }: EmployeeEditFormProps) => {
   const [tempPasswordGenerated, setTempPasswordGenerated] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const navigate = useNavigate();
-  
+
   const {
     data: optionsData,
     loading: optionsLoading,
@@ -678,7 +678,7 @@ export const EditEmployeeForm = ({ id }: EmployeeEditFormProps) => {
               {/* Form Actions */}
               <div className='flex flex-col gap-4 sm:flex-row sm:justify-between'>
                 <div className='flex flex-col gap-4 sm:flex-row'>
-                  <Button
+                  {/* <Button
                     type='button'
                     variant='destructive'
                     onClick={() => setDeleteDialogOpen(true)}
@@ -686,7 +686,7 @@ export const EditEmployeeForm = ({ id }: EmployeeEditFormProps) => {
                   >
                     <Trash2 className='mr-2 h-4 w-4' />
                     Delete Employee
-                  </Button>
+                  </Button> */}
                   <Button
                     type='button'
                     variant='secondary'
