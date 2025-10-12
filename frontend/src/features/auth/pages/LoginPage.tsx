@@ -1,7 +1,7 @@
 import { LoginForm } from '../components/LoginForm';
 import type { LoginSchema } from '../schemas/loginSchema';
 import { authService } from '../services/authService';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Card,
   CardContent,
@@ -18,6 +18,11 @@ const storeTwoFaInfo = (userId: number, twofa_mode: 'setup' | 'login') => {
   sessionStorage.setItem('twofa_userId', String(userId));
   sessionStorage.setItem('twofa_mode', twofa_mode);
 };
+
+const storeForceChangeInfo = (userId: number) => {
+  sessionStorage.setItem('forceChangeUserId', String(userId));
+};
+
 export const LoginPage = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -29,25 +34,34 @@ export const LoginPage = () => {
     try {
       const response: LoginResponse = await authService.login(data);
 
-      if ('twofaSetupRequired' in response) {
-        // Store userId for setup step
-        storeTwoFaInfo(response.userId, 'setup');
-        navigate('/auth/setup-2fa');
+      // Handle force password change
+      if ('forcePasswordChange' in response) {
+        storeForceChangeInfo(response.userId);
+        navigate('/auth/reset-password');
+        return;
       }
 
+      // Handle 2FA setup required
+      if ('twofaSetupRequired' in response) {
+        storeTwoFaInfo(response.userId, 'setup');
+        navigate('/auth/setup-2fa');
+        return;
+      }
+
+      // Handle 2FA verification required
       if ('twofaRequired' in response) {
-        // Existing 2FA enabled, go to OTP verification
         storeTwoFaInfo(response.userId, 'login');
         navigate('/auth/login-2fa');
         return;
       }
 
+      // Fully logged in (no 2FA or password change required)
       if ('user' in response) {
-        // Fully logged in (no 2FA at all or already completed)
         login(response.user, response.tokenExpiry);
         navigate('/', { replace: true });
       }
     } catch (err) {
+      console.error('Login:', err);
       setError('root', { message: (err as Error).message || 'Login failed' });
     }
   };

@@ -1,4 +1,4 @@
-import { ChevronsUpDown, LogOut, QrCode } from 'lucide-react';
+import { ChevronsUpDown, Key, KeyRound, LogOut, QrCode } from 'lucide-react';
 import useDialogState from '@/shared/hooks/useDialogState';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
@@ -18,6 +18,7 @@ import {
 import { SignOutDialog } from './sign-out-dialog';
 import { getInitials } from '@/utils/getInitials';
 import { ResetQRDialog } from './reset-qr-dialog';
+import { ResetPasswordDialog } from './reset-password-dialog';
 
 type NavUserProps = {
   user: {
@@ -29,7 +30,8 @@ type NavUserProps = {
 
 export function NavUser({ user }: NavUserProps) {
   const { isMobile } = useSidebar();
-  const [qrOpen, setQrOpen] = useDialogState();
+  const [resetOpen, setResetOpen] = useDialogState();
+  const [qrOpen, setQROpen] = useDialogState();
   const [signOutOpen, setSignOutOpen] = useDialogState();
 
   return (
@@ -79,7 +81,15 @@ export function NavUser({ user }: NavUserProps) {
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 className='cursor-pointer'
-                onClick={() => setQrOpen(true)}
+                onClick={() => setResetOpen(true)}
+              >
+                <KeyRound />
+                Reset Password
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem
+                className='cursor-pointer'
+                onClick={() => setQROpen(true)}
               >
                 <QrCode />
                 Reset QR / Re-bind 2FA
@@ -99,7 +109,8 @@ export function NavUser({ user }: NavUserProps) {
       </SidebarMenu>
 
       {/* Attach dialogs */}
-      <ResetQRDialog open={!!qrOpen} onOpenChange={setQrOpen} />
+      <ResetPasswordDialog open={!!resetOpen} onOpenChange={setResetOpen} />
+      <ResetQRDialog open={!!qrOpen} onOpenChange={setQROpen} />
       <SignOutDialog open={!!signOutOpen} onOpenChange={setSignOutOpen} />
     </>
   );

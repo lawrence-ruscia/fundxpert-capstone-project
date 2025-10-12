@@ -28,7 +28,14 @@ export type TwoFALoginResponse =
     }
   | { twofaSetupRequired: boolean; userId: number };
 
-export type LoginResponse = JWTLoginResponse | TwoFALoginResponse;
+export type TempPassLoginResponse = {
+  forcePasswordChange: boolean;
+  userId: number;
+};
+export type LoginResponse =
+  | JWTLoginResponse
+  | TwoFALoginResponse
+  | TempPassLoginResponse;
 
 export async function registerUser(
   employee_id: string,
@@ -84,9 +91,10 @@ export async function loginUser(
   if (!isValidPassword) {
     await handleFailedLoginAttempt(user, ipAddress);
   }
-  // validate temp pass expiry
+
   if (user.temp_password) {
-    validateTemporaryPassword(user);
+    // Skip 2FA setup for temp logins
+    return { forcePasswordChange: true, userId: user.id };
   }
 
   // 4. Password expiry check

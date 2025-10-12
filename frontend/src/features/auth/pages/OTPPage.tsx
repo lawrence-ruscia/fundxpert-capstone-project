@@ -13,6 +13,7 @@ import type { UseFormSetError } from 'react-hook-form';
 import type { OTPSchema } from '../schemas/otpSchema';
 import { useAuth } from '../context/AuthContext';
 import { BackButton } from '@/shared/components/back-button';
+import { toast } from 'sonner';
 
 export const OTPPage = () => {
   const { login } = useAuth();
@@ -45,8 +46,12 @@ export const OTPPage = () => {
         // Redirect to dashboard
         console.log('User is: ', response);
         navigate('/', { replace: true });
+        toast.success(
+          `Successfully logged in! Welcome back, ${response.user.name}!`
+        );
       }
     } catch (err) {
+      toast.error((err as Error).message || 'Invalid 2FA token.');
       setError('otp', {
         message: (err as Error).message || 'Invalid 2FA token.',
       });

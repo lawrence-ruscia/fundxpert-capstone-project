@@ -2,7 +2,7 @@ import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
 import SessionManager from './SessionManager';
-import { Toaster } from 'sonner';
+
 interface ProtectedRouteProps {
   children: React.ReactNode;
   allowedRoles?: ('Employee' | 'HR' | 'Admin')[];
@@ -43,7 +43,7 @@ export default function ProtectedRoute({
   return (
     <>
       <SessionManager />
-      <Toaster position='top-right' />
+
       {children}
     </>
   );

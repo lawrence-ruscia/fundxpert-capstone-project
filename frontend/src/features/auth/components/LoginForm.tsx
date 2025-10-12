@@ -5,92 +5,127 @@ import { PasswordInput } from './password-input';
 import { useForm, type UseFormSetError } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { loginSchema } from '../schemas/loginSchema';
+import { Link } from 'react-router-dom';
+import { AlertCircle, LogIn, Mail, Lock } from 'lucide-react';
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from '@/components/ui/form';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 type LoginFormProps = {
   onSubmit: (data: LoginSchema, setError: UseFormSetError<LoginSchema>) => void;
 };
 
 export const LoginForm = ({ onSubmit }: LoginFormProps) => {
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-    setError,
-  } = useForm<LoginSchema>({
+  const form = useForm<LoginSchema>({
     resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
   });
 
+  const handleFormSubmit = (data: LoginSchema) => {
+    onSubmit(data, form.setError);
+  };
+
   return (
-    <form
-      onSubmit={handleSubmit(data => onSubmit(data, setError))}
-      className='mx-auto flex max-w-3xl flex-col gap-4'
-    >
-      <div>
-        <div className='space-y-2'>
-          <label
-            id='emailLabel'
-            htmlFor='email'
-            className={`text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ${
-              errors.email ? 'text-red-500' : ''
-            }`}
-          >
-            Company Email *
-          </label>
-          <Input
-            id='email'
-            type='email'
-            placeholder='Your company email'
-            className={`mt-1 ${errors.email ? 'border-red-500' : ''}`}
-            {...register('email')}
-          />
-          {errors.email && (
-            <p className='text-sm font-medium text-red-500'>
-              {errors.email.message}
-            </p>
+    <Form {...form}>
+      <form
+        onSubmit={form.handleSubmit(handleFormSubmit)}
+        className='space-y-6'
+      >
+        {/* Root Error Alert */}
+        {form.formState.errors.root && (
+          <Alert variant='destructive'>
+            <AlertCircle className='h-4 w-4' />
+            <AlertDescription>
+              {form.formState.errors.root.message}
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {/* Email Field */}
+        <FormField
+          control={form.control}
+          name='email'
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel className='text-base font-medium'>
+                Company Email <span className='text-destructive'>*</span>
+              </FormLabel>
+              <FormControl>
+                <div className='relative'>
+                  <Mail className='text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2' />
+                  <Input
+                    type='email'
+                    placeholder='your.email@company.com'
+                    className='h-12 pl-10 text-base'
+                    {...field}
+                  />
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
           )}
-        </div>
-      </div>
-      <div>
-        <div className='space-y-2'>
-          <div className='flex items-center justify-between'>
-            <label
-              htmlFor='password'
-              className={`text-sm leading-none font-medium peer-disabled:cursor-not-allowed peer-disabled:opacity-70 ${
-                errors.password ? 'text-red-500' : ''
-              }`}
-            >
-              Password *
-            </label>
-            <a
-              href='#'
-              className='hover:text-primary ml-auto inline-block text-sm underline-offset-4 hover:underline'
-            >
-              Forgot your password?
-            </a>
-          </div>
+        />
 
-          <PasswordInput
-            className={`mt-1 ${errors.password ? 'border-red-500' : ''}`}
-            required
-            id='password'
-            placeholder='Your password'
-            {...register('password')}
-          />
-          {errors.password && (
-            <p className='text-sm font-medium text-red-500'>
-              {errors.password.message}
-            </p>
+        {/* Password Field */}
+        <FormField
+          control={form.control}
+          name='password'
+          render={({ field }) => (
+            <FormItem>
+              <div className='flex items-center justify-between'>
+                <FormLabel className='text-base font-medium'>
+                  Password <span className='text-destructive'>*</span>
+                </FormLabel>
+                <Link
+                  to='/auth/reset-password'
+                  className='text-primary text-sm underline-offset-4 hover:underline'
+                >
+                  Forgot password?
+                </Link>
+              </div>
+              <FormControl>
+                <div className='relative'>
+                  <Lock className='text-muted-foreground absolute top-1/2 left-3 z-10 h-4 w-4 -translate-y-1/2' />
+                  <PasswordInput
+                    placeholder='Enter your password'
+                    className='h-12 pl-10 text-base'
+                    {...field}
+                  />
+                </div>
+              </FormControl>
+              <FormMessage />
+            </FormItem>
           )}
-        </div>
-      </div>
+        />
 
-      <p className='text-sm font-medium text-red-500'>
-        {errors.root && errors.root.message}
-      </p>
-
-      <Button className='mt-1.5 w-full' type='submit' disabled={isSubmitting}>
-        Login
-      </Button>
-    </form>
+        {/* Submit Button */}
+        <Button
+          type='submit'
+          className='h-12 w-full text-base'
+          disabled={form.formState.isSubmitting}
+        >
+          {form.formState.isSubmitting ? (
+            <>
+              <div className='mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white' />
+              Signing in...
+            </>
+          ) : (
+            <>
+              <LogIn className='mr-2 h-4 w-4' />
+              Login
+            </>
+          )}
+        </Button>
+      </form>
+    </Form>
   );
 };

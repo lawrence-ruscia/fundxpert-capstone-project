@@ -31,6 +31,16 @@ export async function login(req: Request, res: Response) {
     const { email, password } = req.body.data ?? req.body;
     const result = await authService.loginUser(email, password, req.ip);
 
+    if ('forcePasswordChange' in result) {
+      // Temporary password login detected
+      return res.status(200).json({
+        forcePasswordChange: true,
+        userId: result.userId,
+        message:
+          'Temporary password detected. Please change your password before continuing.',
+      });
+    }
+
     if ('twofaSetupRequired' in result) {
       return res.json(result); // { twofaSetupRequired: true, userId }
     }
@@ -51,9 +61,14 @@ export async function login(req: Request, res: Response) {
 
 export async function resetPassword(req: Request, res: Response) {
   try {
-    console.log(req.body);
     const { userId, newPassword } = req.body;
     const result = await authService.resetPassword(userId, newPassword);
+
+    await logUserAction(userId, 'Successful Password Reset', 'Auth', 'System', {
+      details: { systemMessage: result.message },
+      ipAddress: req.ip ?? '::1',
+    });
+
     res.json(result);
   } catch (err) {
     res.status(400).json({ error: (err as Error).message });
@@ -163,6 +178,7 @@ export async function loginWith2FA(req: Request, res: Response) {
       'SELECT id, name, role, twofa_secret FROM users WHERE id = $1',
       [userId]
     );
+
     const user = rows[0];
     if (!user || !user.twofa_secret) {
       return res.status(400).json({ error: '2FA not enabled' });

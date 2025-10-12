@@ -35,6 +35,7 @@ import AdminLayout from '@/shared/layout/AdminLayout';
 import AdminUserManagementPage from '@/features/userManagement/pages/AdminUserManagementPage';
 import { SmartPollingProvider } from '@/shared/context/SmartPollingContext';
 import { GlobalPollingOverlay } from '@/shared/components/GlobalPollingOverlay';
+import { ResetPasswordPage } from '@/features/auth/pages/ResetPasswordPage';
 
 export const router = createBrowserRouter([
   {
@@ -66,6 +67,10 @@ export const router = createBrowserRouter([
         element: <Setup2FAPage />,
       },
       { index: true, element: <Navigate to='/auth/login' replace /> },
+      {
+        path: '/auth/reset-password',
+        element: <ResetPasswordPage />,
+      },
     ],
   },
   {

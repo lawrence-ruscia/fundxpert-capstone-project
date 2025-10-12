@@ -12,11 +12,13 @@ import {
 import { SignOutDialog } from './sign-out-dialog';
 import { useAuth } from '@/features/auth/context/AuthContext';
 import { getInitials } from '@/utils/getInitials';
-import { LogOut, QrCode } from 'lucide-react';
+import { KeyRound, LogOut, QrCode } from 'lucide-react';
 import { ResetQRDialog } from './reset-qr-dialog';
+import { ResetPasswordDialog } from './reset-password-dialog';
 
 export function ProfileDropdown() {
   const { user, loading } = useAuth();
+  const [resetOpen, setResetOpen] = useDialogState();
   const [qrOpen, setQrOpen] = useDialogState();
   const [signOutOpen, setSignOutOpen] = useDialogState();
 
@@ -45,6 +47,14 @@ export function ProfileDropdown() {
           <DropdownMenuSeparator />
           <DropdownMenuItem
             className='cursor-pointer'
+            onClick={() => setResetOpen(true)}
+          >
+            <KeyRound />
+            Reset Password
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            className='cursor-pointer'
             onClick={() => setQrOpen(true)}
           >
             <QrCode />
@@ -62,6 +72,7 @@ export function ProfileDropdown() {
         </DropdownMenuContent>
       </DropdownMenu>
 
+      <ResetPasswordDialog open={!!resetOpen} onOpenChange={setResetOpen} />
       <ResetQRDialog open={!!qrOpen} onOpenChange={setQrOpen} />
       <SignOutDialog open={!!signOutOpen} onOpenChange={setSignOutOpen} />
     </>

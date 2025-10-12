@@ -16,4 +16,12 @@ export type TwoFALoginResponse =
     }
   | { twofaSetupRequired: boolean; userId: number };
 
-export type LoginResponse = UserResponse | TwoFALoginResponse;
+export type TempPassLoginResponse = {
+  forcePasswordChange: boolean;
+  userId: number;
+};
+
+export type LoginResponse =
+  | UserResponse
+  | TwoFALoginResponse
+  | TempPassLoginResponse;
