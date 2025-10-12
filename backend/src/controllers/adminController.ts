@@ -6,7 +6,7 @@ import {
   getUserById,
   getUserSummary,
   logUserAction,
-  toggleLockuser,
+  toggleLockUser,
   updateUser,
 } from '../services/adminService.js';
 import { resetEmployeePassword } from '../services/hrService.js';
@@ -164,31 +164,96 @@ export async function updateUserHandler(req: Request, res: Response) {
 
 /**
  * POST /admin/users/:userId/lock
- * Lock or unlock account
+ * Lock or unlock user account with configurable duration
+ *
+ * Request body:
+ * - locked: boolean - whether to lock or unlock the account
+ * - duration?: number - lock duration in minutes (optional, defaults to 1440 = 24 hours)
+ * - lockUntil?: string - specific unlock date/time in ISO format (optional, overrides duration)
  */
 export async function toggleLockUserHandler(req: Request, res: Response) {
   try {
+    // Authorization check
     if (!isAuthenticatedRequest(req) || req.user.role !== 'Admin') {
       return res.status(403).json({ error: 'Forbidden' });
     }
 
     const { userId } = req.params;
-    const { locked } = req.body;
+    const { locked, duration, lockUntil } = req.body;
 
-    await toggleLockuser(userId ?? '', locked);
+    // Validation
+    if (typeof locked !== 'boolean') {
+      return res.status(400).json({ error: 'locked must be a boolean' });
+    }
 
+    if (!userId || isNaN(Number(userId))) {
+      return res.status(400).json({ error: 'Invalid userId' });
+    }
+
+    // Validate duration if provided
+    if (locked && duration !== undefined) {
+      if (typeof duration !== 'number' || duration <= 0) {
+        return res.status(400).json({
+          error: 'duration must be a positive number (in minutes)',
+        });
+      }
+      // Optional: Set a maximum lock duration (e.g., 1 year)
+      const MAX_DURATION_MINUTES = 365 * 24 * 60;
+      if (duration > MAX_DURATION_MINUTES) {
+        return res.status(400).json({
+          error: `duration cannot exceed ${MAX_DURATION_MINUTES} minutes (1 year)`,
+        });
+      }
+    }
+
+    // Validate lockUntil if provided
+    if (locked && lockUntil) {
+      const lockDate = new Date(lockUntil);
+      if (isNaN(lockDate.getTime())) {
+        return res.status(400).json({
+          error: 'lockUntil must be a valid ISO date string',
+        });
+      }
+      if (lockDate <= new Date()) {
+        return res.status(400).json({
+          error: 'lockUntil must be in the future',
+        });
+      }
+    }
+
+    // Execute lock/unlock
+    const result = await toggleLockUser(userId, locked, duration, lockUntil);
+
+    // Prepare audit log details
+    let actionDescription = locked ? 'Locked account' : 'Unlocked account';
+    const auditDetails: any = {
+      targetId: Number(userId),
+      ipAddress: req.ip ?? '::1',
+    };
+
+    if (locked && result.lockUntil) {
+      auditDetails.lockUntil = result.lockUntil.toISOString();
+      auditDetails.durationMinutes = duration;
+      actionDescription += ` until ${result.lockUntil.toISOString()}`;
+    }
+
+    // Log the action
     await logUserAction(
       req.user.id,
-      locked ? 'Locked account' : 'Unlocked account',
+      actionDescription,
       'System',
       'Admin',
-      {
-        targetId: Number(userId),
-        ipAddress: req.ip ?? '::1',
-      }
+      auditDetails
     );
 
-    res.json({ success: true });
+    res.json({
+      success: true,
+      locked: locked,
+      lockUntil: result.lockUntil?.toISOString() ?? null,
+      message: locked
+        ? `Account locked until ${result.lockUntil?.toLocaleString()}`
+        : 'Account unlocked',
+    });
   } catch (err) {
     console.error('❌ Error locking/unlocking user:', err);
     res.status(500).json({ error: 'Failed to lock/unlock account' });

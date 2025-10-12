@@ -105,3 +105,20 @@ export const getPositions = async (): Promise<PositionsResponse> => {
     throw new Error((err as Error).message || 'Failed to fetch positions');
   }
 };
+
+/**
+ * Lock or unlock a user account
+ */
+export async function toggleLockUser(
+  userId: string,
+  locked: boolean,
+  duration?: number,
+  lockUntil?: string
+) {
+  const res = await api.post(`/admin/users/${userId}/lock`, {
+    locked,
+    duration,
+    lockUntil,
+  });
+  return res.data;
+}

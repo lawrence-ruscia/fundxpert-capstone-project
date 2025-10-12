@@ -9,6 +9,7 @@ import { ThemeSwitch } from '../components/theme-switch';
 import { ProfileDropdown } from '../components/profile-dropdown';
 import { Main } from './Main';
 import { hrSidebarData } from '../data/hrSidebarData';
+import NavigationSetter from '../components/NavigationSetter';
 export default function HRLayout() {
   const defaultOpen = getCookie('sidebar_state') !== 'false';
   return (
@@ -38,6 +39,7 @@ export default function HRLayout() {
           </Header>
           {/* ===== Main ===== */}
           <Main>
+            <NavigationSetter />
             <Outlet />
           </Main>
         </SidebarInset>

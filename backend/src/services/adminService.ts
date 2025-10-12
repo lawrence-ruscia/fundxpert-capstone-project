@@ -81,8 +81,7 @@ export async function getAllUsers(query: {
 export async function getUserById(userId: number) {
   const query = `
       SELECT 
-        u.id, u.employee_id, u.name, u.email, u.role, u.employment_status, 
-        u.date_hired, u.salary, u.department_id, u.position_id,
+        u.*,
         d.name AS department, p.title AS position, u.created_at
       FROM users u 
       LEFT JOIN departments d ON u.department_id = d.id
@@ -209,8 +208,6 @@ export async function updateUser(
       );
     }
 
-    
-
     const { rows } = await client.query(query, values);
 
     await client.query('COMMIT');
@@ -233,15 +230,38 @@ export async function updateUser(
   }
 }
 
-export async function toggleLockuser(userId: string, locked: string) {
-  // Lock account for one day
-  const ONE_DAY_IN_MS = 24 * 60 * 60 * 1000;
-  const lockUntil = locked ? new Date(Date.now() + ONE_DAY_IN_MS) : null;
+interface LockUserResult {
+  lockUntil: Date | null;
+}
+
+export async function toggleLockUser(
+  userId: string,
+  locked: boolean,
+  durationMinutes?: number,
+  lockUntil?: string
+): Promise<LockUserResult> {
+  let lockUntilDate: Date | null = null;
+
+  if (locked) {
+    if (lockUntil) {
+      // Use specific date if provided
+      lockUntilDate = new Date(lockUntil);
+    } else {
+      // Use duration (default to 24 hours = 1440 minutes)
+      const duration = durationMinutes ?? 1440;
+      const durationMs = duration * 60 * 1000;
+      lockUntilDate = new Date(Date.now() + durationMs);
+    }
+  }
 
   await pool.query(
-    `UPDATE users SET locked_until = $2, updated_at = NOW() WHERE id = $1`,
-    [userId, lockUntil]
+    `UPDATE users 
+     SET locked_until = $2, updated_at = NOW() 
+     WHERE id = $1`,
+    [userId, lockUntilDate]
   );
+
+  return { lockUntil: lockUntilDate };
 }
 
 export async function getAuditLogs() {

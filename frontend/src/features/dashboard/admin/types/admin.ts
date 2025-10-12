@@ -29,3 +29,16 @@ export interface AdminStats {
   login_trends: LoginTrend[];
   recent_actions: RecentAction[];
 }
+
+export const LOCK_DURATIONS = {
+  ONE_HOUR: 60,
+  SIX_HOURS: 360,
+  TWELVE_HOURS: 720,
+  ONE_DAY: 1440,
+  THREE_DAYS: 4320,
+  ONE_WEEK: 10080,
+  ONE_MONTH: 43200,
+  THREE_MONTHS: 129600,
+  SIX_MONTHS: 259200,
+  ONE_YEAR: 525600,
+} as const;

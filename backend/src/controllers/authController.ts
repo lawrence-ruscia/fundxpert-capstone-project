@@ -338,7 +338,11 @@ export async function refreshSession(req: Request, res: Response) {
 
     // Generate JWT token right away
     const jwtToken = jwt.sign(
-      { id: req.user.id, role: req.user.role },
+      {
+        id: req.user.id,
+        role: req.user.role,
+        tokenVersion: req.user.tokenVersion,
+      },
       process.env.JWT_SECRET as string,
       { expiresIn: expiresInMs / 1000 } // seconds
     );

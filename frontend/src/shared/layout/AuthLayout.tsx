@@ -3,6 +3,7 @@ import background from '@/assets/login-background.png';
 import backgroundSmall from '@/assets/login-background-small.png';
 import Logo from '@/components/ui/logo';
 import { Outlet } from 'react-router-dom';
+import NavigationSetter from '../components/NavigationSetter';
 export const AuthLayout = () => {
   const isTablet = useBreakpoint('(min-width: 768px)');
   return (
@@ -17,6 +18,7 @@ export const AuthLayout = () => {
           <div className='mb-4 flex items-center justify-center'>
             <Logo className='mb-2' />
           </div>
+          <NavigationSetter />
           <Outlet />
         </div>
       </div>

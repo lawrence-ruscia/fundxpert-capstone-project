@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { z } from 'zod';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -35,6 +35,7 @@ import {
   Eye,
   EyeOff,
   Copy,
+  AlertCircle,
 } from 'lucide-react';
 import { CurrencyInput } from '@/shared/components/currency-input';
 
@@ -47,14 +48,15 @@ import {
   updateUser,
 } from '../services/usersManagementService.js';
 import { getUserById } from '@/features/dashboard/admin/services/adminService.js';
-import type { Role } from '@/shared/types/user.js';
+import { type Role, type User as UserType } from '@/shared/types/user.js';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner.js';
 import { DataError } from '@/shared/components/DataError.js';
-import { useMultiFetch } from '@/shared/hooks/useMultiFetch.js';
-import type {
-  DepartmentsResponse,
-  PositionsResponse,
-} from '@/features/employeeManagement/types/employeeTypes.js';
+
+import { LockUserDialog } from '../components/LockUserDialog.js';
+import { UnlockUserDialog } from '../components/UnlockUserDialog.js';
+import { ToggleLockButton } from '../components/ToggleLockButton.js';
+import { useSmartPolling } from '@/shared/hooks/useSmartPolling.js';
+import { usePersistedState } from '@/shared/hooks/usePersistedState.js';
 
 // Input schema for form validation
 const updateUserInputSchema = z.object({
@@ -126,28 +128,50 @@ type UpdateUserOutputData = z.infer<typeof updateUserOutputSchema>;
 
 export const AdminUpdateUserPage = () => {
   const { userId } = useParams();
-  const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [resettingPassword, setResettingPassword] = useState(false);
   const [showTempPassword, setShowTempPassword] = useState(false);
   const [tempPasswordGenerated, setTempPasswordGenerated] = useState(false);
-  const navigate = useNavigate();
+  const [actionLoading, setActionLoading] = useState(false);
+  const [openLock, setOpenLock] = useState(false);
+  const [openUnlock, setOpenUnlock] = useState(false);
 
-  const {
-    data: optionsData,
-    loading: optionsLoading,
-    error: optionsError,
-  } = useMultiFetch<{
-    departments: DepartmentsResponse;
-    positions: PositionsResponse;
-  }>(async () => {
-    const [departments, positions] = await Promise.all([
+  const [autoRefreshEnabled] = usePersistedState(
+    'admin-dashboard-auto-refresh',
+    true
+  );
+
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const fetchUsersData = useCallback(async () => {
+    const [departments, positions, user] = await Promise.all([
       getDepartments(),
       getPositions(),
+      getUserById(Number(userId)),
     ]);
 
-    return { departments, positions };
-  });
+    console.log('Locked: ', user.locked_until);
+
+    return { departments, positions, user };
+  }, [userId]);
+
+  const { data, loading, error, refresh, lastUpdated } = useSmartPolling(
+    fetchUsersData,
+    {
+      context: 'users',
+      enabled: autoRefreshEnabled,
+      pauseWhenHidden: true,
+      pauseWhenInactive: true,
+    }
+  );
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await refresh();
+    setIsRefreshing(false);
+  };
+
+  const navigate = useNavigate();
 
   const form = useForm<UpdateUserFormData>({
     resolver: zodResolver(updateUserInputSchema),
@@ -168,41 +192,30 @@ export const AdminUpdateUserPage = () => {
   // Watch the generateTempPassword field to enable/disable reset button
   const generatedTempPassword = form.watch('generateTempPassword');
 
+  // Update form when data changes
   useEffect(() => {
-    async function fetchUser() {
-      try {
-        setLoading(true);
-        const userData = await getUserById(Number(userId));
-        console.log('User data: ', userData);
-        // Format the data for the form
-        form.reset({
-          name: userData.name || '',
-          email: userData.email || '',
-          employee_id: userData.employee_id?.toString() || '',
-          role: (userData.role?.toString() as Role) || '',
-          department_id: userData.department_id?.toString() || '',
-          position_id: userData.position_id?.toString() || '',
-          salary: userData.salary?.toString() || '',
-          employment_status: userData.employment_status || 'Active',
-          date_hired: formatDateForInput(userData.date_hired),
-          generateTempPassword: '', // Always start empty
-        });
-      } catch (error) {
-        console.error('Failed to fetch user:', error);
-        toast.error('Failed to load user data');
-      } finally {
-        setLoading(false);
-      }
+    if (data?.user) {
+      form.reset({
+        name: data.user.name || '',
+        email: data.user.email || '',
+        employee_id: data.user.employee_id?.toString() || '',
+        role: (data.user.role?.toString() as Role) || '',
+        department_id: data.user.department_id?.toString() || '',
+        position_id: data.user.position_id?.toString() || '',
+        salary: data.user.salary?.toString() || '',
+        employment_status: data.user.employment_status || 'Active',
+        date_hired: formatDateForInput(data.user.date_hired ?? new Date()),
+        generateTempPassword: '', // Always start empty
+      });
     }
-    fetchUser();
-  }, [userId, form]);
+  }, [data, form]);
 
-  const onSubmit = async (data: UpdateUserFormData) => {
+  const onSubmit = async (formData: UpdateUserFormData) => {
     try {
       setSaving(true);
 
       const transformedData: UpdateUserOutputData =
-        updateUserOutputSchema.parse(data);
+        updateUserOutputSchema.parse(formData);
 
       await updateUser(Number(userId), {
         name: transformedData.name,
@@ -214,11 +227,11 @@ export const AdminUpdateUserPage = () => {
         salary: transformedData.salary,
         employment_status: transformedData.employment_status,
         date_hired: new Date(transformedData.date_hired),
-        generatedTempPassword: data.generateTempPassword || undefined, // Send temp password if generated
+        generatedTempPassword: formData.generateTempPassword || undefined,
       });
 
       navigate('/admin/users');
-      toast.success(`User ${data.employee_id} updated successfully`);
+      toast.success(`User ${formData.employee_id} updated successfully`);
     } catch (err) {
       console.error(err);
       toast.error('Failed to update user');
@@ -275,30 +288,90 @@ export const AdminUpdateUserPage = () => {
     generatedTempPassword && generatedTempPassword.trim().length > 0
   );
 
-  if (loading || optionsLoading) {
+  if (loading || !data) {
     return <LoadingSpinner text={'Loading user data...'} />;
   }
 
-  if (optionsError) {
+  if (error) {
     return <DataError />;
+  }
+
+  if (!data?.user) {
+    return <DataError message='User not found' />;
   }
 
   return (
     <div className='container px-4'>
+      {/* Header */}
       <div className='mb-8'>
-        <Button
-          variant='ghost'
-          size='sm'
-          onClick={() => navigate('/admin/users', { replace: true })}
-          className='p-2'
-        >
-          <ArrowLeft className='h-4 w-4' />
-        </Button>
+        <div>
+          <Button
+            variant='ghost'
+            size='sm'
+            onClick={() => navigate('/admin/users', { replace: true })}
+            className='p-2'
+          >
+            <ArrowLeft className='h-4 w-4' />
+          </Button>
+        </div>
+        <div className='flex flex-wrap items-start justify-between gap-4'>
+          <div className='flex flex-col gap-3'>
+            <div>
+              <h1 className='text-2xl font-bold tracking-tight'>Update User</h1>
+              <p className='text-muted-foreground'>
+                Update user information and their access levels
+              </p>
+            </div>
+          </div>
+          {/* Refresh Controls */}
+          <div className='flex flex-wrap items-center gap-3'>
+            {/* Last Updated */}
+            {lastUpdated && (
+              <div className='text-muted-foreground text-right text-sm'>
+                <p className='font-medium'>Last updated</p>
+                <p className='text-xs'>
+                  {lastUpdated.toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </p>
+              </div>
+            )}
+            {/* Manual Refresh Button */}
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className='gap-2'
+            >
+              <RefreshCw
+                className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
+              />
+              {isRefreshing ? 'Refreshing...' : 'Refresh'}
+            </Button>
+          </div>
+        </div>
+        {/* Auto-refresh Status Banner */}
+        {!autoRefreshEnabled && (
+          <div className='bg-muted/50 mt-4 mb-8 flex items-center gap-2 rounded-lg border border-dashed px-4 py-2.5'>
+            <AlertCircle className='text-muted-foreground h-4 w-4' />
+            <p className='text-muted-foreground text-sm'>
+              Auto-refresh is disabled. Data will only update when manually
+              refreshed.
+            </p>
+          </div>
+        )}
 
-        <h1 className='text-2xl font-bold tracking-tight'>Update User</h1>
-        <p className='text-muted-foreground'>
-          Update user information and their access levels
-        </p>
+        {/* Loading Overlay for Background Refresh */}
+        {loading && data && (
+          <div className='bg-background/80 fixed inset-0 z-50 flex items-start justify-center pt-20 backdrop-blur-sm'>
+            <div className='bg-card flex items-center gap-2 rounded-lg border p-4 shadow-lg'>
+              <RefreshCw className='h-4 w-4 animate-spin' />
+              <span className='text-sm font-medium'>Updating data...</span>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className='grid gap-8 lg:grid-cols-4'>
@@ -466,7 +539,7 @@ export const AdminUpdateUserPage = () => {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {optionsData?.departments?.map(dept => (
+                              {data?.departments?.map(dept => (
                                 <SelectItem
                                   key={dept.id}
                                   value={dept.id.toString()}
@@ -501,7 +574,7 @@ export const AdminUpdateUserPage = () => {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent>
-                              {optionsData?.positions?.map(pos => (
+                              {data?.positions?.map(pos => (
                                 <SelectItem
                                   key={pos.id}
                                   value={pos.id.toString()}
@@ -718,6 +791,12 @@ export const AdminUpdateUserPage = () => {
               {/* Form Actions */}
               <div className='flex flex-col gap-4 sm:flex-row sm:justify-between'>
                 <div className='flex flex-col gap-4 sm:flex-row'>
+                  <ToggleLockButton
+                    user={data.user}
+                    actionLoading={actionLoading}
+                    onLockClick={() => setOpenLock(true)}
+                    onUnlockClick={() => setOpenUnlock(true)}
+                  />
                   <Button
                     type='button'
                     variant='secondary'
@@ -826,6 +905,23 @@ export const AdminUpdateUserPage = () => {
           </Card>
         </div>
       </div>
+      <LockUserDialog
+        open={openLock}
+        onOpenChange={setOpenLock}
+        setActionLoading={setActionLoading}
+        userId={userId ?? ''}
+        userName={data?.user?.name}
+        refresh={refresh}
+      />
+      <UnlockUserDialog
+        open={openUnlock}
+        onOpenChange={setOpenUnlock}
+        setActionLoading={setActionLoading}
+        userId={userId ?? ''}
+        userName={data?.user?.name}
+        lockExpiresAt={data?.user?.locked_until}
+        refresh={refresh}
+      />
     </div>
   );
 };

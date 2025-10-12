@@ -1,6 +1,6 @@
 import type { EmploymentStatus } from '@/features/dashboard/employee/types/employeeOverview';
 
-export interface User {
+export type User = {
   id: number;
   // Employement fields
   employee_id: string;
@@ -23,7 +23,7 @@ export interface User {
   is_twofa_enabled: boolean;
   passsword_last_changed?: string | null;
   created_at: string;
-}
+};
 
 export type Role = User['role'];
 
