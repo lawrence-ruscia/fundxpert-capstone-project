@@ -25,7 +25,7 @@ export function useSessionWarning({
     const timeLeft = tokenExpiry - now;
 
     if (timeLeft <= 0) {
-      logout();
+      logout('Session Expired. Please log in again to continue');
       navigate('/auth/login', { replace: true });
       return;
     }
@@ -51,7 +51,7 @@ export function useSessionWarning({
       setCountdown(prev => {
         if (prev <= 1) {
           clearInterval(interval);
-          logout();
+          logout('Session Expired. Please log in again to continue');
           navigate('/auth/login', { replace: true });
           return 0;
         }
@@ -70,14 +70,14 @@ export function useSessionWarning({
       setShowModal(false);
       setCountdown(0);
     } catch {
-      logout();
+      logout('Session Expired. Please log in again to continue');
       navigate('/auth/login', { replace: true });
     }
   };
 
   // Force logout now
   const forceLogout = () => {
-    logout();
+    logout('Session Expired. Please log in again to continue');
     navigate('/auth/login', { replace: true }); // prevent user form hitting back button
   };
 

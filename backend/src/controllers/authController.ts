@@ -143,7 +143,7 @@ export async function verify2FASetup(req: Request, res: Response) {
 
     // Generate JWT token right away
     const jwtToken = jwt.sign(
-      { id: user.id, role: user.role },
+      { id: user.id, role: user.role, tokenVersion: user.token_version },
       process.env.JWT_SECRET as string,
       { expiresIn: expiresInMs / 1000 } // seconds
     );
@@ -175,7 +175,7 @@ export async function loginWith2FA(req: Request, res: Response) {
     const { userId, token } = req.body;
     // Fetch secret from DB
     const { rows } = await pool.query(
-      'SELECT id, name, role, twofa_secret FROM users WHERE id = $1',
+      'SELECT id, name, role, twofa_secret, token_version FROM users WHERE id = $1',
       [userId]
     );
 
@@ -201,7 +201,7 @@ export async function loginWith2FA(req: Request, res: Response) {
 
     // Generate JWT token right away
     const jwtToken = jwt.sign(
-      { id: user.id, role: user.role },
+      { id: user.id, role: user.role, tokenVersion: user.token_version },
       process.env.JWT_SECRET as string,
       { expiresIn: expiresInMs / 1000 } // seconds
     );

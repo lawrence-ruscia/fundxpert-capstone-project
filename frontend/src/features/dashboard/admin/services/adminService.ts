@@ -27,7 +27,7 @@ export async function getAllUsers(filters?: {
 export async function getUserById(userId: number): Promise<User> {
   const res = await api.get(`/admin/users/${userId}`);
 
-  return res.data;
+  return res.data.users;
 }
 
 /**
@@ -49,16 +49,6 @@ export async function updateUser(
  */
 export async function toggleLockUser(userId: number, locked: boolean) {
   const res = await api.post(`/admin/users/${userId}/lock`, { locked });
-  return res.data;
-}
-
-/**
- * Reset a user’s password — returns a temporary password
- */
-export async function resetUserPassword(
-  userId: number
-): Promise<{ success: boolean; tempPassword: string }> {
-  const res = await api.post(`/admin/users/${userId}/reset-password`);
   return res.data;
 }
 

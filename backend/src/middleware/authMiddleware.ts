@@ -16,23 +16,25 @@ export function authMiddleware(requiredRole?: string) {
 
     if (!token) return res.status(401).json({ error: 'No token provided' });
 
-    // TODO: Refactor and move to separate functions
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as {
         id: number;
         role: Role;
+        tokenVersion: number;
       };
 
       // Fetch user from DB (enrich context)
       const { rows } = await pool.query(
-        `SELECT id, name, email, role, password_last_changed, password_expired
+        `SELECT id, name, email, role, password_last_changed, password_expired, token_version 
          FROM users
          WHERE id = $1`,
         [decoded.id]
       );
 
       const user = rows[0];
-      if (!user) return res.status(401).json({ error: 'User not found' });
+
+      if (!user || user.token_version !== decoded.tokenVersion)
+        return res.status(401).json({ error: 'User not found' });
 
       // Check expiration
       if (isPasswordExpired(user)) {

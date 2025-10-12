@@ -1,8 +1,12 @@
+import type { EmploymentStatus } from '@/features/dashboard/employee/types/employeeOverview';
 import type {
   DepartmentsResponse,
+  UpdateEmployeeResponse,
   PositionsResponse,
+  ResetPassResponse,
 } from '@/features/employeeManagement/types/employeeTypes';
 import { api } from '@/shared/api/api';
+import type { Role } from '@/shared/types/user';
 
 export const createUser = async (payload: {
   name: string;
@@ -19,6 +23,39 @@ export const createUser = async (payload: {
   const res = await api.post('/admin/users', payload);
 
   return res.data;
+};
+
+export const updateUser = async (
+  userId: number,
+  payload: Partial<{
+    name: string;
+    email: string;
+    employee_id: string;
+    role: Role;
+    department_id: number;
+    position_id: number;
+    salary: number;
+    employment_status: EmploymentStatus;
+    date_hired: Date;
+    generatedTempPassword: string;
+  }>
+): Promise<UpdateEmployeeResponse> => {
+  console.log('Payload: ', payload);
+  const { data } = await api.patch(`/admin/users/${userId}`, payload);
+  return data;
+};
+
+/**
+ * Reset a user’s password — returns a temporary password
+ */
+export const resetUserPassword = async (
+  userId: number,
+  generatedTempPassword: string
+): Promise<ResetPassResponse> => {
+  const { data } = await api.put(`/admin/users/${userId}/reset-password`, {
+    generatedTempPassword,
+  });
+  return data;
 };
 
 export const exportUsersCSV = async (params?: {

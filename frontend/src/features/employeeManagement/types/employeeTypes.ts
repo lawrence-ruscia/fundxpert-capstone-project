@@ -44,7 +44,7 @@ export type HRCreateEmployeeResponse = {
   temp_password_expires: string;
 };
 
-export type HRUpdateEmployeeResponse = {
+export type UpdateEmployeeResponse = {
   id: number;
   name: string;
   email: string;
@@ -57,4 +57,4 @@ export type HRUpdateEmployeeResponse = {
   date_hired: string;
 };
 
-export type HRResetPassResponse = { tempPassword: string; expiresAt: string };
+export type ResetPassResponse = { tempPassword: string; expiresAt: string };

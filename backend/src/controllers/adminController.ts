@@ -6,10 +6,10 @@ import {
   getUserById,
   getUserSummary,
   logUserAction,
-  resetUserPassword,
   toggleLockuser,
   updateUser,
 } from '../services/adminService.js';
+import { resetEmployeePassword } from '../services/hrService.js';
 import type { User } from '../types/user.js';
 import { isAuthenticatedRequest } from './employeeControllers.js';
 import type { Request, Response } from 'express';
@@ -140,14 +140,8 @@ export async function updateUserHandler(req: Request, res: Response) {
       return res.status(403).json({ error: 'Forbidden' });
     }
 
-    const { userId } = req.params;
-    const { role, employment_status } = req.body;
-
-    if (!role && !employment_status) {
-      return res.status(400).json({ error: 'No update fields provided' });
-    }
-
-    await updateUser(userId ?? '', role, employment_status);
+    const user = await updateUser(Number(req.params.userId), req.body);
+    if (!user) return res.status(404).json({ error: 'User not found' });
 
     await logUserAction(
       req.user.id,
@@ -155,16 +149,13 @@ export async function updateUserHandler(req: Request, res: Response) {
       'UserManagement',
       'Admin',
       {
-        targetId: Number(userId),
-        details: {
-          role,
-          employment_status,
-        },
+        targetId: Number(user.id),
+        details: { changedFields: Object.keys(req.body) },
         ipAddress: req.ip ?? '::1',
       }
     );
 
-    res.json({ success: true });
+    res.json(user);
   } catch (err) {
     console.error('❌ Error updating user:', err);
     res.status(500).json({ error: 'Failed to update user' });
@@ -214,16 +205,22 @@ export async function resetUserPasswordHandler(req: Request, res: Response) {
       return res.status(403).json({ error: 'Forbidden' });
     }
 
-    const { userId } = req.params;
+    const result = await resetEmployeePassword(
+      Number(req.params.userId),
+      req.body.generatedTempPassword
+    );
+    if (!result) return res.status(404).json({ error: 'User not found' });
 
-    const tempPassword = await resetUserPassword(userId ?? '');
-
-    await logUserAction(req.user.id, 'Reset password', 'System', 'Admin', {
-      targetId: Number(userId),
+    await logUserAction(req.user.id, 'Reset user password', 'Auth', 'Admin', {
+      targetId: Number(req.params.id),
       ipAddress: req.ip ?? '::1',
     });
 
-    res.json({ success: true, tempPassword });
+    res.json({
+      message: 'Temporary password generated',
+      tempPassword: result.temp_password,
+      expiresAt: result.expires_at,
+    });
   } catch (err) {
     console.error('❌ Error resetting password:', err);
     res.status(500).json({ error: 'Failed to reset password' });

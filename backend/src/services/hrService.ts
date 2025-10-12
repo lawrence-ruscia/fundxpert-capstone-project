@@ -240,9 +240,14 @@ export async function updateEmployee(
     generatedTempPassword: string;
   }>
 ): Promise<UserResponse | null> {
+  const client = await pool.connect();
   try {
+    await client.query('BEGIN');
     const fields: string[] = [];
     const values: unknown[] = [id];
+
+    const sensitiveChange =
+      updates.generatedTempPassword || updates.employment_status;
 
     // Build SET clause dynamically
     let index = 2;
@@ -272,12 +277,23 @@ export async function updateEmployee(
       UPDATE users 
       SET ${fields.join(', ')}, updated_at = NOW()
       WHERE id = $1
-      RETURNING id, name, email, employee_id, department_id, position_id, salary, employment_status, date_hired;
+      RETURNING id, name, email, employee_id, role, department_id, position_id, salary, employment_status, date_hired;
     `;
 
-    const { rows } = await pool.query(query, values);
+    if (sensitiveChange) {
+      await client.query(
+        `UPDATE users SET token_version = token_version + 1 WHERE id = $1`,
+        [id]
+      );
+    }
+
+    const { rows } = await client.query(query, values);
+
+    await client.query('COMMIT');
     return rows[0] || null;
   } catch (err: unknown) {
+    await client.query('ROLLBACK');
+
     if (err.code === '23505') {
       // unique_violation
       if (err.detail.includes('employee_id')) {
@@ -288,9 +304,10 @@ export async function updateEmployee(
       }
     }
     throw err;
+  } finally {
+    client.release();
   }
 }
-
 export async function deleteEmployee(
   id: number
 ): Promise<{ success: boolean }> {
@@ -314,14 +331,23 @@ export async function resetEmployeePassword(
   generatedPassword: string
 ): Promise<{ temp_password: string; expires_at: Date } | null> {
   const hash = await bcrypt.hash(generatedPassword, 10);
-  const expiresAt = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000);
+  const expiresAt = new Date(Date.now()); // Immediately
 
   const query = `
     UPDATE users 
-    SET password_hash = $2, temp_password = true, temp_password_expires = $3
+    SET password_hash = $2, 
+        temp_password = true, 
+        temp_password_expires = $3, 
+        password_last_changed = NOW(),
+        updated_at = NOW()
     WHERE id = $1
     RETURNING id;
   `;
+
+  await pool.query(
+    `INSERT INTO password_history (user_id, password_hash) VALUES ($1, $2)`,
+    [id, hash]
+  );
 
   const { rows } = await pool.query(query, [id, hash, expiresAt]);
   if (!rows[0]) return null;

@@ -1,4 +1,4 @@
-import { Ellipsis } from 'lucide-react';
+import { Ellipsis, UserCog } from 'lucide-react';
 import { type Row } from '@tanstack/react-table';
 import { UserPen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,21 +6,20 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useContributions } from './ContributionsProvider.js';
-import type { Contribution } from '../../shared/types/contributions.js';
 import { useNavigate } from 'react-router-dom';
+import type { User } from '@/shared/types/user';
+import { useUsers } from './UsersProvider';
 
 type DataTableRowActionsProps = {
-  row: Row<Contribution>;
+  row: Row<User>;
 };
 
-export function UsersTableRowActions({
-  row,
-}: DataTableRowActionsProps) {
-  const { setOpen, setCurrentRow } = useContributions();
+export function UsersTableRowActions({ row }: DataTableRowActionsProps) {
+  const { setOpen, setCurrentRow } = useUsers();
   const navigate = useNavigate();
   return (
     <>
@@ -39,12 +38,25 @@ export function UsersTableRowActions({
             onClick={() => {
               setCurrentRow(row.original);
               setOpen('edit');
+              navigate(`/admin/users/${row.original.id}/edit`);
+            }}
+          >
+            Edit
+            <DropdownMenuShortcut>
+              <UserPen size={16} />
+            </DropdownMenuShortcut>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem
+            onClick={() => {
+              setCurrentRow(row.original);
+              setOpen('edit');
               navigate(`/admin/detail/${row.original.id}/edit`);
             }}
           >
             Manage
             <DropdownMenuShortcut>
-              <UserPen size={16} />
+              <UserCog size={16} />
             </DropdownMenuShortcut>
           </DropdownMenuItem>
         </DropdownMenuContent>

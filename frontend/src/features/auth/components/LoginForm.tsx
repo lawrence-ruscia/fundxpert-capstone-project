@@ -110,6 +110,7 @@ export const LoginForm = ({ onSubmit }: LoginFormProps) => {
         {/* Submit Button */}
         <Button
           type='submit'
+          size='sm'
           className='h-12 w-full text-base'
           disabled={form.formState.isSubmitting}
         >

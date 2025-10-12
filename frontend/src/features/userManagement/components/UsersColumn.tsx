@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { DataTableColumnHeader } from '@/shared/components/DataTableColummHeader';
 import { LongText } from '@/shared/components/LongText';
 import type { User } from '@/shared/types/user';
+import { UsersTableRowActions } from './UsersTableRowActions';
 
 const formatDisplayDate = (dateString: Date) => {
   return dateString.toLocaleDateString('en-us', {
@@ -253,12 +254,12 @@ export const usersColumns: ColumnDef<User>[] = [
   },
 
   {
-    accessorKey: 'password_last_change',
+    accessorKey: 'password_last_changed',
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title='Last Password Change' />
     ),
     cell: ({ row }) => {
-      const lastChange = row.getValue('password_last_change') as string | null;
+      const lastChange = row.getValue('password_last_changed') as string | null;
 
       return (
         <LongText className='max-w-36 ps-3'>
@@ -354,10 +355,10 @@ export const usersColumns: ColumnDef<User>[] = [
     enableSorting: true,
   },
 
-  // {
-  //   id: 'actions',
-  //   cell: UsersTableRowActions,
-  // },
+  {
+    id: 'actions',
+    cell: UsersTableRowActions,
+  },
 ];
 
 // Helper function - same as in export

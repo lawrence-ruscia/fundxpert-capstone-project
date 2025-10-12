@@ -233,18 +233,12 @@ export async function resetEmployeePasswordHandler(
 
     if (!result) return res.status(404).json({ error: 'Employee not found' });
 
-    await logUserAction(
-      req.user.id,
-      'Reset employee password',
-      'System',
-      'HR',
-      {
-        targetId: Number(req.params.id),
+    await logUserAction(req.user.id, 'Reset employee password', 'Auth', 'HR', {
+      targetId: Number(req.params.id),
 
-        ipAddress: req.ip ?? '::1',
-      }
-    );
-
+      ipAddress: req.ip ?? '::1',
+    }); 
+ 
     // Send temp password back to HR (they will relay securely to employee)
     res.json({
       message: 'Temporary password generated',

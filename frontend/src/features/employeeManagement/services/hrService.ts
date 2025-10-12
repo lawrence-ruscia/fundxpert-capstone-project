@@ -5,8 +5,8 @@ import type {
   HREmployeeRecord,
   HREmployeesResponse,
   PositionsResponse,
-  HRResetPassResponse,
-  HRUpdateEmployeeResponse,
+  ResetPassResponse,
+  UpdateEmployeeResponse,
 } from '../types/employeeTypes';
 import type { EmploymentStatus } from '@/features/dashboard/employee/types/employeeOverview';
 
@@ -72,7 +72,7 @@ export const updateEmployee = async (
     date_hired: Date;
     generatedTempPassword: string;
   }>
-): Promise<HRUpdateEmployeeResponse> => {
+): Promise<UpdateEmployeeResponse> => {
   const { data } = await api.put(`/hr/employees/${id}`, payload);
   return data;
 };
@@ -87,7 +87,7 @@ export const deleteEmployeeById = async (
 export const resetEmployeePassword = async (
   id: number,
   generatedTempPassword: string
-): Promise<HRResetPassResponse> => {
+): Promise<ResetPassResponse> => {
   const { data } = await api.put(`/hr/employees/${id}/reset-password`, {
     generatedTempPassword,
   });
@@ -97,7 +97,7 @@ export const resetEmployeePassword = async (
 export const updateEmploymentStatus = async (
   id: number,
   status: 'Active' | 'Resigned' | 'Retired' | 'Terminated'
-): Promise<HRUpdateEmployeeResponse> => {
+): Promise<UpdateEmployeeResponse> => {
   const { data } = await api.put(`/hr/employees/${id}/status`, { status });
   return data;
 };

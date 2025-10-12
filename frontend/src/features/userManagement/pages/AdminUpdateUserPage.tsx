@@ -1,9 +1,9 @@
+import { useState, useEffect } from 'react';
 import { z } from 'zod';
-import { Controller, useForm } from 'react-hook-form';
+import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
 import { toast } from 'sonner';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Form,
@@ -23,38 +23,41 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import {
-  AlertCircle,
   User,
   Briefcase,
-  DollarSign,
   Calendar,
   Mail,
   Hash,
   Shield,
+  Save,
+  ArrowLeft,
   RefreshCw,
   Eye,
   EyeOff,
   Copy,
-  ArrowLeft,
 } from 'lucide-react';
-
 import { CurrencyInput } from '@/shared/components/currency-input';
 
 // Import the password generator (you'll need to add this to your utils)
 import { generateTempPassword } from '@/utils/generateTempPassword.js';
 import {
-  createUser,
   getDepartments,
   getPositions,
-} from '../services/usersManagementService';
-import { useMultiFetch } from '@/shared/hooks/useMultiFetch';
+  resetUserPassword,
+  updateUser,
+} from '../services/usersManagementService.js';
+import { getUserById } from '@/features/dashboard/admin/services/adminService.js';
+import type { Role } from '@/shared/types/user.js';
+import { LoadingSpinner } from '@/shared/components/LoadingSpinner.js';
+import { DataError } from '@/shared/components/DataError.js';
+import { useMultiFetch } from '@/shared/hooks/useMultiFetch.js';
 import type {
   DepartmentsResponse,
   PositionsResponse,
-} from '@/features/employeeManagement/types/employeeTypes';
+} from '@/features/employeeManagement/types/employeeTypes.js';
 
-// Input schema for form validation (keeps strings for form inputs)
-const createEmployeeInputSchema = z.object({
+// Input schema for form validation
+const updateUserInputSchema = z.object({
   name: z
     .string()
     .min(2, 'Name must be at least 2 characters')
@@ -83,31 +86,49 @@ const createEmployeeInputSchema = z.object({
     .string()
     .min(1, 'Date hired is required')
     .refine(date => !isNaN(Date.parse(date)), 'Please select a valid date'),
-  generateTempPassword: z
-    .string()
-    .min(1, 'Please generate a temporary password for the new employee'), // Required temporary password field
+  generateTempPassword: z.string().optional(), // Optional temporary password fieldpassword field
 });
 
-// Output schema for API submission (transforms to correct types)
-const createEmployeeOutputSchema = createEmployeeInputSchema.transform(
-  data => ({
-    ...data,
-    role: data.role,
-    department_id: parseInt(data.department_id, 10),
-    position_id: parseInt(data.position_id, 10),
-    salary:
-      typeof data.salary === 'string'
-        ? parseFloat(data.salary.replace(/[^\d.-]/g, ''))
-        : data.salary,
-    date_hired: data.date_hired,
-  })
-);
+// Helper function to format date properly (fixes the -1 day issue)
+const formatDateForInput = (dateString: string | Date): string => {
+  if (!dateString) return '';
 
-type CreateEmployeeFormData = z.infer<typeof createEmployeeInputSchema>;
-type CreateEmployeeOutputData = z.infer<typeof createEmployeeOutputSchema>;
+  // If it's already a string in YYYY-MM-DD format, return it
+  if (
+    typeof dateString === 'string' &&
+    dateString.match(/^\d{4}-\d{2}-\d{2}$/)
+  ) {
+    return dateString;
+  }
 
-export const AdminCreateUserPage = () => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  // Create date and format as local date to avoid timezone issues
+  const date = new Date(dateString);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+// Output schema for API submission
+const updateUserOutputSchema = updateUserInputSchema.transform(data => ({
+  ...data,
+  role: data.role,
+  department_id: parseInt(data.department_id, 10),
+  position_id: parseInt(data.position_id, 10),
+  salary:
+    typeof data.salary === 'string'
+      ? parseFloat(data.salary.replace(/[^\d.-]/g, ''))
+      : data.salary,
+}));
+
+type UpdateUserFormData = z.infer<typeof updateUserInputSchema>;
+type UpdateUserOutputData = z.infer<typeof updateUserOutputSchema>;
+
+export const AdminUpdateUserPage = () => {
+  const { userId } = useParams();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [resettingPassword, setResettingPassword] = useState(false);
   const [showTempPassword, setShowTempPassword] = useState(false);
   const [tempPasswordGenerated, setTempPasswordGenerated] = useState(false);
   const navigate = useNavigate();
@@ -128,8 +149,8 @@ export const AdminCreateUserPage = () => {
     return { departments, positions };
   });
 
-  const form = useForm<CreateEmployeeFormData>({
-    resolver: zodResolver(createEmployeeInputSchema),
+  const form = useForm<UpdateUserFormData>({
+    resolver: zodResolver(updateUserInputSchema),
     defaultValues: {
       name: '',
       email: '',
@@ -138,28 +159,52 @@ export const AdminCreateUserPage = () => {
       department_id: '',
       position_id: '',
       salary: '',
-      date_hired: new Date().toISOString().split('T')[0],
+      employment_status: 'Active',
+      date_hired: '',
       generateTempPassword: '',
     },
   });
 
-  const onSubmit = async (data: CreateEmployeeFormData) => {
-    // Check if temporary password is generated
-    if (!data.generateTempPassword || data.generateTempPassword.trim() === '') {
-      toast.error(
-        'Please generate a temporary password before creating the employee'
-      );
-      return;
+  // Watch the generateTempPassword field to enable/disable reset button
+  const generatedTempPassword = form.watch('generateTempPassword');
+
+  useEffect(() => {
+    async function fetchUser() {
+      try {
+        setLoading(true);
+        const userData = await getUserById(Number(userId));
+        console.log('User data: ', userData);
+        // Format the data for the form
+        form.reset({
+          name: userData.name || '',
+          email: userData.email || '',
+          employee_id: userData.employee_id?.toString() || '',
+          role: (userData.role?.toString() as Role) || '',
+          department_id: userData.department_id?.toString() || '',
+          position_id: userData.position_id?.toString() || '',
+          salary: userData.salary?.toString() || '',
+          employment_status: userData.employment_status || 'Active',
+          date_hired: formatDateForInput(userData.date_hired),
+          generateTempPassword: '', // Always start empty
+        });
+      } catch (error) {
+        console.error('Failed to fetch user:', error);
+        toast.error('Failed to load user data');
+      } finally {
+        setLoading(false);
+      }
     }
+    fetchUser();
+  }, [userId, form]);
 
+  const onSubmit = async (data: UpdateUserFormData) => {
     try {
-      setIsSubmitting(true);
+      setSaving(true);
 
-      // Transform the form data to the correct types for API submission
-      const transformedData: CreateEmployeeOutputData =
-        createEmployeeOutputSchema.parse(data);
+      const transformedData: UpdateUserOutputData =
+        updateUserOutputSchema.parse(data);
 
-      await createUser({
+      await updateUser(Number(userId), {
         name: transformedData.name,
         email: transformedData.email,
         employee_id: transformedData.employee_id,
@@ -167,16 +212,41 @@ export const AdminCreateUserPage = () => {
         department_id: transformedData.department_id,
         position_id: transformedData.position_id,
         salary: transformedData.salary,
-        date_hired: transformedData.date_hired,
-        generatedTempPassword: data.generateTempPassword, // Send temp password (required)
+        employment_status: transformedData.employment_status,
+        date_hired: new Date(transformedData.date_hired),
+        generatedTempPassword: data.generateTempPassword || undefined, // Send temp password if generated
       });
+
       navigate('/admin/users');
-      toast.success(`User ${data.employee_id} created successfully`);
+      toast.success(`User ${data.employee_id} updated successfully`);
     } catch (err) {
       console.error(err);
-      toast.error((err as Error).message || 'Failed to create user');
+      toast.error('Failed to update user');
     } finally {
-      setIsSubmitting(false);
+      setSaving(false);
+    }
+  };
+
+  const handleResetPassword = async () => {
+    const tempPassword = form.getValues('generateTempPassword');
+
+    if (!tempPassword) {
+      toast.error('Please generate a temporary password first');
+      return;
+    }
+
+    try {
+      setResettingPassword(true);
+      // Use the generated temp password for reset
+      await resetUserPassword(Number(userId), tempPassword);
+      toast.success(
+        `Password reset successfully using generated temporary password`
+      );
+    } catch (error) {
+      console.error('Failed to reset password:', error);
+      toast.error('Failed to reset password');
+    } finally {
+      setResettingPassword(false);
     }
   };
 
@@ -184,7 +254,7 @@ export const AdminCreateUserPage = () => {
     const tempPassword = generateTempPassword(12);
     form.setValue('generateTempPassword', tempPassword);
     setTempPasswordGenerated(true);
-    toast.success('Temporary password generated! Remember to save the form.');
+    toast.success('Temporary password generated! Remember to save changes.');
   };
 
   const copyTempPasswordToClipboard = async () => {
@@ -200,37 +270,17 @@ export const AdminCreateUserPage = () => {
     }
   };
 
-  if (optionsLoading) {
-    return (
-      <div className='flex min-h-[400px] items-center justify-center'>
-        <Card className='mx-auto max-w-md'>
-          <CardContent className='flex items-center justify-center py-12'>
-            <div className='flex flex-col items-center gap-4'>
-              <div className='border-primary h-8 w-8 animate-spin rounded-full border-b-2' />
-              <span className='text-muted-foreground text-sm'>
-                Loading form options...
-              </span>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
+  // Check if reset password should be enabled
+  const isResetPasswordEnabled = Boolean(
+    generatedTempPassword && generatedTempPassword.trim().length > 0
+  );
+
+  if (loading || optionsLoading) {
+    return <LoadingSpinner text={'Loading user data...'} />;
   }
 
   if (optionsError) {
-    return (
-      <div className='flex min-h-[400px] items-center justify-center'>
-        <Card className='mx-auto max-w-md'>
-          <CardContent className='py-12 text-center'>
-            <AlertCircle className='text-destructive mx-auto mb-4 h-12 w-12' />
-            <p className='text-destructive mb-6 text-sm font-medium'>
-              {optionsError}
-            </p>
-            <Button onClick={() => window.location.reload()}>Retry</Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return <DataError />;
   }
 
   return (
@@ -244,16 +294,16 @@ export const AdminCreateUserPage = () => {
         >
           <ArrowLeft className='h-4 w-4' />
         </Button>
-        <h1 className='text-2xl font-bold tracking-tight'>Create User</h1>
+
+        <h1 className='text-2xl font-bold tracking-tight'>Update User</h1>
         <p className='text-muted-foreground'>
-          Add a new user to the system with their basic information and access
-          level
+          Update user information and their access levels
         </p>
       </div>
 
-      <div className='grid gap-8 lg:grid-cols-3'>
+      <div className='grid gap-8 lg:grid-cols-4'>
         {/* Main Form */}
-        <div className='lg:col-span-2'>
+        <div className='lg:col-span-3'>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-8'>
               {/* Personal Information Section */}
@@ -501,28 +551,72 @@ export const AdminCreateUserPage = () => {
 
                     <FormField
                       control={form.control}
-                      name='date_hired'
+                      name='employment_status'
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className='text-base font-medium'>
-                            Date Hired{' '}
+                            Employment Status{' '}
                             <span className='text-muted-foreground'>*</span>
                           </FormLabel>
-                          <FormControl>
-                            <div className='relative'>
-                              <Calendar className='text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2' />
-                              <Input
-                                type='date'
-                                className='h-12 pl-10 text-base'
-                                {...field}
-                              />
-                            </div>
-                          </FormControl>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger className='h-12 w-full text-base'>
+                                <SelectValue placeholder='Select status' />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value='Active' className='text-base'>
+                                Active
+                              </SelectItem>
+                              <SelectItem
+                                value='Resigned'
+                                className='text-base'
+                              >
+                                Resigned
+                              </SelectItem>
+                              <SelectItem value='Retired' className='text-base'>
+                                Retired
+                              </SelectItem>
+                              <SelectItem
+                                value='Terminated'
+                                className='text-base'
+                              >
+                                Terminated
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
                   </div>
+
+                  <FormField
+                    control={form.control}
+                    name='date_hired'
+                    render={({ field }) => (
+                      <FormItem className='md:max-w-md'>
+                        <FormLabel className='text-base font-medium'>
+                          Date Hired{' '}
+                          <span className='text-muted-foreground'>*</span>
+                        </FormLabel>
+                        <FormControl>
+                          <div className='relative'>
+                            <Calendar className='text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2' />
+                            <Input
+                              type='date'
+                              className='h-12 pl-10 text-base'
+                              {...field}
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </CardContent>
               </Card>
 
@@ -543,8 +637,7 @@ export const AdminCreateUserPage = () => {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel className='text-base font-medium'>
-                          Temporary Password{' '}
-                          <span className='text-muted-foreground'>*</span>
+                          Temporary Password
                         </FormLabel>
                         <div className='flex flex-wrap gap-2'>
                           <FormControl>
@@ -606,17 +699,15 @@ export const AdminCreateUserPage = () => {
                           </Button>
                         </div>
                         <p className='text-muted-foreground mt-2 text-xs'>
-                          Generate a secure temporary password for the new user.
-                          This password is required to create the user account.
+                          Generate a secure temporary password for the employee.
+                          This will be sent with the update.
                         </p>
                         {tempPasswordGenerated && (
                           <div className='mt-2 rounded border border-green-200 bg-green-50 p-2 text-xs text-green-600'>
                             Temporary password generated successfully. Remember
-                            to save the form to create the user with this
-                            password.
+                            to save changes to apply it.
                           </div>
                         )}
-
                         <FormMessage />
                       </FormItem>
                     )}
@@ -625,29 +716,61 @@ export const AdminCreateUserPage = () => {
               </Card>
 
               {/* Form Actions */}
-              <div className='flex flex-col gap-4 sm:flex-row sm:justify-end'>
-                <Button
-                  type='button'
-                  variant='outline'
-                  onClick={() => navigate('/admin/users', { replace: true })}
-                  className='h-12 px-8 text-base sm:w-auto'
-                >
-                  Cancel
-                </Button>
-                <Button
-                  type='submit'
-                  disabled={isSubmitting}
-                  className='h-12 px-8 text-base sm:w-auto'
-                >
-                  {isSubmitting ? (
-                    <>
-                      <div className='mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white' />
-                      Creating User...
-                    </>
-                  ) : (
-                    'Create User'
-                  )}
-                </Button>
+              <div className='flex flex-col gap-4 sm:flex-row sm:justify-between'>
+                <div className='flex flex-col gap-4 sm:flex-row'>
+                  <Button
+                    type='button'
+                    variant='secondary'
+                    onClick={handleResetPassword}
+                    disabled={resettingPassword || !isResetPasswordEnabled}
+                    className='h-12 px-6 text-base sm:w-auto'
+                    title={
+                      !isResetPasswordEnabled
+                        ? 'Please generate a temporary password first'
+                        : ''
+                    }
+                  >
+                    {resettingPassword ? (
+                      <>
+                        <div className='mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white' />
+                        Resetting...
+                      </>
+                    ) : (
+                      <>
+                        <Shield className='mr-2 h-4 w-4' />
+                        Reset Password
+                      </>
+                    )}
+                  </Button>
+                </div>
+
+                <div className='flex flex-col gap-4 sm:flex-row'>
+                  <Button
+                    type='button'
+                    variant='outline'
+                    onClick={() => navigate('/admin/users')}
+                    className='h-12 px-8 text-base sm:w-auto'
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type='submit'
+                    disabled={saving}
+                    className='h-12 px-8 text-base sm:w-auto'
+                  >
+                    {saving ? (
+                      <>
+                        <div className='mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white' />
+                        Saving Changes...
+                      </>
+                    ) : (
+                      <>
+                        <Save className='mr-2 h-4 w-4' />
+                        Save Changes
+                      </>
+                    )}
+                  </Button>
+                </div>
               </div>
             </form>
           </Form>
@@ -657,77 +780,46 @@ export const AdminCreateUserPage = () => {
         <div className='lg:col-span-1'>
           <Card className='sticky top-6'>
             <CardHeader>
-              <CardTitle className='text-lg'>Form Guidelines</CardTitle>
+              <CardTitle className='text-lg'>Quick Actions</CardTitle>
             </CardHeader>
             <CardContent className='space-y-4'>
               <div className='space-y-3'>
-                <div className='flex items-start gap-3 text-sm'>
-                  <User className='text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0' />
-                  <div>
-                    <p className='font-medium'>Full Name</p>
-                    <p className='text-muted-foreground text-xs'>
-                      Enter the user's complete legal name
-                    </p>
-                  </div>
+                <div className='text-sm'>
+                  <p className='mb-2 font-medium'>Password Management</p>
+                  <p className='text-muted-foreground mb-3 text-xs'>
+                    Generate a temporary password first to enable the Reset
+                    Password button. The password will be used for immediate
+                    reset or included when saving changes.
+                  </p>
                 </div>
 
-                <div className='flex items-start gap-3 text-sm'>
-                  <Shield className='text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0' />
-                  <div>
-                    <p className='font-medium'>Role</p>
-                    <p className='text-muted-foreground text-xs'>
-                      Select the access level: Employee, HR, or System Admin
-                    </p>
-                  </div>
+                <div className='text-sm'>
+                  <p className='mb-2 font-medium'>User Management</p>
+                  <p className='text-muted-foreground mb-3 text-xs'>
+                    Reset Password requires a generated temporary password and
+                    performs immediate password reset via separate API call.
+                  </p>
                 </div>
 
-                <div className='flex items-start gap-3 text-sm'>
-                  <Mail className='text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0' />
-                  <div>
-                    <p className='font-medium'>Email</p>
-                    <p className='text-muted-foreground text-xs'>
-                      Must use @metrobank.com.ph domain
-                    </p>
-                  </div>
-                </div>
-
-                <div className='flex items-start gap-3 text-sm'>
-                  <Hash className='text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0' />
-                  <div>
-                    <p className='font-medium'>Employee ID</p>
-                    <p className='text-muted-foreground text-xs'>
-                      Format: XX-XXXXX (e.g., 12-34567)
-                    </p>
-                  </div>
-                </div>
-
-                <div className='flex items-start gap-3 text-sm'>
-                  <DollarSign className='text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0' />
-                  <div>
-                    <p className='font-medium'>Salary</p>
-                    <p className='text-muted-foreground text-xs'>
-                      Monthly salary with automatic formatting
-                    </p>
-                  </div>
-                </div>
-
-                <div className='flex items-start gap-3 text-sm'>
-                  <Shield className='text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0' />
-                  <div>
-                    <p className='font-medium'>Temporary Password</p>
-                    <p className='text-muted-foreground text-xs'>
-                      Required: Generate a secure 12-character password for the
-                      new user
-                    </p>
-                  </div>
+                <div className='text-sm'>
+                  <p className='mb-2 font-medium'>Form Guidelines</p>
+                  <ul className='text-muted-foreground space-y-1 text-xs'>
+                    <li>• All required fields must be completed</li>
+                    <li>• Email must use company domain</li>
+                    <li>• Employee ID format: XX-XXXXX</li>
+                    <li>
+                      • Temporary passwords are 12 characters with mixed case,
+                      numbers, and symbols
+                    </li>
+                    <li>• Generate password before using Reset Password</li>
+                  </ul>
                 </div>
               </div>
 
               <div className='border-t pt-4'>
                 <p className='text-muted-foreground text-xs'>
-                  All fields marked with * are required. Generate a temporary
-                  password to provide initial login credentials for the new
-                  user.
+                  Changes will take effect immediately after saving. User will
+                  receive notifications of any changes to their profile.
                 </p>
               </div>
             </CardContent>

@@ -795,12 +795,7 @@ export const EditEmployeeForm = ({ id }: EmployeeEditFormProps) => {
           </Card>
         </div>
       </div>
-      {/* Delete Employee Dialog */}
-      <EmployeeDeleteDialog
-        open={deleteDialogOpen}
-        onOpenChange={setDeleteDialogOpen}
-        id={id}
-      />
+    
     </div>
   );
 };

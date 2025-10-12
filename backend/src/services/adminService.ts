@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { pool } from '../config/db.config.js';
 import { generateTempPassword } from '../utils/generateTempPassword.js';
+import type { UserResponse } from '../types/userResponse.js';
 
 export async function logUserAction(
   userId: number,
@@ -81,6 +82,7 @@ export async function getUserById(userId: number) {
   const query = `
       SELECT 
         u.id, u.employee_id, u.name, u.email, u.role, u.employment_status, 
+        u.date_hired, u.salary, u.department_id, u.position_id,
         d.name AS department, p.title AS position, u.created_at
       FROM users u 
       LEFT JOIN departments d ON u.department_id = d.id
@@ -144,29 +146,91 @@ export async function createUser(payload: {
 }
 
 export async function updateUser(
-  userId: string,
-  role: string,
-  employment_status: string
-) {
-  const fields = [];
-  const params: unknown[] = [];
+  id: number,
+  updates: Partial<{
+    name: string;
+    email: string;
+    employee_id: string;
+    role: string;
+    department_id: number;
+    position_id: number;
+    salary: number;
+    employment_status: 'Active' | 'Resigned' | 'Retired' | 'Terminated';
+    date_hired: string;
+    generatedTempPassword: string;
+  }>
+): Promise<UserResponse | null> {
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    const fields: string[] = [];
+    const values: unknown[] = [id];
 
-  if (role) {
-    params.push(role);
-    fields.push(`role = $${params.length}`);
+    const sensitiveChange =
+      updates.role ||
+      updates.generatedTempPassword ||
+      updates.employment_status;
+
+    // Build SET clause dynamically
+    let index = 2;
+    for (const [key, value] of Object.entries(updates)) {
+      if (key === 'generatedTempPassword' && value) {
+        // If resetting password, hash it + set temp flags
+        const hash = await bcrypt.hash(value, 10);
+        const expiresAt = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000); // 5 days
+        fields.push(`password_hash = $${index}`);
+        values.push(hash);
+        index++;
+
+        fields.push(`temp_password = true`);
+        fields.push(`temp_password_expires = $${index}`);
+        values.push(expiresAt);
+        index++;
+      } else {
+        fields.push(`${key} = $${index}`);
+        values.push(value);
+        index++;
+      }
+    }
+
+    if (fields.length === 0) return null;
+
+    const query = `
+      UPDATE users 
+      SET ${fields.join(', ')}, updated_at = NOW()
+      WHERE id = $1
+      RETURNING id, name, email, employee_id, role, department_id, position_id, salary, employment_status, date_hired;
+    `;
+
+    if (sensitiveChange) {
+      await client.query(
+        `UPDATE users SET token_version = token_version + 1 WHERE id = $1`,
+        [id]
+      );
+    }
+
+    
+
+    const { rows } = await client.query(query, values);
+
+    await client.query('COMMIT');
+    return rows[0] || null;
+  } catch (err: unknown) {
+    await client.query('ROLLBACK');
+
+    if (err.code === '23505') {
+      // unique_violation
+      if (err.detail.includes('employee_id')) {
+        throw new Error('Employee ID must be unique.');
+      }
+      if (err.detail.includes('email')) {
+        throw new Error('Email must be unique.');
+      }
+    }
+    throw err;
+  } finally {
+    client.release();
   }
-
-  if (employment_status) {
-    params.push(employment_status);
-    fields.push(`employment_status = $${params.length}`);
-  }
-
-  params.push(userId);
-
-  await pool.query(
-    `UPDATE users SET ${fields.join(', ')}, updated_at = NOW() WHERE id = $${params.length}`,
-    params
-  );
 }
 
 export async function toggleLockuser(userId: string, locked: string) {
@@ -178,29 +242,6 @@ export async function toggleLockuser(userId: string, locked: string) {
     `UPDATE users SET locked_until = $2, updated_at = NOW() WHERE id = $1`,
     [userId, lockUntil]
   );
-}
-
-export async function resetUserPassword(userId: string) {
-  const tempPassword = generateTempPassword();
-  const hashed = await bcrypt.hash(tempPassword, 10);
-
-  await pool.query(
-    `UPDATE users
-       SET password_hash = $1,
-           temp_password = TRUE,
-           temp_password_expires = NOW() + INTERVAL '3 days',
-           password_last_changed = NOW(),
-           updated_at = NOW()
-       WHERE id = $2`,
-    [hashed, userId]
-  );
-
-  await pool.query(
-    `INSERT INTO password_history (user_id, password_hash) VALUES ($1, $2)`,
-    [userId, hashed]
-  );
-
-  return tempPassword;
 }
 
 export async function getAuditLogs() {

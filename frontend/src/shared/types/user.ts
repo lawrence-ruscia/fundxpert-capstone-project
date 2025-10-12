@@ -9,6 +9,8 @@ export interface User {
   role: 'Employee' | 'HR' | 'Admin';
   department: string | null;
   position: string | null;
+  department_id: number;
+  position_id: number;
   salary: number;
   employment_status: EmploymentStatus;
   date_hired: string;
