@@ -25,6 +25,7 @@ import { Switch } from '@/components/ui/switch';
 import type { HRContributionPeriod } from '../types/hrDashboardTypes';
 import { usePersistedState } from '@/shared/hooks/usePersistedState';
 import { DataError } from '@/shared/components/DataError';
+import { useSmartPolling } from '@/shared/hooks/useSmartPolling';
 
 export const HRDashboardPage = () => {
   const [autoRefreshEnabled, setAutoRefreshEnabled] = usePersistedState(
@@ -37,18 +38,22 @@ export const HRDashboardPage = () => {
 
   const fetchDashboardData = useCallback(async () => {
     // This should match what useHRDashboardData returns
-    const overview = await fetchHROverview();
-    const assignedLoans = await fetchAssignedLoans();
-    const contributions = await fetchContributionTrends(timeRange);
+    const [overview, assignedLoans, contributions] = await Promise.all([
+      fetchHROverview(),
+      fetchAssignedLoans(),
+      fetchContributionTrends(timeRange),
+    ]);
 
     return { overview, assignedLoans, contributions };
   }, [timeRange]);
 
-  const { data, loading, error, refresh, lastUpdated } = useAutoRefresh(
+  const { data, loading, error, refresh, lastUpdated } = useSmartPolling(
     fetchDashboardData,
     {
-      interval: 300000,
+      context: 'dashboard',
       enabled: autoRefreshEnabled,
+      pauseWhenHidden: true,
+      pauseWhenInactive: true,
     }
   );
 
@@ -78,7 +83,7 @@ export const HRDashboardPage = () => {
         <div className='flex flex-wrap items-start justify-between gap-4'>
           <div className='flex items-center gap-3'>
             <div>
-              <h1 className='text-3xl font-bold tracking-tight'>
+              <h1 className='text-2xl font-bold tracking-tight'>
                 HR Dashboard
               </h1>
               <p className='text-muted-foreground'>

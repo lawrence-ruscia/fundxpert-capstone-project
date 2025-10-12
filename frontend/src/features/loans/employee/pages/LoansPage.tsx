@@ -1,9 +1,6 @@
 import { fetchEmployeeLoans } from '../services/loanService';
-import type { Loan } from '../types/loan';
-import { useApi } from '@/shared/hooks/useApi';
 import { LoanApplicationForm } from '../components/LoanApplicationForm';
-import { useState } from 'react';
-import { useEmployeeOverview } from '@/features/dashboard/employee/hooks/useEmployeeOverview';
+import { useCallback, useState } from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -19,6 +16,8 @@ import {
   ShieldCheck,
   PiggyBank,
   Wallet,
+  RefreshCw,
+  Timer,
 } from 'lucide-react';
 import { BalanceCard } from '@/features/dashboard/employee/components/BalanceCard';
 import { formatCurrency } from '@/features/dashboard/employee/utils/formatters';
@@ -26,27 +25,49 @@ import { LoansList } from '../components/LoanList';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
 import { NetworkError } from '@/shared/components/NetworkError';
 import { DataError } from '@/shared/components/DataError';
+import { usePersistedState } from '@/shared/hooks/usePersistedState';
+import { fetchEmployeeOverview } from '@/features/dashboard/employee/services/employeeService';
+import { useSmartPolling } from '@/shared/hooks/useSmartPolling';
+import { Switch } from '@/components/ui/switch';
 
 export default function LoansPage() {
-  const {
-    data: loans,
-    loading,
-    error,
-    refetch: refetchLoans,
-  } = useApi<Loan[]>(fetchEmployeeLoans);
-  const {
-    data: overview,
-    loading: overviewLoading,
-    error: overviewError,
-    refetch: refetchOverview,
-  } = useEmployeeOverview();
+  const [autoRefreshEnabled] = usePersistedState(
+    'employee-dashboard-auto-refresh',
+    true // default value
+  );
+
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const fetchLoansData = useCallback(async () => {
+    const [loans, overview] = await Promise.all([
+      fetchEmployeeLoans(),
+      fetchEmployeeOverview(),
+    ]);
+
+    return { loans, overview };
+  }, []);
+
+  const { data, loading, error, refresh, lastUpdated } = useSmartPolling(
+    fetchLoansData,
+    {
+      context: 'loan-detail',
+      enabled: autoRefreshEnabled,
+      pauseWhenHidden: true,
+      pauseWhenInactive: true,
+    }
+  );
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await refresh();
+    setIsRefreshing(false);
+  };
 
   const [showForm, setShowForm] = useState(false);
 
   const handleFormSuccess = () => {
     setShowForm(false);
-    refetchLoans();
-    refetchOverview();
+    refresh();
   };
 
   const handleFormCancel = () => {
@@ -54,16 +75,16 @@ export default function LoansPage() {
   };
 
   // Loading state
-  if (loading || overviewLoading) {
+  if (loading) {
     return <LoadingSpinner text={'Loading Employee Data'} />;
   }
 
   // Error state
-  if (error || overviewError) {
-    return <NetworkError message={error?.message || overviewError?.message} />;
+  if (error) {
+    return <NetworkError message={error} />;
   }
 
-  if (!overview) {
+  if (!data?.overview) {
     return (
       <DataError
         title='No employee overview data found'
@@ -71,6 +92,8 @@ export default function LoansPage() {
       />
     );
   }
+
+  const { loans, overview } = data;
 
   const maxLoanAmount = overview.eligibility.max_loan_amount ?? 0;
 
@@ -98,18 +121,65 @@ export default function LoansPage() {
         <div className=''>
           {/* Header */}
           <div className='mb-8'>
-            <div className='mb-2 flex items-center gap-3'>
-              <div>
-                <h1 className='text-2xl font-bold tracking-tight'>
-                  Loan Management
-                </h1>
-                <p className='text-muted-foreground'>
-                  Manage your provident fund loans and applications
-                </p>
+            <div className='flex flex-wrap items-start justify-between gap-4'>
+              <div className='flex items-center gap-3'>
+                <div>
+                  <h1 className='text-2xl font-bold tracking-tight'>Loans</h1>
+                  <p className='text-muted-foreground'>
+                    Manage your provident fund loans and applications
+                  </p>
+                </div>
+              </div>
+              {/* Refresh Controls */}
+              <div className='flex flex-wrap items-center gap-3'>
+                {/* Last Updated */}
+                {lastUpdated && (
+                  <div className='text-muted-foreground text-right text-sm'>
+                    <p className='font-medium'>Last updated</p>
+                    <p className='text-xs'>
+                      {lastUpdated.toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </p>
+                  </div>
+                )}
+                {/* Manual Refresh Button */}
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={handleRefresh}
+                  disabled={isRefreshing}
+                  className='gap-2'
+                >
+                  <RefreshCw
+                    className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
+                  />
+                  {isRefreshing ? 'Refreshing...' : 'Refresh'}
+                </Button>
               </div>
             </div>
+            {/* Auto-refresh Status Banner */}
+            {!autoRefreshEnabled && (
+              <div className='bg-muted/50 mt-4 mb-8 flex items-center gap-2 rounded-lg border border-dashed px-4 py-2.5'>
+                <AlertCircle className='text-muted-foreground h-4 w-4' />
+                <p className='text-muted-foreground text-sm'>
+                  Auto-refresh is disabled. Data will only update when manually
+                  refreshed.
+                </p>
+              </div>
+            )}
           </div>
 
+          {/* Loading Overlay for Background Refresh */}
+          {loading && data && (
+            <div className='bg-background/80 fixed inset-0 z-50 flex items-start justify-center pt-20 backdrop-blur-sm'>
+              <div className='bg-card flex items-center gap-2 rounded-lg border p-4 shadow-lg'>
+                <RefreshCw className='h-4 w-4 animate-spin' />
+                <span className='text-sm font-medium'>Updating data...</span>
+              </div>
+            </div>
+          )}
           {/* Overview Cards */}
           <div className='mb-8 grid grid-cols-1 gap-6 md:grid-cols-3'>
             <BalanceCard

@@ -1,13 +1,10 @@
-import type { Loan } from '../../employee/types/loan';
 import { getAllLoans, getLoanStatusSummary } from '../services/hrLoanService';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
 import { DataError } from '@/shared/components/DataError';
 import { LoanStatusSummary } from '../components/LoanStatusSummary';
-import { useMultiFetch } from '@/shared/hooks/useMultiFetch';
-import type { LoanSummary } from '../types/hrLoanType';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
-import { FileText, Plus } from 'lucide-react';
+import { AlertCircle, FileText, RefreshCw } from 'lucide-react';
 
 import { useDateRangeFilter } from '@/shared/hooks/useDateRangeFilter';
 import { useTablePagination } from '@/shared/hooks/useTablePagination';
@@ -20,25 +17,48 @@ import {
   getSortedRowModel,
   getFilteredRowModel,
 } from '@tanstack/react-table';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { LoansDataProvider } from '../components/LoansDataProvider';
 import { loansDataColumns } from '../components/LoansDataColumn';
 import { LoansDataTable } from '../components/LoansDataTable';
 import { ExportDropdown } from '@/shared/components/ExportDropdown';
 import { useLoansDataExport } from '../hooks/useLoansDataExport';
+import { useSmartPolling } from '@/shared/hooks/useSmartPolling';
+import { usePersistedState } from '@/shared/hooks/usePersistedState';
+import { Button } from '@/components/ui/button';
 
 export const LoansDashboardPage = () => {
-  const { data, loading, error } = useMultiFetch<{
-    loans: Loan[];
-    summary: LoanSummary[];
-  }>(async () => {
+  const [autoRefreshEnabled] = usePersistedState(
+    'hr-dashboard-auto-refresh',
+    true // default value
+  );
+
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const fetchContributionsHandler = useCallback(async () => {
     const [loans, summary] = await Promise.all([
       getAllLoans(),
       getLoanStatusSummary(),
     ]);
 
     return { loans, summary };
-  });
+  }, []);
+
+  const { data, loading, error, refresh, lastUpdated } = useSmartPolling(
+    fetchContributionsHandler,
+    {
+      context: 'loan-table',
+      enabled: autoRefreshEnabled,
+      pauseWhenHidden: true,
+      pauseWhenInactive: true,
+    }
+  );
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await refresh();
+    setIsRefreshing(false);
+  };
 
   const loans = data?.loans;
   const summary = data?.summary;
@@ -97,19 +117,71 @@ export const LoansDashboardPage = () => {
       <div className='space-y-6'>
         {/* Header */}
         <div className='mb-8'>
-          <div className='mb-4 gap-3'>
-            <div>
-              <h1 className='text-2xl font-bold tracking-tight'>
-                Loans Management
-              </h1>
-              <p className='text-muted-foreground'>
-                Manage requests and track the status of all employee loans
-              </p>
+          <div className='flex flex-wrap items-start justify-between gap-4'>
+            <div className='flex items-center gap-3'>
+              <div>
+                <h1 className='text-2xl font-bold tracking-tight'>
+                  Loans Management
+                </h1>
+                <p className='text-muted-foreground'>
+                  Manage requests and track the status of all employee loans
+                </p>
+              </div>
+            </div>
+            {/* Refresh Controls */}
+            <div className='flex flex-wrap items-center gap-3'>
+              {/* Last Updated */}
+              {lastUpdated && (
+                <div className='text-muted-foreground text-right text-sm'>
+                  <p className='font-medium'>Last updated</p>
+                  <p className='text-xs'>
+                    {lastUpdated.toLocaleTimeString('en-US', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </p>
+                </div>
+              )}
+              {/* Manual Refresh Button */}
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                className='gap-2'
+              >
+                <RefreshCw
+                  className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
+                />
+                {isRefreshing ? 'Refreshing...' : 'Refresh'}
+              </Button>
             </div>
           </div>
+          {/* Auto-refresh Status Banner */}
+          {!autoRefreshEnabled && (
+            <div className='bg-muted/50 mt-4 mb-8 flex items-center gap-2 rounded-lg border border-dashed px-4 py-2.5'>
+              <AlertCircle className='text-muted-foreground h-4 w-4' />
+              <p className='text-muted-foreground text-sm'>
+                Auto-refresh is disabled. Data will only update when manually
+                refreshed.
+              </p>
+            </div>
+          )}
         </div>
+
+        {/* Loading Overlay for Background Refresh */}
+        {loading && data && (
+          <div className='bg-background/80 fixed inset-0 z-50 flex items-start justify-center pt-20 backdrop-blur-sm'>
+            <div className='bg-card flex items-center gap-2 rounded-lg border p-4 shadow-lg'>
+              <RefreshCw className='h-4 w-4 animate-spin' />
+              <span className='text-sm font-medium'>Updating data...</span>
+            </div>
+          </div>
+        )}
+
         {/* Loans Summary */}
         {summary && <LoanStatusSummary summary={summary ?? []} />}
+
         {/* Loans Table */}
         <Card>
           <CardHeader className='mb-4 flex flex-wrap items-center justify-between gap-4 font-semibold'>

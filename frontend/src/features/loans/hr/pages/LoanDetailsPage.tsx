@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useLoanAccess } from '../hooks/useLoanAccess';
 import {
   getLoanById,
@@ -10,15 +10,14 @@ import {
 } from '../services/hrLoanService';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
 import { DataError } from '@/shared/components/DataError';
-import type {
-  Loan,
-  LoanDocument,
-  LoanDocumentResponse,
-} from '../../employee/types/loan';
-import type { LoanApproval, LoanHistory } from '../types/hrLoanType';
-import { useMultiFetch } from '@/shared/hooks/useMultiFetch';
-import { ArrowLeft, CheckCircle2, FileText, Paperclip } from 'lucide-react';
-import { LoanStatusBadge } from '../../employee/components/LoanStatusBadge';
+
+import {
+  AlertCircle,
+  CheckCircle2,
+  FileText,
+  Paperclip,
+  RefreshCw,
+} from 'lucide-react';
 import { MarkIncompleteDialog } from '../components/MarkIncompleteDialog';
 import { MarkReadyDialog } from '../components/MarkReadyDialog';
 import { MoveToReviewDialog } from '../components/MoveToReviewDialog';
@@ -34,10 +33,11 @@ import { LoanSummary } from '../components/LoanSummary';
 import { VerifiedLoanDocuments } from '../components/VerfiedLoanDocuments';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { useSmartPolling } from '@/shared/hooks/useSmartPolling';
+import { usePersistedState } from '@/shared/hooks/usePersistedState';
 
 export default function LoanDetailsPage() {
   const { loanId } = useParams();
-  const navigate = useNavigate();
 
   const [actionLoading, setActionLoading] = useState(false);
 
@@ -50,12 +50,14 @@ export default function LoanDetailsPage() {
   const [openRelease, setOpenRelease] = useState(false);
   const [openCancel, setOpenCancel] = useState(false);
 
-  const { data, loading, error, refetch } = useMultiFetch<{
-    loan: Loan;
-    approvals: LoanApproval[];
-    history: LoanHistory[];
-    documents: LoanDocumentResponse;
-  }>(async () => {
+  const [autoRefreshEnabled] = usePersistedState(
+    'hr-dashboard-auto-refresh',
+    true // default value
+  );
+
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const fetchLoanDetailsHandler = useCallback(async () => {
     const [loanRes, approvalsRes, historyRes, documentsRes] = await Promise.all(
       [
         getLoanById(Number(loanId)),
@@ -72,6 +74,22 @@ export default function LoanDetailsPage() {
       documents: documentsRes,
     };
   }, [loanId]);
+
+  const { data, loading, error, refresh, lastUpdated } = useSmartPolling(
+    fetchLoanDetailsHandler,
+    {
+      context: 'loan-detail',
+      enabled: autoRefreshEnabled,
+      pauseWhenHidden: true,
+      pauseWhenInactive: true,
+    }
+  );
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await refresh();
+    setIsRefreshing(false);
+  };
 
   const loan = data?.loan;
   const approvals = data?.approvals;
@@ -93,24 +111,67 @@ export default function LoanDetailsPage() {
     <div className='container px-4 pb-8'>
       {/* Header */}
       <div className='mb-8'>
-        <Button
-          variant='ghost'
-          size='sm'
-          onClick={() => navigate('/hr/loans', { replace: true })}
-          className='p-2'
-        >
-          <ArrowLeft className='h-4 w-4' />
-        </Button>
-        <div className='mb-2 flex items-center justify-between gap-3'>
-          <div>
-            <h1 className='text-2xl font-bold tracking-tight'>Loan Details</h1>
-            <p className='text-muted-foreground'>
-              Manage loan details and actions for Loan ID: {loan.id}
+        <div className='flex flex-wrap items-start justify-between gap-4'>
+          <div className='flex items-center gap-3'>
+            <div>
+              <h1 className='text-2xl font-bold tracking-tight'>
+                Loan Details
+              </h1>
+              <p className='text-muted-foreground'>
+                Manage loan details and actions for Loan ID: {loan.id}
+              </p>
+            </div>
+          </div>
+          {/* Refresh Controls */}
+          <div className='flex flex-wrap items-center gap-3'>
+            {/* Last Updated */}
+            {lastUpdated && (
+              <div className='text-muted-foreground text-right text-sm'>
+                <p className='font-medium'>Last updated</p>
+                <p className='text-xs'>
+                  {lastUpdated.toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </p>
+              </div>
+            )}
+            {/* Manual Refresh Button */}
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className='gap-2'
+            >
+              <RefreshCw
+                className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
+              />
+              {isRefreshing ? 'Refreshing...' : 'Refresh'}
+            </Button>
+          </div>
+        </div>
+        {/* Auto-refresh Status Banner */}
+        {!autoRefreshEnabled && (
+          <div className='bg-muted/50 mt-4 mb-8 flex items-center gap-2 rounded-lg border border-dashed px-4 py-2.5'>
+            <AlertCircle className='text-muted-foreground h-4 w-4' />
+            <p className='text-muted-foreground text-sm'>
+              Auto-refresh is disabled. Data will only update when manually
+              refreshed.
             </p>
           </div>
-          <LoanStatusBadge status={loan.status} />
-        </div>
+        )}
       </div>
+
+      {/* Loading Overlay for Background Refresh */}
+      {loading && data && (
+        <div className='bg-background/80 fixed inset-0 z-50 flex items-start justify-center pt-20 backdrop-blur-sm'>
+          <div className='bg-card flex items-center gap-2 rounded-lg border p-4 shadow-lg'>
+            <RefreshCw className='h-4 w-4 animate-spin' />
+            <span className='text-sm font-medium'>Updating data...</span>
+          </div>
+        </div>
+      )}
 
       <div className='grid gap-6 lg:grid-cols-3'>
         {/* Main Content - Left Column */}
@@ -196,7 +257,7 @@ export default function LoanDetailsPage() {
         setActionLoading={setActionLoading}
         refreshAccess={refreshAccess}
         loanId={Number(loanId)}
-        refetch={refetch}
+        refetch={refresh}
       />
 
       <MarkReadyDialog
@@ -205,7 +266,7 @@ export default function LoanDetailsPage() {
         setActionLoading={setActionLoading}
         refreshAccess={refreshAccess}
         loanId={Number(loanId)}
-        refetch={refetch}
+        refetch={refresh}
       />
 
       <MoveToReviewDialog
@@ -214,7 +275,7 @@ export default function LoanDetailsPage() {
         setActionLoading={setActionLoading}
         refreshAccess={refreshAccess}
         loanId={Number(loanId)}
-        refetch={refetch}
+        refetch={refresh}
       />
 
       <ApproveLoanDialog
@@ -223,7 +284,7 @@ export default function LoanDetailsPage() {
         setActionLoading={setActionLoading}
         refreshAccess={refreshAccess}
         loan={loan}
-        refetch={refetch}
+        refetch={refresh}
       />
 
       <RejectLoanDialog
@@ -232,7 +293,7 @@ export default function LoanDetailsPage() {
         setActionLoading={setActionLoading}
         refreshAccess={refreshAccess}
         loanId={Number(loanId)}
-        refetch={refetch}
+        refetch={refresh}
       />
 
       <ReleaseLoanDialog
@@ -241,7 +302,7 @@ export default function LoanDetailsPage() {
         setActionLoading={setActionLoading}
         refreshAccess={refreshAccess}
         loan={loan}
-        refetch={refetch}
+        refetch={refresh}
       />
 
       <CancelLoanDialog
@@ -250,7 +311,7 @@ export default function LoanDetailsPage() {
         setActionLoading={setActionLoading}
         refreshAccess={refreshAccess}
         loanId={Number(loanId)}
-        refetch={refetch}
+        refetch={refresh}
       />
     </div>
   );

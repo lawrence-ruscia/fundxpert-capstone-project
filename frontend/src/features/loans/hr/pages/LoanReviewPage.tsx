@@ -234,7 +234,7 @@ export const LoanReviewPage = () => {
     <div className='container px-4 pb-8'>
       {/* Header */}
       <div className='mb-8'>
-        <div className='mb-2 flex items-center gap-3'>
+        <div className='mb-2 flex flex-col items-start gap-3'>
           <Button
             variant='ghost'
             size='sm'
@@ -244,7 +244,7 @@ export const LoanReviewPage = () => {
             <ArrowLeft className='h-4 w-4' />
           </Button>
           <div className='flex-1'>
-            <h1 className='text-3xl font-bold tracking-tight'>
+            <h1 className='text-2xl font-bold tracking-tight'>
               Assign Approvers
             </h1>
             <p className='text-muted-foreground mt-1'>

@@ -1,4 +1,4 @@
-import { Ellipsis } from 'lucide-react';
+import { Ellipsis, User } from 'lucide-react';
 import { type Row } from '@tanstack/react-table';
 import { UserPen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -6,6 +6,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';

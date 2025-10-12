@@ -33,6 +33,8 @@ import { WithdrawalsDashboardPage } from '@/features/withdrawals/hr/pages/Withdr
 import WithdrawalDetailsPage from '@/features/withdrawals/hr/pages/WithdrawalDetailsPage';
 import AdminLayout from '@/shared/layout/AdminLayout';
 import AdminUserManagementPage from '@/features/userManagement/pages/AdminUserManagementPage';
+import { SmartPollingProvider } from '@/shared/context/SmartPollingContext';
+import { GlobalPollingOverlay } from '@/shared/components/GlobalPollingOverlay';
 
 export const router = createBrowserRouter([
   {
@@ -70,7 +72,10 @@ export const router = createBrowserRouter([
     path: '/employee',
     element: (
       <ProtectedRoute allowedRoles={['Employee']}>
-        <EmployeeLayout />
+        <SmartPollingProvider>
+          <GlobalPollingOverlay position='top' showWhenPaused={true} />
+          <EmployeeLayout />
+        </SmartPollingProvider>
       </ProtectedRoute>
     ),
     children: [
@@ -87,7 +92,10 @@ export const router = createBrowserRouter([
     path: '/hr',
     element: (
       <ProtectedRoute allowedRoles={['HR']}>
-        <HRLayout />
+        <SmartPollingProvider>
+          <GlobalPollingOverlay position='top' showWhenPaused={true} />
+          <HRLayout />
+        </SmartPollingProvider>
       </ProtectedRoute>
     ),
     children: [
@@ -154,7 +162,10 @@ export const router = createBrowserRouter([
     path: '/admin',
     element: (
       <ProtectedRoute allowedRoles={['Admin']}>
-        <AdminLayout />
+        <SmartPollingProvider>
+          <GlobalPollingOverlay position='top' showWhenPaused={true} />
+          <AdminLayout />
+        </SmartPollingProvider>
       </ProtectedRoute>
     ),
     children: [

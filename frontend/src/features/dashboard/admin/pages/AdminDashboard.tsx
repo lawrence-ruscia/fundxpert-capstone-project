@@ -18,6 +18,7 @@ import {
   Timer,
   AlertCircle,
 } from 'lucide-react';
+
 import { getAdminStats } from '../services/adminService';
 import { BalanceCard } from '../../employee/components/BalanceCard';
 import { RoleDistribution } from '../components/RoleDistribution';
@@ -26,10 +27,11 @@ import { LoginTrendsChart } from '../components/LoginTrendsChart';
 import { DataError } from '@/shared/components/DataError';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
 import { useCallback, useState } from 'react';
-import { useAutoRefresh } from '@/shared/hooks/useAuthRefresh';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { usePersistedState } from '@/shared/hooks/usePersistedState';
+import { useSmartPolling } from '@/shared/hooks/useSmartPolling';
+import { NetworkError } from '@/shared/components/NetworkError';
 
 export default function AdminDashboardPage() {
   const [autoRefreshEnabled, setAutoRefreshEnabled] = usePersistedState(
@@ -46,11 +48,14 @@ export default function AdminDashboardPage() {
   const {
     data: stats,
     loading,
+    error,
     refresh,
     lastUpdated,
-  } = useAutoRefresh<AdminStats>(fetchStats, {
-    interval: 300000, // 5 minutes
+  } = useSmartPolling<AdminStats>(fetchStats, {
+    context: 'dashboard',
     enabled: autoRefreshEnabled,
+    pauseWhenHidden: true,
+    pauseWhenInactive: true,
   });
 
   const handleRefresh = async () => {
@@ -62,6 +67,8 @@ export default function AdminDashboardPage() {
   if (loading && !stats) {
     return <LoadingSpinner text=' Loading system overview...' />;
   }
+
+  if (error) return <NetworkError message={error} />;
 
   if (!stats) {
     return (
@@ -83,7 +90,7 @@ export default function AdminDashboardPage() {
       <div className='mb-8'>
         <div className='flex flex-wrap items-start justify-between gap-4'>
           <div>
-            <h1 className='text-3xl font-bold tracking-tight'>
+            <h1 className='text-2xl font-bold tracking-tight'>
               System Overview
             </h1>
             <p className='text-muted-foreground mt-2'>

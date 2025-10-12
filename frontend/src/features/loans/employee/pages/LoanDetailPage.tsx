@@ -6,10 +6,12 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import {
+  AlertCircle,
   AlertTriangle,
   CalendarDays,
   Clock,
   PhilippinePeso,
+  RefreshCw,
   Target,
   XCircle,
 } from 'lucide-react';
@@ -20,13 +22,15 @@ import { LoanStatusBadge } from '../components/LoanStatusBadge';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
 import { DataError } from '@/shared/components/DataError';
 import { NetworkError } from '@/shared/components/NetworkError';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { useParams } from 'react-router-dom';
 import { CancelLoanDialog } from '../components/CancelLoanDialog';
 import type { Loan } from '../types/loan';
 import { useApi } from '@/shared/hooks/useApi';
+import { usePersistedState } from '@/shared/hooks/usePersistedState';
+import { useSmartPolling } from '@/shared/hooks/useSmartPolling';
 import { fetchLoanDetails } from '../services/loanService';
 
 const allowedCancelStatuses = [
@@ -39,14 +43,38 @@ const allowedCancelStatuses = [
 export default function LoanDetailPage() {
   const { loanId } = useParams<{ loanId: string }>();
 
+  const [autoRefreshEnabled] = usePersistedState(
+    'employee-dashboard-auto-refresh',
+    true // default value
+  );
+
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const fetchLoanDetailsHandler = useCallback(async () => {
+    const loan = await fetchLoanDetails(parseInt(loanId ?? '', 10));
+
+    return loan;
+  }, [loanId]);
+
+  const { data, loading, error, refresh, lastUpdated } = useSmartPolling(
+    fetchLoanDetailsHandler,
+    {
+      context: 'loan-detail',
+      enabled: autoRefreshEnabled,
+      pauseWhenHidden: true,
+      pauseWhenInactive: true,
+    }
+  );
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await refresh();
+    setIsRefreshing(false);
+  };
+
   const [openCancel, setOpenCancel] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
-  const {
-    data: loan,
-    loading,
-    error,
-    refetch,
-  } = useApi<Loan>(() => fetchLoanDetails(parseInt(loanId ?? '', 10)));
+  const loan = data;
 
   const canCancel = allowedCancelStatuses.find(
     status => loan?.status === status
@@ -57,7 +85,7 @@ export default function LoanDetailPage() {
   }
 
   if (error) {
-    return <NetworkError message={error.message} />;
+    return <NetworkError message={error} />;
   }
 
   if (!loan) {
@@ -72,16 +100,69 @@ export default function LoanDetailPage() {
     <div className='bg-background'>
       <div className='mx-auto space-y-8'>
         {/* Header */}
-        <div className='space-y-2'>
-          <div className='space-y-1'>
-            <h1 className='text-2xl font-bold tracking-tight'>
-              Loan Application: #{loan.id}
-            </h1>
-            <p className='text-muted-foreground'>
-              Review your loan application details and manage required documents
-            </p>
+        <div className='mb-8'>
+          <div className='flex flex-wrap items-start justify-between gap-4'>
+            <div className='flex items-center gap-3'>
+              <div>
+                <h1 className='text-2xl font-bold tracking-tight'>
+                  Loan Application: #{loan.id}
+                </h1>
+                <p className='text-muted-foreground'>
+                  Review your loan application details and manage required
+                  documents
+                </p>
+              </div>
+            </div>
+            {/* Refresh Controls */}
+            <div className='flex flex-wrap items-center gap-3'>
+              {/* Last Updated */}
+              {lastUpdated && (
+                <div className='text-muted-foreground text-right text-sm'>
+                  <p className='font-medium'>Last updated</p>
+                  <p className='text-xs'>
+                    {lastUpdated.toLocaleTimeString('en-US', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </p>
+                </div>
+              )}
+              {/* Manual Refresh Button */}
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                className='gap-2'
+              >
+                <RefreshCw
+                  className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
+                />
+                {isRefreshing ? 'Refreshing...' : 'Refresh'}
+              </Button>
+            </div>
           </div>
+          {/* Auto-refresh Status Banner */}
+          {!autoRefreshEnabled && (
+            <div className='bg-muted/50 mt-4 mb-8 flex items-center gap-2 rounded-lg border border-dashed px-4 py-2.5'>
+              <AlertCircle className='text-muted-foreground h-4 w-4' />
+              <p className='text-muted-foreground text-sm'>
+                Auto-refresh is disabled. Data will only update when manually
+                refreshed.
+              </p>
+            </div>
+          )}
         </div>
+
+        {/* Loading Overlay for Background Refresh */}
+        {loading && data && (
+          <div className='bg-background/80 fixed inset-0 z-50 flex items-start justify-center pt-20 backdrop-blur-sm'>
+            <div className='bg-card flex items-center gap-2 rounded-lg border p-4 shadow-lg'>
+              <RefreshCw className='h-4 w-4 animate-spin' />
+              <span className='text-sm font-medium'>Updating data...</span>
+            </div>
+          </div>
+        )}
 
         {/* Loan Overview Card */}
         <Card className='border-border/50 shadow-sm'>
@@ -216,7 +297,7 @@ export default function LoanDetailPage() {
             onOpenChange={setOpenCancel}
             setActionLoading={setActionLoading}
             loan={loan}
-            refetch={refetch}
+            refetch={refresh}
           />
         </Card>
 

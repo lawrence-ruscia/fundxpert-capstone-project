@@ -10,12 +10,13 @@ import {
   getSortedRowModel,
   getFilteredRowModel,
 } from '@tanstack/react-table';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { empContributionsColumns } from '../components/EmployeeContributionsColumn';
 import { EmployeeContributionsTable } from '../components/EmployeeContributionsTable';
 import { ContributionsProvider } from '../components/ContributionsProvider';
 import { Button } from '@/components/ui/button';
 import {
+  AlertCircle,
   ArrowLeft,
   Briefcase,
   Building,
@@ -24,6 +25,7 @@ import {
   Hash,
   Percent,
   PiggyBank,
+  RefreshCw,
   TrendingUp,
   User,
 } from 'lucide-react';
@@ -36,14 +38,49 @@ import { ExportDropdown } from '@/shared/components/ExportDropdown';
 import { useTablePagination } from '@/shared/hooks/useTablePagination';
 import { useDateRangeFilter } from '@/shared/hooks/useDateRangeFilter';
 import { useContributionsExport } from '../hooks/useContributionsExport';
+import { usePersistedState } from '@/shared/hooks/usePersistedState';
+import { hrContributionsService } from '../services/hrContributionService';
+import { getEmployeeById } from '@/features/employeeManagement/services/hrService';
+import { useSmartPolling } from '@/shared/hooks/useSmartPolling';
 
 // TODO: Make this Employee Summary, add loans, withdrawals
 export default function EmployeeContributionsPage() {
-  const { id: userId } = useParams();
+  const { id } = useParams();
 
-  const { data, loading, error, refetch } = useEmployeeContributionsData(
-    Number(userId)
+  const userId = Number(id);
+  const [autoRefreshEnabled] = usePersistedState(
+    'hr-dashboard-auto-refresh',
+    true // default value
   );
+
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const fetchContributionsHandler = useCallback(async () => {
+    const [employee, contributions, summary] = await Promise.all([
+      getEmployeeById(userId),
+      hrContributionsService.getAllContributions({ userId }),
+      hrContributionsService.getEmployeeContributionsSummary(userId),
+    ]);
+
+    return { employee, contributions, summary };
+  }, [userId]);
+
+  const { data, loading, error, refresh, lastUpdated } = useSmartPolling(
+    fetchContributionsHandler,
+    {
+      context: 'contributions',
+      enabled: autoRefreshEnabled,
+      pauseWhenHidden: true,
+      pauseWhenInactive: true,
+    }
+  );
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await refresh();
+    setIsRefreshing(false);
+  };
+
   const navigate = useNavigate();
 
   // Table states
@@ -59,7 +96,7 @@ export default function EmployeeContributionsPage() {
 
   // Export functionality
   const { handleExport } = useContributionsExport({
-    userId: Number(userId),
+    userId,
     dateRange: {
       start: dateRange.start,
       end: dateRange.end ?? new Date().toLocaleDateString(),
@@ -101,26 +138,69 @@ export default function EmployeeContributionsPage() {
   return (
     <ContributionsProvider>
       <div>
+        {/* Header */}
         <div className='mb-8'>
-          <div className='mb-4 gap-3'>
-            <Button
-              variant='ghost'
-              size='sm'
-              onClick={() => navigate('/hr/employees')}
-              className='p-2'
-            >
-              <ArrowLeft className='h-4 w-4' />
-            </Button>
-            <div>
-              <h1 className='text-2xl font-bold tracking-tight'>
-                Employee Contributions
-              </h1>
-              <p className='text-muted-foreground'>
-                Manage and track contribution history for {employee?.name}
-              </p>
+          <div className='flex flex-wrap items-start justify-between gap-4'>
+            <div className='flex items-center gap-3'>
+              <div>
+                <h1 className='text-2xl font-bold tracking-tight'>
+                  Employee Contributions
+                </h1>
+                <p className='text-muted-foreground'>
+                  Manage and track contribution history for {employee?.name}
+                </p>
+              </div>
+            </div>
+            {/* Refresh Controls */}
+            <div className='flex flex-wrap items-center gap-3'>
+              {/* Last Updated */}
+              {lastUpdated && (
+                <div className='text-muted-foreground text-right text-sm'>
+                  <p className='font-medium'>Last updated</p>
+                  <p className='text-xs'>
+                    {lastUpdated.toLocaleTimeString('en-US', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </p>
+                </div>
+              )}
+              {/* Manual Refresh Button */}
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                className='gap-2'
+              >
+                <RefreshCw
+                  className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
+                />
+                {isRefreshing ? 'Refreshing...' : 'Refresh'}
+              </Button>
             </div>
           </div>
+          {/* Auto-refresh Status Banner */}
+          {!autoRefreshEnabled && (
+            <div className='bg-muted/50 mt-4 mb-8 flex items-center gap-2 rounded-lg border border-dashed px-4 py-2.5'>
+              <AlertCircle className='text-muted-foreground h-4 w-4' />
+              <p className='text-muted-foreground text-sm'>
+                Auto-refresh is disabled. Data will only update when manually
+                refreshed.
+              </p>
+            </div>
+          )}
         </div>
+
+        {/* Loading Overlay for Background Refresh */}
+        {loading && data && (
+          <div className='bg-background/80 fixed inset-0 z-50 flex items-start justify-center pt-20 backdrop-blur-sm'>
+            <div className='bg-card flex items-center gap-2 rounded-lg border p-4 shadow-lg'>
+              <RefreshCw className='h-4 w-4 animate-spin' />
+              <span className='text-sm font-medium'>Updating data...</span>
+            </div>
+          </div>
+        )}
 
         {/* Employee Profile Card */}
         <Card className='mb-6'>

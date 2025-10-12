@@ -1,5 +1,5 @@
 import { EmployeesProvider } from '../components/EmployeesProvider';
-import { Main } from '@/shared/layout/Main';
+
 import { EmployeesPrimaryButtons } from '../components/EmployeesPrimaryButtons';
 import { useCallback, useEffect, useState } from 'react';
 import {
@@ -13,28 +13,69 @@ import {
   type Table,
 } from '@tanstack/react-table';
 import { employeesColumns } from '../components/EmployeesColumn';
-import { getEmployees } from '../services/hrService';
-import { useApi } from '@/shared/hooks/useApi';
+import {
+  getDepartments,
+  getEmployees,
+  getPositions,
+} from '../services/hrService';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
 import { NetworkError } from '@/shared/components/NetworkError';
 import { EmployeesTable } from '../components/EmployeesTable';
 import type { HREmployeeRecord } from '../types/employeeTypes';
-import { useEmployeeForm } from '../hooks/useEmployeeForm';
 import { useSearchParams } from 'react-router-dom';
+import { usePersistedState } from '@/shared/hooks/usePersistedState';
+import { useSmartPolling } from '@/shared/hooks/useSmartPolling';
+import { Button } from '@/components/ui/button';
+import {
+  AlertCircle,
+  BanknoteArrowDown,
+  FileText,
+  PiggyBank,
+  RefreshCw,
+  Users,
+  Wallet,
+} from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { BalanceCard } from '@/features/dashboard/employee/components/BalanceCard';
+import { formatCurrency } from '@/features/dashboard/employee/utils/formatters';
+import { fetchHROverview } from '@/features/dashboard/hr/services/hrDashboardService';
 
 export const EmployeeListPage = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const { data, loading, error } = useApi<HREmployeeRecord[]>(getEmployees);
-  const {
-    data: empMetadata,
-    loading: empMetaLoading,
-    error: empMetaError,
-  } = useEmployeeForm();
-
-  console.log(
-    'DATE_HIRED: ',
-    data?.map(e => e.date_hired)
+  const [autoRefreshEnabled] = usePersistedState(
+    'hr-dashboard-auto-refresh',
+    true // default value
   );
+
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const fetchEmployeesHandler = useCallback(async () => {
+    const [employees, departments, positions, overview] = await Promise.all([
+      getEmployees(),
+      getDepartments(),
+      getPositions(),
+      fetchHROverview(),
+    ]);
+
+    return { employees, departments, positions, overview };
+  }, []);
+
+  const { data, loading, error, refresh, lastUpdated } = useSmartPolling(
+    fetchEmployeesHandler,
+    {
+      context: 'employees',
+      enabled: autoRefreshEnabled,
+      pauseWhenHidden: true,
+      pauseWhenInactive: true,
+    }
+  );
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await refresh();
+    setIsRefreshing(false);
+  };
+
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Get pagination values from URL or use defaults
   const pageIndex = parseInt(searchParams.get('page') || '1', 10) - 1; // URL is 1-based, table is 0-based
@@ -85,21 +126,8 @@ export const EmployeeListPage = () => {
     });
   }, [searchParams]);
 
-  const departments = empMetadata.departments?.map(d => {
-    return {
-      label: d.name,
-      value: d.name,
-    };
-  });
-  const positions = empMetadata.positions?.map(p => {
-    return {
-      label: p.title,
-      value: p.title,
-    };
-  });
-
   const table = useReactTable({
-    data: data ?? [],
+    data: data?.employees ?? [],
     columns: employeesColumns,
     onSortingChange: setSorting,
     onColumnFiltersChange: setColumnFilters,
@@ -117,31 +145,168 @@ export const EmployeeListPage = () => {
     },
   });
 
-  if (loading || empMetaLoading) {
-    return <LoadingSpinner text={'Loading Employee List'} />;
+  if (loading) {
+    return <LoadingSpinner text={'Loading employees...'} />;
   }
 
-  if (error || empMetaError) {
-    return <NetworkError message={error?.message || empMetaError} />;
+  if (error) {
+    return <NetworkError message={error} />;
   }
+
+  const departmentsFiltered = data?.departments.map(d => {
+    return {
+      label: d.name,
+      value: d.name,
+    };
+  });
+  const positionsFiltered = data?.positions.map(p => {
+    return {
+      label: p.title,
+      value: p.title,
+    };
+  });
+
+  const overview = data?.overview;
 
   return (
     <EmployeesProvider>
-      <div className='mb-2 flex flex-wrap items-center justify-between space-y-2'>
-        <div>
-          <h2 className='text-2xl font-bold tracking-tight'>Employee List</h2>
-          <p className='text-muted-foreground'>
-            Manage employee records and account details.
-          </p>
+      <div className='mx-auto space-y-8'>
+        {/* Header */}
+        <div className='mb-8'>
+          <div className='flex flex-wrap items-start justify-between gap-4'>
+            <div className='flex items-center gap-3'>
+              <div>
+                <h1 className='text-2xl font-bold tracking-tight'>
+                  Employees List
+                </h1>
+                <p className='text-muted-foreground'>
+                  Manage employee records and details
+                </p>
+              </div>
+            </div>
+            {/* Refresh Controls */}
+            <div className='flex flex-wrap items-center gap-3'>
+              {/* Last Updated */}
+              {lastUpdated && (
+                <div className='text-muted-foreground text-right text-sm'>
+                  <p className='font-medium'>Last updated</p>
+                  <p className='text-xs'>
+                    {lastUpdated.toLocaleTimeString('en-US', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </p>
+                </div>
+              )}
+              {/* Manual Refresh Button */}
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                className='gap-2'
+              >
+                <RefreshCw
+                  className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
+                />
+                {isRefreshing ? 'Refreshing...' : 'Refresh'}
+              </Button>
+            </div>
+          </div>
+          {/* Auto-refresh Status Banner */}
+          {!autoRefreshEnabled && (
+            <div className='bg-muted/50 mt-4 mb-8 flex items-center gap-2 rounded-lg border border-dashed px-4 py-2.5'>
+              <AlertCircle className='text-muted-foreground h-4 w-4' />
+              <p className='text-muted-foreground text-sm'>
+                Auto-refresh is disabled. Data will only update when manually
+                refreshed.
+              </p>
+            </div>
+          )}
         </div>
-        <EmployeesPrimaryButtons />
+
+        {/* Loading Overlay for Background Refresh */}
+        {loading && data && (
+          <div className='bg-background/80 fixed inset-0 z-50 flex items-start justify-center pt-20 backdrop-blur-sm'>
+            <div className='bg-card flex items-center gap-2 rounded-lg border p-4 shadow-lg'>
+              <RefreshCw className='h-4 w-4 animate-spin' />
+              <span className='text-sm font-medium'>Updating data...</span>
+            </div>
+          </div>
+        )}
       </div>
-      <div className='-mx-4 flex-1 overflow-auto px-4 py-1 lg:flex-row lg:space-y-0 lg:space-x-12'>
-        <EmployeesTable
-          table={table as Table<HREmployeeRecord>}
-          metadata={{ departments, positions }}
-        />
-      </div>
+
+      <Card className='mb-8'>
+        <CardHeader className='mb-4 flex items-center gap-2 font-semibold'>
+          <div className='bg-primary/10 rounded-lg p-2'>
+            <Users className='h-5 w-5' />
+          </div>
+          <CardTitle className='text-lg'>Employees Summary</CardTitle>
+        </CardHeader>
+        <CardContent className='grid gap-4 md:grid-cols-2 lg:grid-cols-4'>
+          <BalanceCard
+            label='Total Employees'
+            value={String(overview?.total_employees)}
+            icon={Users}
+            description={`${overview?.active_employees} active employees`}
+          />
+          <BalanceCard
+            label='Total Contributions'
+            value={formatCurrency(
+              Number(overview?.total_employee_contributions) +
+                Number(overview?.total_employer_contributions)
+            )}
+            icon={PiggyBank}
+            description={`${formatCurrency(Number(overview?.total_employee_contributions))} from employee`}
+          />
+
+          <BalanceCard
+            label='Pending Loans'
+            value={String(overview?.pending_loans)}
+            icon={Wallet}
+            description={`${String(overview?.approved_loans_this_month ?? 0)} approved loans this month`}
+          />
+
+          <BalanceCard
+            label='Pending Withdrawals'
+            value={String(overview?.pending_withdrawals)}
+            icon={BanknoteArrowDown}
+            description={`${String(overview?.processsed_withdrawals_this_month ?? 0)} processed withdrawals this month`}
+          />
+        </CardContent>
+      </Card>
+
+      {/* Contribution History Table */}
+      <Card>
+        <CardHeader className='mb-4 flex flex-wrap items-center justify-between gap-4 font-semibold'>
+          <div className='flex items-center gap-2'>
+            <div className='bg-primary/10 rounded-lg p-2'>
+              <Users className='h-5 w-5' />
+            </div>
+            <CardTitle className='text-lg'>
+              Employees Table
+              <p className='text-muted-foreground text-sm'>
+                Detailed breakdown of all employees
+              </p>
+            </CardTitle>
+          </div>
+          <div className='flex items-center gap-4'>
+            <EmployeesPrimaryButtons />
+            {/* <ExportDropdown onExport={handleExport} variant='outline' /> */}
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className='overflow-auto'>
+            <EmployeesTable
+              table={table as Table<HREmployeeRecord>}
+              metadata={{
+                departments: departmentsFiltered,
+                positions: positionsFiltered,
+              }}
+            />
+          </div>
+        </CardContent>
+      </Card>
     </EmployeesProvider>
   );
 };

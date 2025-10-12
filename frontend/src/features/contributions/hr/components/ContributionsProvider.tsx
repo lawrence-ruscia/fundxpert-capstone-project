@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import useDialogState from '@/shared/hooks/useDialogState';
 import type { Contribution } from '../../shared/types/contributions';
 
-type DialogType = 'add' | 'edit' | 'delete';
+type DialogType = 'add' | 'edit' | 'delete' | 'view';
 
 type ContributionsContextType = {
   open: DialogType | null;

@@ -8,7 +8,7 @@ import type {
 } from '../types/withdrawal';
 import { useApi } from '@/shared/hooks/useApi';
 import { WithdrawalApplicationForm } from '../components/WithdrawalApplicationForm';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
 import {
@@ -35,6 +35,7 @@ import {
   FileX,
   Wallet,
   Calendar,
+  RefreshCw,
 } from 'lucide-react';
 import { BalanceCard } from '@/features/dashboard/employee/components/BalanceCard';
 import { formatCurrency } from '@/features/dashboard/employee/utils/formatters';
@@ -43,27 +44,47 @@ import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
 import { NetworkError } from '@/shared/components/NetworkError';
 import { DataError } from '@/shared/components/DataError';
 import { WithdrawalItem } from '../components/WithdrawalItem';
+import { usePersistedState } from '@/shared/hooks/usePersistedState';
+import { useSmartPolling } from '@/shared/hooks/useSmartPolling';
 
 export default function WithdrawalsPage() {
-  const {
-    data: withdrawals,
-    loading,
-    error,
-    refetch: refetchWithdrawal,
-  } = useApi<WithdrawalRequest[]>(fetchWithdrawalHistory);
-  const {
-    data: eligibility,
-    loading: eligibilityLoading,
-    error: eligibilityError,
-    refetch: refetchEligibility,
-  } = useApi<WithdrawalEligibility>(fetchWithdrawalEligibility);
+  const [autoRefreshEnabled] = usePersistedState(
+    'employee-dashboard-auto-refresh',
+    true // default value
+  );
+
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const fetchWithdrawalDetailsHandler = useCallback(async () => {
+    const [withdrawals, eligibility] = await Promise.all([
+      fetchWithdrawalHistory(),
+      fetchWithdrawalEligibility(),
+    ]);
+
+    return { withdrawals, eligibility };
+  }, []);
+
+  const { data, loading, error, refresh, lastUpdated } = useSmartPolling(
+    fetchWithdrawalDetailsHandler,
+    {
+      context: 'withdrawal-detail',
+      enabled: autoRefreshEnabled,
+      pauseWhenHidden: true,
+      pauseWhenInactive: true,
+    }
+  );
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await refresh();
+    setIsRefreshing(false);
+  };
 
   const [showForm, setShowForm] = useState(false);
 
   const handleFormSuccess = () => {
     setShowForm(false);
-    refetchWithdrawal();
-    refetchEligibility();
+    refresh();
   };
 
   const handleFormCancel = () => {
@@ -71,18 +92,16 @@ export default function WithdrawalsPage() {
   };
 
   // Loading state
-  if (loading || eligibilityLoading) {
+  if (loading) {
     return <LoadingSpinner text={'Checking Withdrawal Eligibility'} />;
   }
 
   // Error state
-  if (error || eligibilityError) {
-    return (
-      <NetworkError message={error?.message || eligibilityError?.message} />
-    );
+  if (error) {
+    return <NetworkError message={error} />;
   }
 
-  if (!eligibility) {
+  if (!data) {
     return (
       <DataError
         title='No withdrawal eligibility data found'
@@ -90,6 +109,8 @@ export default function WithdrawalsPage() {
       />
     );
   }
+
+  const { withdrawals, eligibility } = data;
   // FIX: Filter for active withdrawals and get the latest one
   const activeWithdrawals =
     withdrawals?.filter(
@@ -135,17 +156,67 @@ export default function WithdrawalsPage() {
         <div className=''>
           {/* Header */}
           <div className='mb-8'>
-            <div className='mb-2 flex items-center gap-3'>
-              <div>
-                <h1 className='text-2xl font-bold tracking-tight'>
-                  Withdrawal Management
-                </h1>
-                <p className='text-muted-foreground'>
-                  Manage your provident fund withdrawals
-                </p>
+            <div className='flex flex-wrap items-start justify-between gap-4'>
+              <div className='flex items-center gap-3'>
+                <div>
+                  <h1 className='text-2xl font-bold tracking-tight'>
+                    Withdrawals Management
+                  </h1>
+                  <p className='text-muted-foreground'>
+                    Manage your provident fund withdrawals
+                  </p>
+                </div>
+              </div>
+              {/* Refresh Controls */}
+              <div className='flex flex-wrap items-center gap-3'>
+                {/* Last Updated */}
+                {lastUpdated && (
+                  <div className='text-muted-foreground text-right text-sm'>
+                    <p className='font-medium'>Last updated</p>
+                    <p className='text-xs'>
+                      {lastUpdated.toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </p>
+                  </div>
+                )}
+                {/* Manual Refresh Button */}
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={handleRefresh}
+                  disabled={isRefreshing}
+                  className='gap-2'
+                >
+                  <RefreshCw
+                    className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
+                  />
+                  {isRefreshing ? 'Refreshing...' : 'Refresh'}
+                </Button>
               </div>
             </div>
+            {/* Auto-refresh Status Banner */}
+            {!autoRefreshEnabled && (
+              <div className='bg-muted/50 mt-4 mb-8 flex items-center gap-2 rounded-lg border border-dashed px-4 py-2.5'>
+                <AlertCircle className='text-muted-foreground h-4 w-4' />
+                <p className='text-muted-foreground text-sm'>
+                  Auto-refresh is disabled. Data will only update when manually
+                  refreshed.
+                </p>
+              </div>
+            )}
           </div>
+
+          {/* Loading Overlay for Background Refresh */}
+          {loading && data && (
+            <div className='bg-background/80 fixed inset-0 z-50 flex items-start justify-center pt-20 backdrop-blur-sm'>
+              <div className='bg-card flex items-center gap-2 rounded-lg border p-4 shadow-lg'>
+                <RefreshCw className='h-4 w-4 animate-spin' />
+                <span className='text-sm font-medium'>Updating data...</span>
+              </div>
+            </div>
+          )}
 
           {/* Overview Cards */}
           <div className='mb-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4'>

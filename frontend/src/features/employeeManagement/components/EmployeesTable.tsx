@@ -19,13 +19,6 @@ type EmployeesTableProps = {
   metadata: unknown;
 };
 export const EmployeesTable = ({ table, metadata }: EmployeesTableProps) => {
-  console.log('EmployeesTable Debug Info:');
-  console.log('- Table object:', table);
-  console.log('- Row count:', table.getRowCount());
-  console.log('- Rows:', table.getRowModel().rows);
-  console.log('- Columns:', table.getAllColumns());
-  console.log('- Header groups:', table.getHeaderGroups());
-
   return (
     <div className='space-y-4 max-sm:has-[div[role="toolbar"]]:mb-16'>
       <DataTableToolbar

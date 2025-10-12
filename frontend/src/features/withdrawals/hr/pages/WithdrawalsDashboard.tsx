@@ -1,13 +1,8 @@
-import type {
-  WithdrawalRequest,
-  WithdrawalSummary,
-} from '../../employee/types/withdrawal';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
 import { DataError } from '@/shared/components/DataError';
-import { useMultiFetch } from '@/shared/hooks/useMultiFetch';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
-import { FileText } from 'lucide-react';
+import { AlertCircle, FileText, RefreshCw } from 'lucide-react';
 
 import { useDateRangeFilter } from '@/shared/hooks/useDateRangeFilter';
 import { useTablePagination } from '@/shared/hooks/useTablePagination';
@@ -20,7 +15,7 @@ import {
   getSortedRowModel,
   getFilteredRowModel,
 } from '@tanstack/react-table';
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import {
   getAllWithdrawals,
   getWithdrawalStatusSummary,
@@ -31,19 +26,42 @@ import { WithdrawalsTable } from '../components/WithdrawalsTable';
 import { WithdrawalStatusSummary } from '../components/WithdrawalStatusSummary';
 import { useWithdrawalsExport } from '../hooks/useWithdrawalsExport';
 import { ExportDropdown } from '@/shared/components/ExportDropdown';
+import { useSmartPolling } from '@/shared/hooks/useSmartPolling';
+import { usePersistedState } from '@/shared/hooks/usePersistedState';
+import { Button } from '@/components/ui/button';
 
 export const WithdrawalsDashboardPage = () => {
-  const { data, loading, error } = useMultiFetch<{
-    requests: WithdrawalRequest[];
-    summary: WithdrawalSummary[];
-  }>(async () => {
+  const [autoRefreshEnabled] = usePersistedState(
+    'hr-dashboard-auto-refresh',
+    true // default value
+  );
+
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const fetchContributionsHandler = useCallback(async () => {
     const [requests, summary] = await Promise.all([
       getAllWithdrawals(),
       getWithdrawalStatusSummary(),
     ]);
 
     return { requests, summary };
-  });
+  }, []);
+
+  const { data, loading, error, refresh, lastUpdated } = useSmartPolling(
+    fetchContributionsHandler,
+    {
+      context: 'withdrawal-table',
+      enabled: autoRefreshEnabled,
+      pauseWhenHidden: true,
+      pauseWhenInactive: true,
+    }
+  );
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await refresh();
+    setIsRefreshing(false);
+  };
 
   const requests = data?.requests;
   const summary = data?.summary;
@@ -109,18 +127,69 @@ export const WithdrawalsDashboardPage = () => {
       <div className='space-y-6'>
         {/* Header */}
         <div className='mb-8'>
-          <div className='mb-4 gap-3'>
-            <div>
-              <h1 className='text-2xl font-bold tracking-tight'>
-                Withdrawals Management
-              </h1>
-              <p className='text-muted-foreground'>
-                Track the status and manage the lifecycle of all employee
-                withdrawal requests.
-              </p>
+          <div className='flex flex-wrap items-start justify-between gap-4'>
+            <div className='flex items-center gap-3'>
+              <div>
+                <h1 className='text-2xl font-bold tracking-tight'>
+                  Withdrawals Management
+                </h1>
+                <p className='text-muted-foreground'>
+                  Track the status and manage the lifecycle of all employee
+                  withdrawal requests.
+                </p>
+              </div>
+            </div>
+            {/* Refresh Controls */}
+            <div className='flex flex-wrap items-center gap-3'>
+              {/* Last Updated */}
+              {lastUpdated && (
+                <div className='text-muted-foreground text-right text-sm'>
+                  <p className='font-medium'>Last updated</p>
+                  <p className='text-xs'>
+                    {lastUpdated.toLocaleTimeString('en-US', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </p>
+                </div>
+              )}
+              {/* Manual Refresh Button */}
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                className='gap-2'
+              >
+                <RefreshCw
+                  className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
+                />
+                {isRefreshing ? 'Refreshing...' : 'Refresh'}
+              </Button>
             </div>
           </div>
+          {/* Auto-refresh Status Banner */}
+          {!autoRefreshEnabled && (
+            <div className='bg-muted/50 mt-4 mb-8 flex items-center gap-2 rounded-lg border border-dashed px-4 py-2.5'>
+              <AlertCircle className='text-muted-foreground h-4 w-4' />
+              <p className='text-muted-foreground text-sm'>
+                Auto-refresh is disabled. Data will only update when manually
+                refreshed.
+              </p>
+            </div>
+          )}
         </div>
+
+        {/* Loading Overlay for Background Refresh */}
+        {loading && data && (
+          <div className='bg-background/80 fixed inset-0 z-50 flex items-start justify-center pt-20 backdrop-blur-sm'>
+            <div className='bg-card flex items-center gap-2 rounded-lg border p-4 shadow-lg'>
+              <RefreshCw className='h-4 w-4 animate-spin' />
+              <span className='text-sm font-medium'>Updating data...</span>
+            </div>
+          </div>
+        )}
+
         {/* Loans Summary */}
         {summary && <WithdrawalStatusSummary summary={summary ?? []} />}
         {/* Loans Table */}

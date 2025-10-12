@@ -8,6 +8,7 @@ import {
   formatVestingDate,
 } from '../utils/formatters.js';
 import {
+  AlertCircle,
   Building2,
   Clock,
   PiggyBank,
@@ -26,28 +27,37 @@ import { DataError } from '@/shared/components/DataError';
 import { useCallback, useState } from 'react';
 import type { ContributionPeriod } from '@/features/contributions/shared/types/contributions.js';
 import { usePersistedState } from '@/shared/hooks/usePersistedState.js';
-import { useAutoRefresh } from '@/shared/hooks/useAuthRefresh.js';
 import { fetchEmployeeOverview } from '../services/employeeService.js';
 import { fetchEmployeeContributions } from '@/features/contributions/employee/services/employeeContributionsService.js';
 import { Button } from '@/components/ui/button.js';
+import { useSmartPolling } from '@/shared/hooks/useSmartPolling.js';
+import { Switch } from '@/components/ui/switch.js';
 
 export default function EmployeeDashboardPage() {
+  const [autoRefreshEnabled, setAutoRefreshEnabled] = usePersistedState(
+    'employee-dashboard-auto-refresh',
+    true // default value
+  );
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [timeRange, setTimeRange] = useState<ContributionPeriod>('year');
 
   const fetchDashboardData = useCallback(async () => {
     // This should match what useHRDashboardData returns
-    const overview = await fetchEmployeeOverview();
-    const contributions = await fetchEmployeeContributions(timeRange);
+    const [overview, contributions] = await Promise.all([
+      fetchEmployeeOverview(),
+      fetchEmployeeContributions(timeRange),
+    ]);
 
     return { overview, contributions };
   }, [timeRange]);
 
-  const { data, loading, error, refresh, lastUpdated } = useAutoRefresh(
+  const { data, error, loading, refresh, lastUpdated } = useSmartPolling(
     fetchDashboardData,
     {
-      interval: 300000,
-      enabled: false,
+      context: 'dashboard',
+      enabled: autoRefreshEnabled,
+      pauseWhenHidden: true,
+      pauseWhenInactive: true,
     }
   );
 
@@ -72,56 +82,82 @@ export default function EmployeeDashboardPage() {
 
   return (
     <>
-      <div className='mb-8 flex flex-wrap items-center justify-between gap-4 space-y-2'>
-        <div>
-          <h1 className='text-3xl font-bold tracking-tight'>
-            Welcome back, {overview.employee.name}!
-          </h1>
-          <div className='mt-2 flex gap-6'>
-            <p>
-              <span className='text-muted-foreground'>Employee ID: </span>
-              {overview.employee.employee_id}
-            </p>
-            <p>
-              <span className='text-muted-foreground flex items-center gap-2'>
-                Status:
-                <EmploymentStatusBadge
-                  status={overview.employee.employment_status}
-                  size='sm'
-                />
-              </span>
-            </p>
+      {/* Header */}
+      <div className='mb-8'>
+        <div className='flex flex-wrap items-start justify-between gap-4'>
+          <div className='flex items-center gap-3'>
+            <div>
+              <h1 className='text-2xl font-bold tracking-tight'>
+                Welcome back, {overview.employee.name}!
+              </h1>
+              <div className='mt-2 flex items-center gap-4 tracking-tight'>
+                <p className='text-muted-foreground'>
+                  <span className='text-muted-foreground'>Employee ID: </span>
+                  {overview.employee.employee_id}
+                </p>
+                <p>
+                  <span className='text-muted-foreground flex items-center gap-2'>
+                    Status:
+                    <EmploymentStatusBadge
+                      status={overview.employee.employment_status}
+                      size='sm'
+                    />
+                  </span>
+                </p>
+              </div>
+            </div>
+          </div>
+          {/* Refresh Controls */}
+          <div className='flex flex-wrap items-center gap-3'>
+            {/* Auto-refresh Toggle */}
+            <div className='flex items-center gap-2 rounded-lg border px-3 py-2'>
+              <div className='flex items-center gap-2'>
+                <Timer className='text-muted-foreground h-4 w-4' />
+                <span className='text-sm font-medium'>Auto-refresh</span>
+              </div>
+              <Switch
+                checked={autoRefreshEnabled}
+                onCheckedChange={setAutoRefreshEnabled}
+                aria-label='Toggle auto-refresh'
+              />
+            </div>
+            {/* Last Updated */}
+            {lastUpdated && (
+              <div className='text-muted-foreground text-right text-sm'>
+                <p className='font-medium'>Last updated</p>
+                <p className='text-xs'>
+                  {lastUpdated.toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </p>
+              </div>
+            )}
+            {/* Manual Refresh Button */}
+            <Button
+              variant='outline'
+              size='sm'
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className='gap-2'
+            >
+              <RefreshCw
+                className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
+              />
+              {isRefreshing ? 'Refreshing...' : 'Refresh'}
+            </Button>
           </div>
         </div>
-
-        {/* Refresh Controls */}
-        <div className='flex items-center gap-3 self-start'>
-          {/* Last Updated */}
-          {lastUpdated && (
-            <div className='text-muted-foreground text-right text-sm'>
-              <p className='font-medium'>Last updated</p>
-              <p className='text-xs'>
-                {lastUpdated.toLocaleTimeString('en-US', {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}
-              </p>
-            </div>
-          )}
-          {/* Manual Refresh Button */}
-          <Button
-            variant='outline'
-            size='sm'
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-            className='gap-2'
-          >
-            <RefreshCw
-              className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
-            />
-            {isRefreshing ? 'Refreshing...' : 'Refresh'}
-          </Button>
-        </div>
+        {/* Auto-refresh Status Banner */}
+        {!autoRefreshEnabled && (
+          <div className='bg-muted/50 mt-4 mb-8 flex items-center gap-2 rounded-lg border border-dashed px-4 py-2.5'>
+            <AlertCircle className='text-muted-foreground h-4 w-4' />
+            <p className='text-muted-foreground text-sm'>
+              Auto-refresh is disabled. Data will only update when manually
+              refreshed.
+            </p>
+          </div>
+        )}
       </div>
 
       {/* Loading Overlay for Background Refresh */}

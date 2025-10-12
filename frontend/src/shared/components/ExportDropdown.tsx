@@ -38,7 +38,7 @@ export function ExportDropdown({
   size = 'default',
   showLabel = true,
   label = 'Export',
-  enablePdf = false, // Default to false
+  enablePdf = true, // Default to false
 }: ExportDropdownProps) {
   const [isExporting, setIsExporting] = useState<ExportType | null>(null);
 

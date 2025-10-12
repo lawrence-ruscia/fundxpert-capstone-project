@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { Calendar } from 'lucide-react';
+import { useCallback, useMemo, useState } from 'react';
+import { AlertCircle, Calendar, RefreshCw, Timer } from 'lucide-react';
 
 import {
   Card,
@@ -8,16 +8,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
-
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
 
 import {
   getCoreRowModel,
@@ -29,37 +19,36 @@ import {
   type SortingState,
 } from '@tanstack/react-table';
 import type { EmployeeOverview } from '@/features/dashboard/employee/types/employeeOverview';
-import { periodOptions } from '../data/periodOptions';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
 import { DataError } from '@/shared/components/DataError';
 import { EmployeeContributionsTable } from '../../hr/components/EmployeeContributionsTable';
 import { useDateRangeFilter } from '@/shared/hooks/useDateRangeFilter';
 import { useTablePagination } from '@/shared/hooks/useTablePagination';
-import { useMultiFetch } from '@/shared/hooks/useMultiFetch';
-import type {
-  Contribution,
-  ContributionPeriod,
-  ContributionSummary,
-} from '../../shared/types/contributions';
+
 import {
   fetchEmployeeContributions,
   fetchEmployeeContributionsSummary,
 } from '../services/employeeContributionsService';
 import { fetchEmployeeOverview } from '@/features/dashboard/employee/services/employeeService';
 import { useContributionsExport } from '../../hr/hooks/useContributionsExport';
-import { ExportDropdown } from '@/shared/components/ExportDropdown';
 import { ContributionsProvider } from '../../hr/components/ContributionsProvider';
 import { contributionsColumns } from '../components/ContributionColumns';
 import { ContributionStats } from '../components/ContributionStats';
+import { usePersistedState } from '@/shared/hooks/usePersistedState';
+import { useSmartPolling } from '@/shared/hooks/useSmartPolling';
+import { Button } from '@/components/ui/button';
 
 export type EmployeeMetadata = Omit<EmployeeOverview['employee'], 'id'>;
 
 export default function ContributionHistoryPage() {
-  const { data, loading, error } = useMultiFetch<{
-    contributions: Contribution[];
-    summary: ContributionSummary;
-    overview: EmployeeOverview;
-  }>(async () => {
+  const [autoRefreshEnabled] = usePersistedState(
+    'employee-dashboard-auto-refresh',
+    true // default value
+  );
+
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const fetchContributionsData = useCallback(async () => {
     const [constributionsRes, summarRes, overviewRes] = await Promise.all([
       fetchEmployeeContributions('all'),
       fetchEmployeeContributionsSummary('all'),
@@ -71,7 +60,23 @@ export default function ContributionHistoryPage() {
       summary: summarRes,
       overview: overviewRes,
     };
-  });
+  }, []);
+
+  const { data, loading, error, refresh, lastUpdated } = useSmartPolling(
+    fetchContributionsData,
+    {
+      context: 'contributions',
+      enabled: autoRefreshEnabled,
+      pauseWhenHidden: true,
+      pauseWhenInactive: true,
+    }
+  );
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await refresh();
+    setIsRefreshing(false);
+  };
 
   const contributions = data?.contributions;
   const summary = data?.summary;
@@ -121,16 +126,68 @@ export default function ContributionHistoryPage() {
     <ContributionsProvider>
       <div className='space-y-6'>
         {/* Header */}
-        <div className='flex flex-col space-y-4 md:flex-row md:items-center md:justify-between md:space-y-0'>
-          <div className='space-y-1'>
-            <h1 className='text-2xl font-bold tracking-tight'>
-              Contribution History
-            </h1>
-            <p className='text-muted-foreground'>
-              Track your provident fund contributions and growth over time
-            </p>
+        <div className='mb-8'>
+          <div className='flex flex-wrap items-start justify-between gap-4'>
+            <div className='flex items-center gap-3'>
+              <div>
+                <h1 className='text-2xl font-bold tracking-tight'>
+                  Contributions
+                </h1>
+                <p className='text-muted-foreground'>
+                  Track your provident fund growth and contributions over time
+                </p>
+              </div>
+            </div>
+            {/* Refresh Controls */}
+            <div className='flex flex-wrap items-center gap-3'>
+              {/* Last Updated */}
+              {lastUpdated && (
+                <div className='text-muted-foreground text-right text-sm'>
+                  <p className='font-medium'>Last updated</p>
+                  <p className='text-xs'>
+                    {lastUpdated.toLocaleTimeString('en-US', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </p>
+                </div>
+              )}
+              {/* Manual Refresh Button */}
+              <Button
+                variant='outline'
+                size='sm'
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                className='gap-2'
+              >
+                <RefreshCw
+                  className={`h-4 w-4 ${isRefreshing ? 'animate-spin' : ''}`}
+                />
+                {isRefreshing ? 'Refreshing...' : 'Refresh'}
+              </Button>
+            </div>
           </div>
+          {/* Auto-refresh Status Banner */}
+          {!autoRefreshEnabled && (
+            <div className='bg-muted/50 mt-4 mb-8 flex items-center gap-2 rounded-lg border border-dashed px-4 py-2.5'>
+              <AlertCircle className='text-muted-foreground h-4 w-4' />
+              <p className='text-muted-foreground text-sm'>
+                Auto-refresh is disabled. Data will only update when manually
+                refreshed.
+              </p>
+            </div>
+          )}
         </div>
+
+        {/* Loading Overlay for Background Refresh */}
+        {loading && data && (
+          <div className='bg-background/80 fixed inset-0 z-50 flex items-start justify-center pt-20 backdrop-blur-sm'>
+            <div className='bg-card flex items-center gap-2 rounded-lg border p-4 shadow-lg'>
+              <RefreshCw className='h-4 w-4 animate-spin' />
+              <span className='text-sm font-medium'>Updating data...</span>
+            </div>
+          </div>
+        )}
 
         {summary && <ContributionStats summary={summary} />}
         {/* Data Table */}
