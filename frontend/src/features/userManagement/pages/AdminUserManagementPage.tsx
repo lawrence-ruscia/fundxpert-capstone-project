@@ -42,6 +42,7 @@ import { usersColumns } from '../components/UsersColumn';
 import { UsersTable } from '../components/UsersTable';
 import { usePersistedState } from '@/shared/hooks/usePersistedState';
 import { useSmartPolling } from '@/shared/hooks/useSmartPolling';
+import { UsersPrimaryButtons } from '../components/UsersPrimaryButtons';
 
 export default function AdminUserManagementPage() {
   const [autoRefreshEnabled] = usePersistedState(
@@ -232,7 +233,9 @@ export default function AdminUserManagementPage() {
               </p>
             </CardTitle>
           </div>
+
           <div className='flex items-center gap-4'>
+            <UsersPrimaryButtons />
             <ExportDropdown
               onExport={handleExport}
               variant='outline'

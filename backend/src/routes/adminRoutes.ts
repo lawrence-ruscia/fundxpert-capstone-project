@@ -15,6 +15,10 @@ import {
   exportUsersCSVController,
   exportUsersExcelController,
 } from '../controllers/adminExportController.js';
+import {
+  getDepartmentsHandler,
+  getPositionsHandler,
+} from '../controllers/hrController.js';
 
 export const adminRouter = Router();
 adminRouter.use(authMiddleware('Admin'));
@@ -30,3 +34,5 @@ adminRouter.post('/users/:userId/lock', toggleLockUserHandler);
 adminRouter.post('/users/:userId/reset-password', resetUserPasswordHandler);
 adminRouter.get('/logs', getAuditLogsHandler);
 adminRouter.get('/stats', getAdminStatsHandler);
+adminRouter.get('/departments', getDepartmentsHandler);
+adminRouter.get('/positions', getPositionsHandler);

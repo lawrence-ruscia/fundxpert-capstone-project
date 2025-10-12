@@ -72,18 +72,42 @@ export async function createUserHandler(req: Request, res: Response) {
       return res.status(403).json({ error: 'Forbidden' });
     }
 
-    const { employee_id, name, email, password, role } = req.body;
-    if (!employee_id || !name || !email || !password || !role) {
+    const {
+      name,
+      email,
+      employee_id,
+      department_id,
+      position_id,
+      salary,
+      date_hired,
+      role,
+      generatedTempPassword,
+    } = req.body;
+    if (
+      !name ||
+      !email ||
+      !employee_id ||
+      !department_id ||
+      !position_id ||
+      !salary ||
+      !date_hired ||
+      !role ||
+      !generatedTempPassword
+    ) {
       return res.status(400).json({ error: 'Missing required fields' });
     }
 
-    const user = (await createUser(
-      employee_id,
+    const user = (await createUser({
       name,
       email,
-      password,
-      role
-    )) as Partial<User>;
+      employee_id,
+      department_id,
+      position_id,
+      salary,
+      date_hired,
+      role,
+      generatedTempPassword,
+    })) as Partial<User>;
 
     await logUserAction(
       req.user.id,

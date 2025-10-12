@@ -21,13 +21,13 @@ type HRDepartmentRecord = {
   id: number;
   name: string;
 };
-export type HRDepartmentsResponse = HRDepartmentRecord[];
+export type DepartmentsResponse = HRDepartmentRecord[];
 
 type HRPositionsRecord = {
   id: number;
   title: string;
 };
-export type HRPositionsResponse = HRPositionsRecord[];
+export type PositionsResponse = HRPositionsRecord[];
 
 export type HRCreateEmployeeResponse = {
   id: number;

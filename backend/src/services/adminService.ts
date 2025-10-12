@@ -92,23 +92,55 @@ export async function getUserById(userId: number) {
   return rows[0];
 }
 
-export async function createUser(
-  employee_id: string,
-  name: string,
-  email: string,
-  password: string,
-  role: string
-) {
-  const hashedPassword = await bcrypt.hash(password, 10);
+export async function createUser(payload: {
+  name: string;
+  email: string;
+  employee_id: string;
+  department_id: number;
+  position_id: number;
+  salary: number;
+  date_hired: string;
+  role: string;
+  generatedTempPassword: string;
+}) {
+  try {
+    const hashedPassword = await bcrypt.hash(payload.generatedTempPassword, 10);
+    const expiresAt = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000); // 5 days
 
-  const { rows } = await pool.query(
-    `INSERT INTO users (employee_id, name, email, password_hash, role)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING id, employee_id, name, email, role`,
-    [employee_id, name, email, hashedPassword, role]
-  );
+    const { rows } = await pool.query(
+      `INSERT INTO users 
+     (name, email, employee_id, password_hash, role, department_id, position_id, 
+      salary, date_hired, employment_status, temp_password, temp_password_expires)
+   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'Active', true, $10)
+   RETURNING id, name, email, employee_id, role, salary, department_id, position_id, 
+             employment_status, date_hired, temp_password, temp_password_expires;`,
+      [
+        payload.name,
+        payload.email,
+        payload.employee_id,
+        hashedPassword,
+        payload.role,
+        payload.department_id,
+        payload.position_id,
+        payload.salary,
+        payload.date_hired,
+        expiresAt,
+      ]
+    );
 
-  return rows;
+    return rows[0];
+  } catch (err: unknown) {
+    if (err.code === '23505') {
+      // unique_violation
+      if (err.detail.includes('employee_id')) {
+        throw new Error('Employee ID must be unique.');
+      }
+      if (err.detail.includes('email')) {
+        throw new Error('Email must be unique.');
+      }
+    }
+    throw err;
+  }
 }
 
 export async function updateUser(

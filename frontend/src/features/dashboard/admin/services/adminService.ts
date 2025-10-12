@@ -31,20 +31,6 @@ export async function getUserById(userId: number): Promise<User> {
 }
 
 /**
- * Create a new system user (HR or Admin)
- */
-export async function createUser(data: {
-  employee_id: string;
-  name: string;
-  email: string;
-  password: string;
-  role: 'HR' | 'Admin';
-}): Promise<User> {
-  const res = await api.post('/admin/users', data);
-  return res.data.user;
-}
-
-/**
  * Update user role or employment status
  */
 export async function updateUser(

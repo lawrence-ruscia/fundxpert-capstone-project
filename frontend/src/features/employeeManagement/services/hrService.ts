@@ -1,10 +1,10 @@
 import { api } from '@/shared/api/api';
 import type {
   HRCreateEmployeeResponse,
-  HRDepartmentsResponse,
+  DepartmentsResponse,
   HREmployeeRecord,
   HREmployeesResponse,
-  HRPositionsResponse,
+  PositionsResponse,
   HRResetPassResponse,
   HRUpdateEmployeeResponse,
 } from '../types/employeeTypes';
@@ -32,7 +32,7 @@ export const getEmployees = async (query?: {
   return data;
 };
 
-export const getDepartments = async (): Promise<HRDepartmentsResponse> => {
+export const getDepartments = async (): Promise<DepartmentsResponse> => {
   try {
     const { data } = await api.get('/hr/departments');
 
@@ -42,7 +42,7 @@ export const getDepartments = async (): Promise<HRDepartmentsResponse> => {
   }
 };
 
-export const getPositions = async (): Promise<HRPositionsResponse> => {
+export const getPositions = async (): Promise<PositionsResponse> => {
   try {
     const { data } = await api.get('/hr/positions');
 

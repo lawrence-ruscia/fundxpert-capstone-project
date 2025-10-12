@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { getDepartments, getPositions } from '../services/hrService';
 import type {
-  HRDepartmentsResponse,
-  HRPositionsResponse,
+  DepartmentsResponse,
+  PositionsResponse,
 } from '../types/employeeTypes';
 
 export interface FormFieldsOptionsData {
-  departments: HRDepartmentsResponse | null;
-  positions: HRPositionsResponse | null;
+  departments: DepartmentsResponse | null;
+  positions: PositionsResponse | null;
 }
 
 export function useEmployeeForm() {

@@ -36,6 +36,7 @@ import AdminUserManagementPage from '@/features/userManagement/pages/AdminUserMa
 import { SmartPollingProvider } from '@/shared/context/SmartPollingContext';
 import { GlobalPollingOverlay } from '@/shared/components/GlobalPollingOverlay';
 import { ResetPasswordPage } from '@/features/auth/pages/ResetPasswordPage';
+import { AdminCreateUserPage } from '@/features/userManagement/pages/AdminCreateUserPage';
 
 export const router = createBrowserRouter([
   {
@@ -181,6 +182,10 @@ export const router = createBrowserRouter([
       {
         path: 'users',
         element: <AdminUserManagementPage />,
+      },
+      {
+        path: 'users/add',
+        element: <AdminCreateUserPage />,
       },
     ],
   },
