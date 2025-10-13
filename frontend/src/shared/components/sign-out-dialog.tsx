@@ -12,7 +12,7 @@ export function SignOutDialog({ open, onOpenChange }: SignOutDialogProps) {
   const location = useLocation();
 
   const handleSignOut = async () => {
-    logout();
+    await logout();
     // Preserve current location for redirect after sign-in
     const currentPath = location.pathname + location.search + location.hash;
 

@@ -873,6 +873,15 @@ export const AdminUpdateUserPage = () => {
                 </div>
 
                 <div className='text-sm'>
+                  <p className='mb-2 font-medium'>Account Lock/Unlock</p>
+                  <p className='text-muted-foreground mb-3 text-xs'>
+                    Lock an account to prevent login attempts immediately.
+                    Unlock to restore access. Locked accounts will see a message
+                    indicating when they can try again.
+                  </p>
+                </div>
+
+                <div className='text-sm'>
                   <p className='mb-2 font-medium'>User Management</p>
                   <p className='text-muted-foreground mb-3 text-xs'>
                     Reset Password requires a generated temporary password and

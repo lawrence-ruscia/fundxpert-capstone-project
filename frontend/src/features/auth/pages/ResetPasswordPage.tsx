@@ -34,6 +34,7 @@ import {
   KeyRound,
 } from 'lucide-react';
 import { authService } from '../services/authService';
+import { getErrorMessage } from '@/shared/api/getErrorMessage';
 
 // Step 1: Verify identity
 const verifyIdentitySchema = z.object({
@@ -129,8 +130,7 @@ export function ResetPasswordPage() {
       toast.success('Identity verified! Now create your new password.');
     } catch (err) {
       console.error('Verification error:', err);
-      const errorMessage =
-        (err as Error).message || 'Failed to verify identity';
+      const errorMessage = getErrorMessage(err, 'FFailed to verify identity');
       setServerError(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -156,7 +156,7 @@ export function ResetPasswordPage() {
       );
     } catch (err) {
       console.error('Password reset error:', err);
-      const errorMessage = (err as Error).message || 'Failed to reset password';
+      const errorMessage = getErrorMessage(err, 'Failed to reset password');
       setServerError(errorMessage);
       toast.error(errorMessage);
     } finally {

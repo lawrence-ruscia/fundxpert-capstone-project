@@ -13,6 +13,7 @@ import {
 import type { UseFormSetError } from 'react-hook-form';
 import { useAuth } from '../context/AuthContext';
 import type { LoginResponse } from '../types/loginResponse';
+import { getErrorMessage } from '@/shared/api/getErrorMessage';
 
 const storeTwoFaInfo = (userId: number, twofa_mode: 'setup' | 'login') => {
   sessionStorage.setItem('twofa_userId', String(userId));
@@ -62,7 +63,9 @@ export const LoginPage = () => {
       }
     } catch (err) {
       console.error('Login:', err);
-      setError('root', { message: (err as Error).message || 'Login failed' });
+      setError('root', {
+        message: getErrorMessage(err, 'Login failed. Please try again.'),
+      });
     }
   };
 

@@ -313,6 +313,12 @@ export async function logout(req: Request, res: Response) {
   const userId = req.user.id;
   const role = req.user.role;
 
+  // Increment token version to invalidate all existing tokens
+  await pool.query(
+    `UPDATE users SET token_version = token_version + 1 WHERE id = $1`,
+    [req.user.id]
+  );
+
   // Clear the JWT cookie
   res.clearCookie('token', {
     httpOnly: true,

@@ -14,14 +14,9 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 
-const FIVE_MIN_MS = 5 * 60;
-const MILLISECONDS = 1000;
-
 export default function SessionManager() {
   const { showModal, countdown, extendSession, forceLogout } =
-    useSessionWarning({
-      warnBefore: FIVE_MIN_MS * MILLISECONDS, // 5min
-    });
+    useSessionWarning();
 
   if (!showModal) return null;
 

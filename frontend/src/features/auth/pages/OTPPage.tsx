@@ -14,6 +14,7 @@ import type { OTPSchema } from '../schemas/otpSchema';
 import { useAuth } from '../context/AuthContext';
 import { BackButton } from '@/shared/components/back-button';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/shared/api/getErrorMessage';
 
 export const OTPPage = () => {
   const { login } = useAuth();
@@ -51,9 +52,9 @@ export const OTPPage = () => {
         );
       }
     } catch (err) {
-      toast.error((err as Error).message || 'Invalid 2FA token.');
+      toast.error(getErrorMessage(err, 'Invalid 2FA token.'));
       setError('otp', {
-        message: (err as Error).message || 'Invalid 2FA token.',
+        message: getErrorMessage(err, 'Invalid 2FA token.'),
       });
     }
   };

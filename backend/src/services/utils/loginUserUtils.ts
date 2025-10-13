@@ -22,14 +22,45 @@ export const checkAccountLockout = (user: User): void => {
   const now = new Date();
 
   if (lockedUntil > now) {
-    const minutesRemaining = Math.ceil(
-      (lockedUntil.getTime() - now.getTime()) / 60000
-    );
-    throw new Error(
-      `Account locked. Try again in ${minutesRemaining} minute(s).`
-    );
+    const msRemaining = lockedUntil.getTime() - now.getTime();
+    const timeMessage = formatLockoutDuration(msRemaining);
+
+    throw new Error(`Account locked. Try again in ${timeMessage}.`);
   }
 };
+
+function formatLockoutDuration(ms: number): string {
+  const seconds = Math.ceil(ms / 1000);
+  const minutes = Math.ceil(ms / 60000);
+  const hours = Math.ceil(ms / 3600000);
+  const days = Math.ceil(ms / 86400000);
+
+  if (days > 1) {
+    return `${days} days`;
+  }
+
+  if (hours >= 2) {
+    return `${hours} hours`;
+  }
+
+  if (hours === 1) {
+    const remainingMinutes = minutes - 60;
+    if (remainingMinutes > 0) {
+      return `1 hour and ${remainingMinutes} minute${remainingMinutes > 1 ? 's' : ''}`;
+    }
+    return '1 hour';
+  }
+
+  if (minutes >= 2) {
+    return `${minutes} minutes`;
+  }
+
+  if (minutes === 1) {
+    return '1 minute';
+  }
+
+  return `${seconds} second${seconds !== 1 ? 's' : ''}`;
+}
 
 export const validateUserPassword = async (
   password: string,

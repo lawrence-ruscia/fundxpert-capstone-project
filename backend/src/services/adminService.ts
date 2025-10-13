@@ -206,6 +206,7 @@ export async function updateUser(
         `UPDATE users SET token_version = token_version + 1 WHERE id = $1`,
         [id]
       );
+      console.log('Incremented token for user: ', id);
     }
 
     const { rows } = await client.query(query, values);
@@ -240,28 +241,42 @@ export async function toggleLockUser(
   durationMinutes?: number,
   lockUntil?: string
 ): Promise<LockUserResult> {
-  let lockUntilDate: Date | null = null;
+  const client = await pool.connect();
+  try {
+    let lockUntilDate: Date | null = null;
 
-  if (locked) {
-    if (lockUntil) {
-      // Use specific date if provided
-      lockUntilDate = new Date(lockUntil);
-    } else {
-      // Use duration (default to 24 hours = 1440 minutes)
-      const duration = durationMinutes ?? 1440;
-      const durationMs = duration * 60 * 1000;
-      lockUntilDate = new Date(Date.now() + durationMs);
+    if (locked) {
+      if (lockUntil) {
+        // Use specific date if provided
+        lockUntilDate = new Date(lockUntil);
+      } else {
+        // Use duration (default to 24 hours = 1440 minutes)
+        const duration = durationMinutes ?? 1440;
+        const durationMs = duration * 60 * 1000;
+        lockUntilDate = new Date(Date.now() + durationMs);
+      }
     }
-  }
 
-  await pool.query(
-    `UPDATE users 
+    await client.query(
+      `UPDATE users 
      SET locked_until = $2, updated_at = NOW() 
      WHERE id = $1`,
-    [userId, lockUntilDate]
-  );
+      [userId, lockUntilDate]
+    );
 
-  return { lockUntil: lockUntilDate };
+    await client.query(
+      `UPDATE users SET token_version = token_version + 1 WHERE id = $1`,
+      [userId]
+    );
+
+    await client.query('COMMIT');
+    return { lockUntil: lockUntilDate };
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
 }
 
 export async function getAuditLogs() {

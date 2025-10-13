@@ -1,6 +1,9 @@
 import { createContext, useContext, useEffect, useState } from 'react';
 import { authService } from '../services/authService';
 import type { UserType } from '../types/loginResponse';
+import { setupAuthInterceptor } from '@/shared/api/api';
+import { toast } from 'sonner';
+import { getErrorMessage } from '@/shared/api/getErrorMessage';
 
 type AuthContextType = {
   user: UserType | null;
@@ -20,6 +23,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [tokenExpiry, setTokenExpiry] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Setup interceptor once when component mounts
+  useEffect(() => {
+    setupAuthInterceptor(logout);
+  }, []); // Empty deps - only run once
 
   // Fetch current user on mount (auto-login via cookie)
   useEffect(() => {
@@ -59,6 +67,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       await authService.logoutUser();
     } catch (err) {
       console.error('Logout error:', err);
+      toast.error(
+        getErrorMessage(err, 'Logout failed. Clearing local session.')
+      );
     } finally {
       setUser(null);
       setTokenExpiry(null);
@@ -74,8 +85,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { user, tokenExpiry } = await authService.fetchCurrentUser();
       setUser(user);
       setTokenExpiry(tokenExpiry);
+      setError(null);
     } catch (err) {
       setUser(null);
+      setTokenExpiry(null);
       setError((err as Error).message);
     }
   };

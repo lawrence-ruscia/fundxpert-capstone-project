@@ -48,12 +48,6 @@ export const authService = {
   fetchCurrentUser: async (): Promise<UserResponse> => {
     const res = await api.get('/auth/me');
 
-    if (res.status === 401) {
-      //  auto logout if unauthorized
-      await logout();
-      throw new Error('Session expired. Please log in again.');
-    }
-
     return res.data;
   },
 
