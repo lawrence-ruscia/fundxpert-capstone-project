@@ -1271,7 +1271,6 @@ export async function exportLoansPDFController(req: Request, res: Response) {
     };
 
     let currentY = 40;
-    const __dirname = import.meta.dirname;
 
     // ========== COMPANY HEADER WITH LOGO ==========
     try {

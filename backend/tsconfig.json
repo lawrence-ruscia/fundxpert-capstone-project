@@ -7,8 +7,8 @@
 
     // Environment Settings
     // See also https://aka.ms/tsconfig/module
-    "module": "nodenext",
-    "target": "esnext",
+    // "module": "nodenext",
+    // "target": "esnext",
     // For nodejs:
     "lib": ["esnext"],
     "types": ["node"],
@@ -49,9 +49,11 @@
 
     // MOST IMPORTANT - Force build even with errors
     "noEmitOnError": false,
-    "esModuleInterop": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "moduleDetection": "auto"
+    "moduleDetection": "auto",
+    "esModuleInterop": true,
+    "module": "commonjs",
+    "target": "es2019"
   }
 }

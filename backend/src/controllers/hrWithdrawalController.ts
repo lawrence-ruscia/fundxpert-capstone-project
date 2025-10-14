@@ -1208,7 +1208,6 @@ export async function exportWithdrawalsPDFController(
     };
 
     let currentY = 40;
-    const __dirname = import.meta.dirname;
 
     // ========== COMPANY HEADER WITH LOGO ==========
     try {
