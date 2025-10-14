@@ -10,7 +10,10 @@ app.use(express.urlencoded());
 app.use(json());
 app.use(
   cors({
-    origin: 'http://localhost:5173',
+    origin: [
+      'http://localhost:5173',
+      'https://fundxpert.vercel.app', // once deployed
+    ],
     credentials: true, // Allow cookies/auth headers
   })
 );

@@ -210,7 +210,7 @@ export async function loginWith2FA(req: Request, res: Response) {
     res.cookie('token', jwtToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: 'none', // REQUIRED for cross-site cookies
       maxAge: expiresInMs,
     });
 
@@ -363,7 +363,7 @@ export async function refreshSession(req: Request, res: Response) {
     res.cookie('token', jwtToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: 'none', // REQUIRED for cross-site cookies
       maxAge: expiresInMs,
     });
 
