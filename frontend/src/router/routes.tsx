@@ -38,6 +38,7 @@ import { GlobalPollingOverlay } from '@/shared/components/GlobalPollingOverlay';
 import { ResetPasswordPage } from '@/features/auth/pages/ResetPasswordPage';
 import { AdminCreateUserPage } from '@/features/userManagement/pages/AdminCreateUserPage';
 import { AdminUpdateUserPage } from '@/features/userManagement/pages/AdminUpdateUserPage';
+import NotificationsPage from '@/features/notifications/pages/NotificationPage';
 
 export const router = createBrowserRouter([
   {
@@ -87,6 +88,10 @@ export const router = createBrowserRouter([
     ),
     children: [
       { index: true, element: <EmployeeDashboardPage /> },
+      {
+        path: 'notifications',
+        element: <NotificationsPage />,
+      },
       { path: 'contributions', element: <ContributionHistoryPage /> },
       { path: 'projection', element: <FundProjectionPage /> },
       { path: 'loans', element: <LoansPage /> },
@@ -107,6 +112,10 @@ export const router = createBrowserRouter([
     ),
     children: [
       { index: true, element: <HRDashboardPage /> },
+      {
+        path: 'notifications',
+        element: <NotificationsPage />,
+      },
       {
         path: 'employees',
         element: <EmployeeListPage />,
@@ -179,6 +188,10 @@ export const router = createBrowserRouter([
       {
         index: true,
         element: <AdminDashboard />,
+      },
+      {
+        path: 'notifications',
+        element: <NotificationsPage />,
       },
       {
         path: 'users',

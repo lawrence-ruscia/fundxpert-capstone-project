@@ -12,8 +12,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import type { Notification } from '../types/notification';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useAuth } from '@/features/auth/context/AuthContext';
 
 export function NotificationBell() {
+  const { user } = useAuth();
+
   const navigate = useNavigate();
   const { notifications, unreadCount, loading, markAsRead, markAllAsRead } =
     useNotifications();
@@ -59,6 +62,8 @@ export function NotificationBell() {
     if (diffDays < 7) return `${diffDays}d ago`;
     return notifDate.toLocaleDateString();
   };
+
+  const role = user?.role.toLowerCase();
 
   return (
     <DropdownMenu>
@@ -174,7 +179,7 @@ export function NotificationBell() {
               <Button
                 variant='ghost'
                 className='h-9 w-full text-sm'
-                onClick={() => navigate('/notifications')}
+                onClick={() => navigate(`/${role}/notifications`)}
               >
                 View all notifications
               </Button>
