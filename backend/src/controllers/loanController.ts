@@ -66,7 +66,7 @@ export async function applyLoan(req: Request, res: Response) {
     await createNotification(
       userId,
       'Loan Request Submitted',
-      `Your loan request for ₱${parseFloat(amount).toLocaleString()} has been successfully submitted and is awaiting HR review.`,
+      `Your loan request for ₱${parseFloat(amount)} has been successfully submitted and is awaiting HR review.`,
       'success',
       { loanId, link: `/employee/loan/${loanId}` }
     );

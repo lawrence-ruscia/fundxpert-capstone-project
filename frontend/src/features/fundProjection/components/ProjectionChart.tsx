@@ -27,11 +27,11 @@ interface ProjectionRecord {
 const chartConfig = {
   total_balance: {
     label: 'Total Balance',
-    color: 'hsl(var(--chart-4))',
+    color: 'hsl(var(--chart-3))',
   },
   with_growth: {
     label: 'With Growth',
-    color: 'hsl(var(--chart-3))',
+    color: 'hsl(var(--chart-4))',
   },
 };
 
