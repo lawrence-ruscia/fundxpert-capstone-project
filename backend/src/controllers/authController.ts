@@ -339,16 +339,22 @@ export async function refreshSession(req: Request, res: Response) {
     if (!isAuthenticatedRequest(req))
       return res.status(401).json({ error: 'Not authenticated' });
 
+    const userId = req.user.id;
+
+    // Fetch secret from DB
+    const { rows } = await pool.query(
+      'SELECT id, name, role, twofa_secret, token_version FROM users WHERE id = $1',
+      [userId]
+    );
+
+    const user = rows[0];
+
     const expiresInMs = 60 * 60 * 1000; // 1h
     const expiryDate = Date.now() + expiresInMs;
 
     // Generate JWT token right away
     const jwtToken = jwt.sign(
-      {
-        id: req.user.id,
-        role: req.user.role,
-        tokenVersion: req.user.tokenVersion,
-      },
+      { id: user.id, role: user.role, tokenVersion: user.token_version },
       process.env.JWT_SECRET as string,
       { expiresIn: expiresInMs / 1000 } // seconds
     );
