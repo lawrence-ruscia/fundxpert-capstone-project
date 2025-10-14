@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import { Parser as Json2CsvParser } from 'json2csv';
-import ExcelJS from 'exceljs';
+import * as ExcelJS from 'exceljs';
 import { getAllUsers } from '../services/adminService.js';
 import { SHEET_PASSWORD } from '../config/security.config.js';
 import type { User } from '../types/user.js';
@@ -47,7 +47,8 @@ export async function exportUsersExcelController(req: Request, res: Response) {
     workbook.lastModifiedBy = 'System Administrator';
     workbook.created = new Date();
     workbook.modified = new Date();
-    workbook.properties.subject = 'User Audit Report - System Administration';
+    if ('subject' in workbook.properties)
+      workbook.properties.subject = 'User Audit Report - System Administration';
 
     // ========== COVER SHEET ==========
     const cover = workbook.addWorksheet('Report Information');

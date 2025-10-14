@@ -19,7 +19,7 @@ export const findUserByEmail = async (email: string): Promise<User | null> => {
   return result.rows[0] || null;
 };
 
-export const checkAccountLockout = async (user: User): void => {
+export const checkAccountLockout = async (user: User) => {
   if (!user.locked_until) return;
 
   const lockedUntil = new Date(user.locked_until);

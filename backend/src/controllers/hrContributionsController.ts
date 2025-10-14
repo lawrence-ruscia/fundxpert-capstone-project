@@ -99,7 +99,7 @@ export async function getEmployeeContributionsController(
 ) {
   try {
     const { userId } = req.params;
-    const contributions = await getEmployeeContributions(Number(userId));
+    const contributions = await getEmployeeContributions(Number(userId), 'all');
     res.json(contributions);
   } catch (err) {
     console.error('❌ getEmployeeContributions error:', err);
@@ -116,11 +116,14 @@ export async function getAllContributionsController(
   res: Response
 ) {
   try {
-    const { userId, startDate, endDate } = req.query;
+    const { userId } = req.query;
+
+    const startDate = req.query.startDate?.toString();
+    const endDate = req.query.endDate?.toString();
 
     const contributions = await getAllContributions(
       userId !== null ? Number(userId) : null,
-      startDate ?? '',
+      startDate,
       endDate
     );
     res.json(contributions);
@@ -490,8 +493,9 @@ export async function exportContributionsExcelController(
     workbook.lastModifiedBy = 'HR Department';
     workbook.created = new Date();
     workbook.modified = new Date();
-    workbook.properties.subject =
-      'Provident Fund Contributions Report - Banking Audit';
+    if ('subject' in workbook.properties)
+      workbook.properties.subject =
+        'Provident Fund Contributions Report - Banking Audit';
 
     // ========== COVER SHEET ==========
     const cover = workbook.addWorksheet('Report Information');
@@ -1545,12 +1549,6 @@ export async function getAllContributionSummary(req: Request, res: Response) {
     res.status(500).json({ error: 'Failed to fetch contribution summary' });
   }
 }
-const truncateText = (text: string, maxLength: number) => {
-  if (!text) return '-';
-  return text.length > maxLength
-    ? text.substring(0, maxLength - 3) + '...'
-    : text;
-};
 
 export function formatCurrency(value: number): string {
   return `₱${value.toLocaleString('en-PH', {

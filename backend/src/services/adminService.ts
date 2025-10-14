@@ -1,6 +1,7 @@
 import bcrypt from 'bcryptjs';
 import { pool } from '../config/db.config.js';
 import type { UserResponse } from '../types/userResponse.js';
+import { isPostgresError } from '../validation/postgresValidation.js';
 
 export async function logUserAction(
   userId: number,
@@ -130,14 +131,16 @@ export async function createUser(payload: {
     );
 
     return rows[0];
-  } catch (err: unknown) {
-    if (err.code === '23505') {
-      // unique_violation
-      if (err.detail.includes('employee_id')) {
-        throw new Error('Employee ID must be unique.');
-      }
-      if (err.detail.includes('email')) {
-        throw new Error('Email must be unique.');
+  } catch (err) {
+    if (isPostgresError(err)) {
+      if (err.code === '23505') {
+        // unique_violation
+        if (err.detail.includes('employee_id')) {
+          throw new Error('Employee ID must be unique.');
+        }
+        if (err.detail.includes('email')) {
+          throw new Error('Email must be unique.');
+        }
       }
     }
     throw err;
@@ -191,7 +194,7 @@ export async function updateUser(
     for (const [key, value] of Object.entries(updates)) {
       if (key === 'generatedTempPassword' && value) {
         // Password reset is always sensitive
-        const hash = await bcrypt.hash(value, 10);
+        const hash = await bcrypt.hash(value as string, 10);
         const expiresAt = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000); // 5 days
 
         fields.push(`password_hash = $${index}`);
@@ -256,15 +259,17 @@ export async function updateUser(
     await client.query('COMMIT');
 
     return rows[0] || null;
-  } catch (err: any) {
+  } catch (err) {
     await client.query('ROLLBACK');
-    if (err.code === '23505') {
-      // unique_violation
-      if (err.detail?.includes('employee_id')) {
-        throw new Error('Employee ID must be unique.');
-      }
-      if (err.detail?.includes('email')) {
-        throw new Error('Email must be unique.');
+    if (isPostgresError(err)) {
+      if (err.code === '23505') {
+        // unique_violation
+        if (err.detail?.includes('employee_id')) {
+          throw new Error('Employee ID must be unique.');
+        }
+        if (err.detail?.includes('email')) {
+          throw new Error('Email must be unique.');
+        }
       }
     }
     throw err;

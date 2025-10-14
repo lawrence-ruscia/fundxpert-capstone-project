@@ -796,7 +796,7 @@ export async function exportLoansExcelController(req: Request, res: Response) {
       : null;
 
     const loans = await getAllLoans({
-      userId: employee_id ? Number(employee_id) : undefined,
+      search: employee_id,
       startDate: start,
       endDate: end,
     });
@@ -812,7 +812,9 @@ export async function exportLoansExcelController(req: Request, res: Response) {
     workbook.lastModifiedBy = 'HR Department';
     workbook.created = new Date();
     workbook.modified = new Date();
-    workbook.properties.subject = 'Provident Fund Loans Report - Banking Audit';
+    if ('subject' in workbook.properties)
+      workbook.properties.subject =
+        'Provident Fund Loans Report - Banking Audit';
 
     // ========== COVER SHEET ==========
     const cover = workbook.addWorksheet('Report Information');
@@ -1171,7 +1173,7 @@ export async function exportLoansPDFController(req: Request, res: Response) {
       : null;
 
     const loans = await getAllLoans({
-      employeeId: employee_id ? Number(employee_id) : undefined,
+      search: employee_id,
       startDate: start,
       endDate: end,
     });
@@ -1485,7 +1487,7 @@ export async function exportLoansPDFController(req: Request, res: Response) {
 
     // Calculate column positions
     const calculatePositions = () => {
-      const positions: any = { id: 40 };
+      const positions: { [key: string]: number } = { id: 40 };
       let currentPos = 40;
 
       Object.entries(columnWidths).forEach(([key, width]) => {
@@ -1558,7 +1560,7 @@ export async function exportLoansPDFController(req: Request, res: Response) {
           align: 'center',
         })
         .text('Approved', columnPositions.dateApproved + 2, currentY, {
-          width: columnWidths.dateReleased - 4,
+          width: columnWidths.dateApproved - 4,
           align: 'center',
         });
     } else {
@@ -1635,7 +1637,7 @@ export async function exportLoansPDFController(req: Request, res: Response) {
             align: 'center',
           })
           .text('Approved', columnPositions.dateApproved + 2, headerY, {
-            width: columnWidths.dateReleased - 4,
+            width: columnWidths.dateApproved - 4,
             align: 'center',
           });
       } else {
@@ -1756,6 +1758,7 @@ export async function exportLoansPDFController(req: Request, res: Response) {
               : '-',
             columnPositions.dateApproved + 2,
             textY,
+            // @ts-expect-error: columnWidths are complete
             { width: columnWidths.dateReleased - 4, align: 'center' }
           );
       } else {

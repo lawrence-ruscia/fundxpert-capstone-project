@@ -763,6 +763,7 @@ export async function exportWithdrawalsExcelController(
     workbook.lastModifiedBy = 'HR Department';
     workbook.created = new Date();
     workbook.modified = new Date();
+    // @ts-expect-error: Workbook properties types are incomplete
     workbook.properties.subject =
       'Provident Fund Withdrawal Requests Report - Banking Audit';
 
@@ -1420,7 +1421,7 @@ export async function exportWithdrawalsPDFController(
 
     // Calculate column positions
     const calculatePositions = () => {
-      const positions: any = { id: 40 };
+      const positions: { [key: string]: number } = { id: 40 };
       let currentPos = 40;
 
       Object.entries(columnWidths).forEach(([key, width]) => {

@@ -1,5 +1,6 @@
 import { pool } from '../config/db.config.js';
 import type {
+  HRContributionPeriod,
   HRContributionsResponse,
   HrOverviewResponse,
 } from '../types/hrTypes.js';
@@ -8,8 +9,7 @@ import bcrypt from 'bcryptjs';
 
 import { getDateRange } from './utils/getEmployeeContributionsUtils.js';
 import type { EmploymentStatus } from '../types/user.js';
-import { createNotification } from '../utils/notificationHelper.js';
-import { getUserById } from './adminService.js';
+import { isPostgresError } from '../validation/postgresValidation.js';
 
 export async function getHRDashboardOverview(): Promise<HrOverviewResponse> {
   const query = `
@@ -63,7 +63,7 @@ export async function getHRDashboardOverview(): Promise<HrOverviewResponse> {
 }
 
 export async function getHRContributions(
-  period = 'year'
+  period: HRContributionPeriod = 'year'
 ): Promise<HRContributionsResponse> {
   const { startDate, endDate } = getDateRange(period);
 
@@ -187,7 +187,7 @@ export async function createEmployee(payload: {
   salary: number;
   date_hired: string;
   generatedTempPassword: string;
-}): Promise<UserResponse> {
+}): Promise<UserResponse | undefined> {
   try {
     const hash = await bcrypt.hash(payload.generatedTempPassword, 10);
     const expiresAt = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000); // 5 days
@@ -215,16 +215,21 @@ export async function createEmployee(payload: {
 
     return rows[0];
   } catch (err: unknown) {
-    if (err.code === '23505') {
-      // unique_violation
-      if (err.detail.includes('employee_id')) {
-        throw new Error('Employee ID must be unique.');
+    if (isPostgresError(err)) {
+      if (err.code === '23505') {
+        // unique_violation
+        // Unique Constraint Error
+        if (err.detail.includes('employee_id')) {
+          throw new Error('Employee ID must be unique.');
+        }
+        if (err.detail.includes('email')) {
+          throw new Error('Email must be unique.');
+        }
       }
-      if (err.detail.includes('email')) {
-        throw new Error('Email must be unique.');
-      }
+
+      // Re-throw other types of database errors (e.g., foreign key, not null)
+      throw new Error(`Database error: ${err.code}`);
     }
-    throw err;
   }
 }
 
@@ -274,7 +279,7 @@ export async function updateEmployee(
     for (const [key, value] of Object.entries(updates)) {
       if (key === 'generatedTempPassword' && value) {
         // Password reset is always sensitive
-        const hash = await bcrypt.hash(value, 10);
+        const hash = await bcrypt.hash(value as string, 10);
         const expiresAt = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000); // 5 days
 
         fields.push(`password_hash = $${index}`);
@@ -339,18 +344,19 @@ export async function updateEmployee(
     await client.query('COMMIT');
 
     return rows[0] || null;
-  } catch (err: unknown) {
+  } catch (err) {
     await client.query('ROLLBACK');
 
-    if (err.code === '23505') {
-      // unique_violation
-      if (err.detail.includes('employee_id')) {
-        throw new Error('Employee ID must be unique.');
+    if (isPostgresError(err))
+      if (err.code === '23505') {
+        // unique_violation
+        if (err.detail.includes('employee_id')) {
+          throw new Error('Employee ID must be unique.');
+        }
+        if (err.detail.includes('email')) {
+          throw new Error('Email must be unique.');
+        }
       }
-      if (err.detail.includes('email')) {
-        throw new Error('Email must be unique.');
-      }
-    }
     throw err;
   } finally {
     client.release();
