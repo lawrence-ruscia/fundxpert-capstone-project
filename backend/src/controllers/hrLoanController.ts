@@ -26,7 +26,7 @@ import path from 'path';
 import { SHEET_PASSWORD } from '../config/security.config.js';
 import { pool } from '../config/db.config.js';
 import { createNotification } from '../utils/notificationHelper.js';
-import { getUserById } from '../services/adminService.js';
+import { getUserById, logUserAction } from '../services/adminService.js';
 
 export const markLoanReadyHandler = async (req: Request, res: Response) => {
   try {
@@ -474,6 +474,9 @@ export const getLoanStatusSummaryHandler = async (
 
 export async function exportLoansCSVController(req: Request, res: Response) {
   try {
+    if (!req.user || req.user.role !== 'HR') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
     const {
       userId: employee_id,
       startDate,
@@ -745,6 +748,18 @@ export async function exportLoansCSVController(req: Request, res: Response) {
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
 
+    let reportPeriod = 'All Time';
+    if (startDate && endDate) {
+      reportPeriod = `${new Date(startDate).toLocaleDateString()} - ${new Date(endDate).toLocaleDateString()}`;
+    }
+
+    await logUserAction(req.user.id, 'Exported Loans as CSV', 'System', 'HR', {
+      ipAddress: req.ip ?? '::1',
+      details: {
+        reportPeriod,
+      },
+    });
+
     // Add BOM for proper Excel UTF-8 handling
     res.send('\ufeff' + csv);
   } catch (err) {
@@ -758,6 +773,10 @@ export async function exportLoansCSVController(req: Request, res: Response) {
 
 export async function exportLoansExcelController(req: Request, res: Response) {
   try {
+    if (!req.user || req.user.role !== 'HR') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
     const {
       user_id: employee_id,
       start,
@@ -1102,6 +1121,25 @@ export async function exportLoansExcelController(req: Request, res: Response) {
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
 
     await workbook.xlsx.write(res);
+
+    let reportPeriod = 'All Time';
+    if (start && end) {
+      reportPeriod = `${new Date(start).toLocaleDateString()} - ${new Date(end).toLocaleDateString()}`;
+    }
+
+    await logUserAction(
+      req.user.id,
+      'Exported Loans as Excel',
+      'System',
+      'HR',
+      {
+        ipAddress: req.ip ?? '::1',
+        details: {
+          reportPeriod,
+        },
+      }
+    );
+
     res.end();
   } catch (err) {
     console.error('❌ Excel export error:', err);
@@ -1114,6 +1152,10 @@ export async function exportLoansExcelController(req: Request, res: Response) {
 
 export async function exportLoansPDFController(req: Request, res: Response) {
   try {
+    if (!req.user || req.user.role !== 'HR') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
+
     const { employee_id, start, end } = req.query as {
       employee_id?: string;
       start?: string;
@@ -1832,6 +1874,19 @@ export async function exportLoansPDFController(req: Request, res: Response) {
       });
 
     addFooter();
+
+    let reportPeriod = 'All Time';
+    if (start && end) {
+      reportPeriod = `${new Date(start).toLocaleDateString()} - ${new Date(end).toLocaleDateString()}`;
+    }
+
+    await logUserAction(req.user.id, 'Exported Loans as PDF', 'System', 'HR', {
+      ipAddress: req.ip ?? '::1',
+      details: {
+        reportPeriod,
+      },
+    });
+
     doc.end();
   } catch (err) {
     console.error('❌ PDF export error:', err);

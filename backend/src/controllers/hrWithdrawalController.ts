@@ -21,6 +21,7 @@ import ExcelJS from 'exceljs';
 import { SHEET_PASSWORD } from '../config/security.config.js';
 import path from 'path';
 import { createNotification } from '../utils/notificationHelper.js';
+import { logUserAction } from '../services/adminService.js';
 
 export const markWithdrawalReadyHandler = async (
   req: Request,
@@ -434,6 +435,9 @@ export async function exportWithdrawalsCSVController(
   res: Response
 ) {
   try {
+    if (!req.user || req.user.role !== 'HR') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
     const {
       userId: employee_id,
       start,
@@ -689,6 +693,24 @@ export async function exportWithdrawalsCSVController(
     res.setHeader('Pragma', 'no-cache');
     res.setHeader('Expires', '0');
 
+    let reportPeriod = 'All Time';
+    if (start && end) {
+      reportPeriod = `${new Date(start).toLocaleDateString()} - ${new Date(end).toLocaleDateString()}`;
+    }
+
+    await logUserAction(
+      req.user.id,
+      'Exported Loans as Excel',
+      'System',
+      'HR',
+      {
+        ipAddress: req.ip ?? '::1',
+        details: {
+          reportPeriod,
+        },
+      }
+    );
+
     // Add BOM for proper Excel UTF-8 handling
     res.send('\ufeff' + csv);
   } catch (err) {
@@ -705,6 +727,9 @@ export async function exportWithdrawalsExcelController(
   res: Response
 ) {
   try {
+    if (!req.user || req.user.role !== 'HR') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
     const {
       user_id: employee_id,
       start,
@@ -1032,6 +1057,24 @@ export async function exportWithdrawalsExcelController(
     );
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
 
+    let reportPeriod = 'All Time';
+    if (start && end) {
+      reportPeriod = `${new Date(start).toLocaleDateString()} - ${new Date(end).toLocaleDateString()}`;
+    }
+
+    await logUserAction(
+      req.user.id,
+      'Exported Loans as Excel',
+      'System',
+      'HR',
+      {
+        ipAddress: req.ip ?? '::1',
+        details: {
+          reportPeriod,
+        },
+      }
+    );
+
     await workbook.xlsx.write(res);
     res.end();
   } catch (err) {
@@ -1048,6 +1091,9 @@ export async function exportWithdrawalsPDFController(
   res: Response
 ) {
   try {
+    if (!req.user || req.user.role !== 'HR') {
+      return res.status(403).json({ error: 'Access denied' });
+    }
     const { employee_id, start, end } = req.query as {
       employee_id?: string;
       start?: string;
@@ -1726,6 +1772,24 @@ export async function exportWithdrawalsPDFController(
       );
 
     addFooter();
+
+    let reportPeriod = 'All Time';
+    if (start && end) {
+      reportPeriod = `${new Date(start).toLocaleDateString()} - ${new Date(end).toLocaleDateString()}`;
+    }
+
+    await logUserAction(
+      req.user.id,
+      'Exported Loans as Excel',
+      'System',
+      'HR',
+      {
+        ipAddress: req.ip ?? '::1',
+        details: {
+          reportPeriod,
+        },
+      }
+    );
     doc.end();
   } catch (err) {
     console.error('❌ PDF export error:', err);

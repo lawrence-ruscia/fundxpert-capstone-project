@@ -1,8 +1,6 @@
 import bcrypt from 'bcryptjs';
 import { pool } from '../config/db.config.js';
-import { generateTempPassword } from '../utils/generateTempPassword.js';
 import type { UserResponse } from '../types/userResponse.js';
-import { createNotification } from '../utils/notificationHelper.js';
 
 export async function logUserAction(
   userId: number,
@@ -16,12 +14,13 @@ export async function logUserAction(
   }
 ) {
   await pool.query(
-    `INSERT INTO audit_logs (user_id, category, action, target_id, details, ip_address)
-     VALUES ($1, $2, $3, $4, $5, $6)`,
+    `INSERT INTO audit_logs (user_id, category, action, performed_by_role, target_id, details, ip_address)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)`,
     [
       userId,
       category,
       action,
+      performed_by_role,
       meta.targetId || null,
       meta.details || null,
       meta.ipAddress || null,
