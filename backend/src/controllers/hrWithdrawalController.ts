@@ -60,13 +60,10 @@ export const markWithdrawalReadyHandler = async (
     // Notify employee
     await createNotification(
       request.user_id,
-      'Withdrawal Request Incomplete',
-      `Your withdrawal request is missing required documents. Please update and resubmit.`,
-      'warning',
-      {
-        withdrawalId: Number(withdrawalId),
-        link: `/employee/withdrawals/${withdrawalId}`,
-      }
+      'Loan Ready for Review',
+      `Your loan application #${request.id} has been successfully submitted and is pending review.`,
+      'success',
+      { withdrawalId: request.id, link: `/hr/withdrawals/${request.id}` }
     );
 
     res.json({ success: true, withdrawal: request });

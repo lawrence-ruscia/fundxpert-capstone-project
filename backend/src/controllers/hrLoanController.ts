@@ -65,19 +65,15 @@ export const markLoanReadyHandler = async (req: Request, res: Response) => {
     );
 
     // NOTIFICATION: Notify HR Officers only
-    const { rows: officers } = await pool.query(
-      `SELECT id FROM users WHERE role = 'HR'` // You may want to add hr_role field
+
+    await createNotification(
+      loan.user_id,
+      'Loan Ready for Review',
+      `Your loan application #${loanId} has been successfully submitted and is pending review.`,
+      'success',
+      { loanId: loan.id, link: `/hr/loans/${loanId}` }
     );
 
-    for (const officer of officers) {
-      await createNotification(
-        officer.id,
-        'Loan Ready for Review',
-        `Loan #${loanId} is now ready for your review.`,
-        'info',
-        { loanId: loan.id, link: `/hr/loans/${loanId}` }
-      );
-    }
     res.json({ success: true, loan });
   } catch (err) {
     console.error(err);
