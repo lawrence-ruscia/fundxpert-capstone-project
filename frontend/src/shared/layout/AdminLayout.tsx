@@ -10,8 +10,12 @@ import { ProfileDropdown } from '../components/profile-dropdown';
 import { Main } from './Main';
 import { adminSidebarData } from '../data/adminSidebarData';
 import NavigationSetter from '../components/NavigationSetter';
+import { useAuth } from '@/features/auth/context/AuthContext';
+import { NotificationBell } from '../components/NotificationBell';
 export default function AdminLayout() {
+  const { user } = useAuth();
   const defaultOpen = getCookie('sidebar_state') !== 'false';
+
   return (
     <LayoutProvider>
       <SidebarProvider defaultOpen={defaultOpen}>
@@ -33,6 +37,7 @@ export default function AdminLayout() {
           {/* ===== Top Heading ===== */}
           <Header>
             <div className='ms-auto flex items-center space-x-4'>
+              {user && <NotificationBell />}
               <ThemeSwitch />
               <ProfileDropdown />
             </div>

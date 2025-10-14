@@ -14,7 +14,10 @@ export function authMiddleware(requiredRole?: string) {
   return async (req: Request, res: Response, next: NextFunction) => {
     const token = req.cookies.token; // read from cookie
 
-    if (!token) return res.status(401).json({ error: 'No token provided' });
+    if (!token)
+      return res
+        .status(401)
+        .json({ error: 'Your session has expired. Please log in again.' });
 
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET as string) as {

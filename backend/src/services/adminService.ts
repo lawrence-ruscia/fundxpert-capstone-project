@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs';
 import { pool } from '../config/db.config.js';
 import { generateTempPassword } from '../utils/generateTempPassword.js';
 import type { UserResponse } from '../types/userResponse.js';
+import { createNotification } from '../utils/notificationHelper.js';
 
 export async function logUserAction(
   userId: number,
@@ -162,21 +163,38 @@ export async function updateUser(
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
+
+    // STEP 1: Fetch current user data
+    const { rows: currentRows } = await client.query(
+      `SELECT id, name, email, employee_id, role, department_id, position_id, 
+              salary, employment_status, date_hired
+       FROM users WHERE id = $1`,
+      [id]
+    );
+
+    if (currentRows.length === 0) {
+      await client.query('ROLLBACK');
+      return null;
+    }
+
+    const currentUser = currentRows[0];
+
+    // STEP 2: Detect actual changes and sensitive changes
     const fields: string[] = [];
     const values: unknown[] = [id];
-
-    const sensitiveChange =
-      updates.role ||
-      updates.generatedTempPassword ||
-      updates.employment_status;
-
-    // Build SET clause dynamically
     let index = 2;
+    let hasSensitiveChange = false;
+    const actualChanges: string[] = [];
+
+    // Sensitive fields that trigger token version increment
+    const sensitiveFields = ['role', 'employment_status'];
+
     for (const [key, value] of Object.entries(updates)) {
       if (key === 'generatedTempPassword' && value) {
-        // If resetting password, hash it + set temp flags
+        // Password reset is always sensitive
         const hash = await bcrypt.hash(value, 10);
         const expiresAt = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000); // 5 days
+
         fields.push(`password_hash = $${index}`);
         values.push(hash);
         index++;
@@ -185,43 +203,68 @@ export async function updateUser(
         fields.push(`temp_password_expires = $${index}`);
         values.push(expiresAt);
         index++;
+
+        hasSensitiveChange = true;
+        actualChanges.push('password_hash');
       } else {
-        fields.push(`${key} = $${index}`);
-        values.push(value);
-        index++;
+        // Only add field if value actually changed
+        if (currentUser[key] !== value) {
+          fields.push(`${key} = $${index}`);
+          values.push(value);
+          index++;
+          actualChanges.push(key);
+
+          // Check if this is a sensitive field
+          if (sensitiveFields.includes(key)) {
+            hasSensitiveChange = true;
+          }
+        }
       }
     }
 
-    if (fields.length === 0) return null;
-
-    const query = `
-      UPDATE users 
-      SET ${fields.join(', ')}, updated_at = NOW()
-      WHERE id = $1
-      RETURNING id, name, email, employee_id, role, department_id, position_id, salary, employment_status, date_hired;
-    `;
-
-    if (sensitiveChange) {
+    // STEP 3: If no actual changes, return early
+    if (fields.length === 0) {
+      await client.query('COMMIT');
+      return currentUser;
+    }
+    // STEP 4: Increment token version ONLY for sensitive changes
+    if (hasSensitiveChange) {
       await client.query(
         `UPDATE users SET token_version = token_version + 1 WHERE id = $1`,
         [id]
       );
-      console.log('Incremented token for user: ', id);
+      console.log(
+        `Token version incremented for user ${id} due to sensitive change:`,
+        actualChanges
+      );
+    } else {
+      console.log(
+        `ℹNo token version increment for user ${id}. Non-sensitive changes:`,
+        actualChanges
+      );
     }
 
+    // STEP 5: Update user
+    const query = `
+      UPDATE users
+      SET ${fields.join(', ')}, updated_at = NOW()
+      WHERE id = $1
+      RETURNING id, name, email, employee_id, role, department_id, position_id, 
+                salary, employment_status, date_hired;
+    `;
+
     const { rows } = await client.query(query, values);
-
     await client.query('COMMIT');
-    return rows[0] || null;
-  } catch (err: unknown) {
-    await client.query('ROLLBACK');
 
+    return rows[0] || null;
+  } catch (err: any) {
+    await client.query('ROLLBACK');
     if (err.code === '23505') {
       // unique_violation
-      if (err.detail.includes('employee_id')) {
+      if (err.detail?.includes('employee_id')) {
         throw new Error('Employee ID must be unique.');
       }
-      if (err.detail.includes('email')) {
+      if (err.detail?.includes('email')) {
         throw new Error('Email must be unique.');
       }
     }

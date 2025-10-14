@@ -9,8 +9,12 @@ import { ThemeSwitch } from '../components/theme-switch';
 import { ProfileDropdown } from '../components/profile-dropdown';
 import { Main } from './Main';
 import { employeeSidebarData } from '../data/employeeSidebarData';
+import { NotificationBell } from '../components/NotificationBell';
+import { useAuth } from '@/features/auth/context/AuthContext';
 export default function EmployeeLayout() {
   const defaultOpen = getCookie('sidebar_state') !== 'false';
+  const { user } = useAuth();
+
   return (
     <LayoutProvider>
       <SidebarProvider defaultOpen={defaultOpen}>
@@ -32,6 +36,7 @@ export default function EmployeeLayout() {
           {/* ===== Top Heading ===== */}
           <Header>
             <div className='ms-auto flex items-center space-x-4'>
+              {user && <NotificationBell />}
               <ThemeSwitch />
               <ProfileDropdown />
             </div>

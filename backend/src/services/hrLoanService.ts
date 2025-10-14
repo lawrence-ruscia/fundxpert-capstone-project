@@ -1,5 +1,10 @@
 import { pool } from '../config/db.config.js';
 import type { LoanApprovalStatus, LoanDocument } from '../types/loan.js';
+import {
+  createNotification,
+  notifyUsersByRole,
+} from '../utils/notificationHelper.js';
+import { getEmployeeById } from './hrService.js';
 
 /**
  * Step 0: Assistant marks loan as ready for HR Officer review
@@ -152,7 +157,7 @@ export async function assignLoanApprovers(
     );
 
     await client.query('COMMIT');
-    return { success: true };
+    return { success: true, loan };
   } catch (err) {
     await client.query('ROLLBACK');
     throw err;
@@ -173,6 +178,7 @@ export async function reviewLoanApproval(
   const client = await pool.connect();
   try {
     await client.query('BEGIN');
+    const loan = await getLoanById(loanId);
 
     // 1️. Verify approver is the current one
     const { rows: current } = await client.query(
@@ -205,6 +211,16 @@ export async function reviewLoanApproval(
         [loanId, comments]
       );
       await client.query('COMMIT');
+
+      // Notify employee
+      await createNotification(
+        loan.user_id,
+        'Loan Request Rejected',
+        `Your loan request was not approved. Please check your email or contact HR for details.`,
+        'error',
+        { loanId, link: `/employee/loans/${loanId}` }
+      );
+
       return { decision };
     }
 
@@ -232,6 +248,17 @@ export async function reviewLoanApproval(
          WHERE id = $1`,
         [loanId]
       );
+
+      // Notify next approver
+      const employee = await getEmployeeById(loan.user_id);
+
+      await createNotification(
+        next[0].approver_id,
+        'Loan Approval Required',
+        `You are the next approver for Loan #${loanId} from ${employee.name}. Please review it in the HR Loan Portal.`,
+        'action_required',
+        { loanId, link: `/hr/loans/${loanId}` }
+      );
     } else {
       // No next approver → all approved
       await client.query(
@@ -239,6 +266,24 @@ export async function reviewLoanApproval(
          SET status = 'Approved', updated_at = NOW()
          WHERE id = $1`,
         [loanId]
+      );
+
+      // Notify employee
+      await createNotification(
+        loan.user_id,
+        'Loan Approved',
+        `Your loan request for ₱${parseFloat(loan.amount).toLocaleString()} has been approved. The release process is now underway.`,
+        'success',
+        { loanId, link: `/employee/loans/${loanId}` }
+      );
+
+      // Notify all HR
+      await notifyUsersByRole(
+        'HR',
+        'Loan Fully Approved',
+        `Loan #${loanId} has completed all approvals and is now ready for release.`,
+        'success',
+        { loanId, link: `/hr/loans/${loanId}` }
       );
     }
 
@@ -262,7 +307,7 @@ export async function releaseLoanToTrustBank(
   txRef?: string | null
 ) {
   const { rows: loanRows } = await pool.query(
-    `SELECT officer_id, status FROM loans WHERE id = $1`,
+    `SELECT user_id, officer_id, status FROM loans WHERE id = $1`,
     [loanId]
   );
 
@@ -288,6 +333,15 @@ export async function releaseLoanToTrustBank(
      WHERE id = $1
      RETURNING *`,
     [loanId, txRef || null, releasedBy]
+  );
+
+  //  Notify employee
+  await createNotification(
+    loan.user_id,
+    'Loan Released',
+    `Your approved loan has been released to your registered bank account.`,
+    'success',
+    { loanId, link: `/employee/loans/${loanId}` }
   );
 
   return rows[0] || null;
@@ -477,7 +531,7 @@ export async function getLoanAccess(userId: number, loanId: number) {
 
   switch (loan.status) {
     case 'Pending':
-    case 'Incomplete': 
+    case 'Incomplete':
       // Assistant actions
       if (!loan.assistant_id || loan.assistant_id === userId) {
         access.canMarkReady = true;

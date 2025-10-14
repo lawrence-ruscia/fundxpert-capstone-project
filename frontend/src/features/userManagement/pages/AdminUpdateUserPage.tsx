@@ -288,7 +288,7 @@ export const AdminUpdateUserPage = () => {
     generatedTempPassword && generatedTempPassword.trim().length > 0
   );
 
-  if (loading || !data) {
+  if (loading) {
     return <LoadingSpinner text={'Loading user data...'} />;
   }
 

@@ -9,7 +9,10 @@ import { ThemeSwitch } from '../components/theme-switch';
 import { ProfileDropdown } from '../components/profile-dropdown';
 import { Main } from './Main';
 import { hrSidebarData } from '../data/hrSidebarData';
+import { NotificationBell } from '../components/NotificationBell';
+import { useAuth } from '@/features/auth/context/AuthContext';
 export default function HRLayout() {
+  const { user } = useAuth();
   const defaultOpen = getCookie('sidebar_state') !== 'false';
   return (
     <LayoutProvider>
@@ -32,6 +35,7 @@ export default function HRLayout() {
           {/* ===== Top Heading ===== */}
           <Header>
             <div className='ms-auto flex items-center space-x-4'>
+              {user && <NotificationBell />}
               <ThemeSwitch />
               <ProfileDropdown />
             </div>

@@ -21,14 +21,14 @@ export async function checkLoanEligibility(
 ): Promise<LoanEligibility> {
   // Fetch vested balance
   const vestedQuery = `
-    SELECT 
-      COALESCE(SUM(employee_amount + employer_amount), 0) AS total,
+    SELECT
+      COALESCE(SUM(c.employee_amount + c.employer_amount), 0) AS total,
       u.date_hired,
       u.employment_status
-    FROM contributions c
-    RIGHT JOIN users u ON u.id = $1
-    WHERE c.user_id = $1
-    GROUP BY u.date_hired, u.employment_status;
+    FROM users u
+    LEFT JOIN contributions c ON c.user_id = u.id
+    WHERE u.id = $1
+    GROUP BY u.id, u.date_hired, u.employment_status;
   `;
 
   const { rows } = await pool.query(vestedQuery, [userId]);

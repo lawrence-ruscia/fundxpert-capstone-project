@@ -18,8 +18,9 @@ import {
   searchHR,
 } from '../services/hrService.js';
 import type { HRContributionPeriod } from '../types/hrTypes.js';
-import { logUserAction } from '../services/adminService.js';
+import { getUserById, logUserAction } from '../services/adminService.js';
 import { isAuthenticatedRequest } from './employeeControllers.js';
+import { createNotification } from '../utils/notificationHelper.js';
 
 // Overview
 export async function getOverviewHandler(req: Request, res: Response) {
@@ -237,8 +238,28 @@ export async function resetEmployeePasswordHandler(
       targetId: Number(req.params.id),
 
       ipAddress: req.ip ?? '::1',
-    }); 
- 
+    });
+
+    const user = await getUserById(Number(req.params.id));
+
+    // Notify user
+    await createNotification(
+      user.id,
+      'Password Reset',
+      `Your password was successfully reset by an hr. Please log in with your temporary password and change it immediately.`,
+      'warning',
+      { link: '/auth/login' }
+    );
+
+    // Notify admin who performed action
+    await createNotification(
+      req.user.id,
+      'Password Reset Performed',
+      `A password reset was performed for ${user.email}.`,
+      'info',
+      { userId: user.id }
+    );
+
     // Send temp password back to HR (they will relay securely to employee)
     res.json({
       message: 'Temporary password generated',

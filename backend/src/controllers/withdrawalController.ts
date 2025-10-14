@@ -8,6 +8,11 @@ import {
 } from '../services/withdrawalService.js';
 import { isAuthenticatedRequest } from './employeeControllers.js';
 import { recordWithdrawalHistory } from '../services/hrWithdrawalService.js';
+import {
+  createNotification,
+  notifyUsersByRole,
+} from '../utils/notificationHelper.js';
+import { getEmployeeById } from '../services/hrService.js';
 
 export async function getEligibility(req: Request, res: Response) {
   try {
@@ -36,6 +41,27 @@ export async function createWithdrawal(req: Request, res: Response) {
       Number(withdrawal.id),
       'Employee requested a withdrawal',
       userId
+    );
+
+    const withdrawalId = withdrawal.id;
+    const employee = await getEmployeeById(req.user.id);
+
+    // Notify employee
+    await createNotification(
+      userId,
+      'Withdrawal Request Submitted',
+      `Your withdrawal request has been submitted for HR review.`,
+      'success',
+      { withdrawalId, link: `/employee/withdrawals/${withdrawalId}` }
+    );
+
+    // Notify all HR
+    await notifyUsersByRole(
+      'HR',
+      'New Withdrawal Request',
+      `A new withdrawal request from ${req.user.name} (${employee.employee_id}) is awaiting pre-screening.`,
+      'info',
+      { withdrawalId, link: `/hr/withdrawals/${withdrawalId}` }
     );
 
     res.status(201).json(withdrawal);

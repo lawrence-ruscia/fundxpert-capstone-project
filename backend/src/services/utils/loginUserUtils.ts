@@ -7,6 +7,10 @@ import {
   PASSWORD_EXPIRY_DAYS,
 } from '../../config/security.config.js';
 import { logUserAction } from '../adminService.js';
+import {
+  createNotification,
+  notifyUsersByRole,
+} from '../../utils/notificationHelper.js';
 
 export const findUserByEmail = async (email: string): Promise<User | null> => {
   const result = await pool.query(`SELECT * FROM users WHERE email = $1`, [
@@ -15,7 +19,7 @@ export const findUserByEmail = async (email: string): Promise<User | null> => {
   return result.rows[0] || null;
 };
 
-export const checkAccountLockout = (user: User): void => {
+export const checkAccountLockout = async (user: User): void => {
   if (!user.locked_until) return;
 
   const lockedUntil = new Date(user.locked_until);
@@ -24,6 +28,24 @@ export const checkAccountLockout = (user: User): void => {
   if (lockedUntil > now) {
     const msRemaining = lockedUntil.getTime() - now.getTime();
     const timeMessage = formatLockoutDuration(msRemaining);
+
+    // Notify user
+    await createNotification(
+      user.id,
+      'Account Locked',
+      `Your account has been temporarily locked due to multiple failed login attempts. Please try again later or contact support.`,
+      'error',
+      { link: '/auth/login' }
+    );
+
+    // Notify all admins
+    await notifyUsersByRole(
+      'Admin',
+      'User Account Locked',
+      `User ${user.email} has been automatically locked due to repeated failed login attempts.`,
+      'warning',
+      { userId: user.id, link: `/admin/users/${user.id}` }
+    );
 
     throw new Error(`Account locked. Try again in ${timeMessage}.`);
   }

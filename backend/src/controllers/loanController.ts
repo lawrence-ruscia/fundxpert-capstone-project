@@ -5,6 +5,12 @@ import {
   recordLoanHistory,
 } from '../services/hrLoanService.js';
 import { isAuthenticatedRequest } from './employeeControllers.js';
+import {
+  createNotification,
+  notifyUsersByRole,
+} from '../utils/notificationHelper.js';
+import { pool } from '../config/db.config.js';
+import { getUserById } from '../services/adminService.js';
 
 export async function getLoanEligibility(req: Request, res: Response) {
   if (!isAuthenticatedRequest(req)) {
@@ -51,6 +57,27 @@ export async function applyLoan(req: Request, res: Response) {
       Number(loan.id),
       'Employee applied for loan',
       userId
+    );
+
+    const loanId = loan.id;
+    const employeeId = await getUserById(req.user.id);
+
+    // Notify employee
+    await createNotification(
+      userId,
+      'Loan Request Submitted',
+      `Your loan request for ₱${parseFloat(amount).toLocaleString()} has been successfully submitted and is awaiting HR review.`,
+      'success',
+      { loanId, link: `/employee/loan/${loanId}` }
+    );
+
+    // NOTIFICATION: Notify all HR users
+    await notifyUsersByRole(
+      'HR',
+      'New Loan Submitted',
+      `A new loan request from ${req.user.name} (${employeeId}) is awaiting initial review.`,
+      'info',
+      { loanId, link: `/hr/loans/${loanId}` }
     );
 
     res.status(201).json({ success: true, loan });
@@ -127,7 +154,7 @@ export async function cancelLoanRequestHandler(req: Request, res: Response) {
     const userId = req.user.id;
     const { id } = req.params;
     const { remarks } = req.body;
-    const result = await cancelLoanRequest(
+    const loan = await cancelLoanRequest(
       Number(id),
       userId,
       'Employee',
@@ -140,6 +167,19 @@ export async function cancelLoanRequestHandler(req: Request, res: Response) {
       userId,
       remarks
     );
+
+    const loanId = loan.id;
+
+    //  NOTIFICATION: Notify employee (if cancelled by HR)
+    if (req.user.role === 'HR' && loan.user_id !== userId) {
+      await createNotification(
+        loan.user_id,
+        'Loan Cancelled',
+        `Your loan request has been cancelled by HR. You may submit a new request if necessary.`,
+        'warning',
+        { loanId, link: `/employee/loan/${loanId}` }
+      );
+    }
 
     res.json({ success: true, message: 'Loan cancelled' });
   } catch (err) {

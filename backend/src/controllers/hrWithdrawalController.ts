@@ -20,6 +20,7 @@ import PDFDocument from 'pdfkit';
 import ExcelJS from 'exceljs';
 import { SHEET_PASSWORD } from '../config/security.config.js';
 import path from 'path';
+import { createNotification } from '../utils/notificationHelper.js';
 
 export const markWithdrawalReadyHandler = async (
   req: Request,
@@ -54,6 +55,19 @@ export const markWithdrawalReadyHandler = async (
       'Marked ready for review',
       assistantId
     );
+
+    // Notify employee
+    await createNotification(
+      request.user_id,
+      'Withdrawal Request Incomplete',
+      `Your withdrawal request is missing required documents. Please update and resubmit.`,
+      'warning',
+      {
+        withdrawalId: Number(withdrawalId),
+        link: `/employee/withdrawals/${withdrawalId}`,
+      }
+    );
+
     res.json({ success: true, withdrawal: request });
   } catch (err) {
     console.error(err);
@@ -71,11 +85,11 @@ export const markWithdrawalIncompleteHandler = async (
     if (!req.user || req.user.role !== 'HR')
       return res.status(403).json({ error: 'Access denied' });
 
-    const { withdrwalId } = req.params;
+    const { withdrawalId } = req.params;
     const { remarks } = req.body;
     const assistantId = req.user.id;
 
-    const access = await getWithdrawalAccess(assistantId, Number(withdrwalId));
+    const access = await getWithdrawalAccess(assistantId, Number(withdrawalId));
     if (!access.canMarkIncomplete) {
       return res.status(403).json({
         error:
@@ -84,7 +98,7 @@ export const markWithdrawalIncompleteHandler = async (
     }
 
     const request = await markWithdrawalIncomplete(
-      Number(withdrwalId),
+      Number(withdrawalId),
       assistantId,
       remarks
     );
@@ -98,6 +112,18 @@ export const markWithdrawalIncompleteHandler = async (
       'Marked incomplete by HR assistant',
       assistantId,
       remarks
+    );
+
+    // NOTIFICATION: Notify employee
+    await createNotification(
+      request.user_id,
+      'Withdrawal Request Incomplete',
+      `Your loan request requires additional documents. Please upload the missing files to continue.`,
+      'warning',
+      {
+        withdrawalId: Number(withdrawalId),
+        link: `/employee/withdrawals/${withdrawalId}`,
+      }
     );
     res.json({ success: true, withdrawal: request });
   } catch (err) {
@@ -189,6 +215,9 @@ export const reviewWithdrawalDecisionHandler = async (
       approverId,
       comments
     );
+
+    // Notify employee
+
     res.json(approval);
   } catch (err) {
     if (err instanceof Error) {
@@ -235,6 +264,7 @@ export const releaseWithdrawalFundsHandler = async (
       releasedBy,
       payment_reference || null
     );
+
     res.json({ success: true, withdrawal: request });
   } catch (err) {
     if (err instanceof Error) {
@@ -274,6 +304,17 @@ export const cancelWithdrawalRequestHandler = async (
       'Withdrawal request cancelled by HR',
       userId
     );
+
+    if (req.user.role === 'HR' && request.user_id !== userId) {
+      await createNotification(
+        request.user_id,
+        'Withdrawal Request Cancelled',
+        `Your withdrawal request was cancelled by HR.`,
+        'warning',
+        { request, link: `/employee/withdrawals/${withdrawalId}` }
+      );
+    }
+
     res.json({ success: true, withdrawal: request });
   } catch (err) {
     if (err instanceof Error) {

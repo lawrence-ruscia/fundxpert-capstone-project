@@ -1,5 +1,9 @@
 import { pool } from '../config/db.config.js';
 import type { WithdrawalStatus } from '../types/withdrawal.js';
+import {
+  createNotification,
+  notifyUsersByRole,
+} from '../utils/notificationHelper.js';
 
 /**
  * Step 0: Assistant marks as incomplete / missing requirements
@@ -137,6 +141,33 @@ export async function reviewWithdrawalDecision(
       ]
     );
 
+    if (decision === 'Approved') {
+      await createNotification(
+        request.user_id,
+        'Withdrawal Request Approved',
+        `Your withdrawal request has been approved. The funds will be released shortly.`,
+        'success',
+        { withdrawalId, link: `/employee/withdrawals/${withdrawalId}` }
+      );
+
+      // Notify HR (for release tracking)
+      await notifyUsersByRole(
+        'HR',
+        'Withdrawal Approved',
+        `Withdrawal #${withdrawalId} has been approved and marked for release.`,
+        'success',
+        { withdrawalId, link: `/hr/withdrawals/${withdrawalId}` }
+      );
+    } else {
+      await createNotification(
+        request.user_id,
+        'Withdrawal Request Rejected',
+        `Your withdrawal request was not approved. Contact HR for further information.`,
+        'error',
+        { withdrawalId, link: `/employee/withdrawals/${withdrawalId}` }
+      );
+    }
+
     await client.query('COMMIT');
     return { success: true, decision };
   } catch (err) {
@@ -182,6 +213,16 @@ export async function releaseWithdrawalFunds(
      RETURNING *`,
     [withdrawalId, officerId, paymentReference]
   );
+
+  // Notify employee
+  await createNotification(
+    request.user_id,
+    'Withdrawal Funds Released',
+    `Your withdrawal funds have been released to your account.`,
+    'success',
+    { withdrawalId, link: `/employee/withdrawals/${withdrawalId}` }
+  );
+
   return rows[0] || null;
 }
 

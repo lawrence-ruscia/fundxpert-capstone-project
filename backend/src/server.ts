@@ -27,6 +27,7 @@ import { hrContributionsRouter } from './routes/hrContributionsRoutes.js';
 import { hrLoanRouter } from './routes/hrLoanRoutes.js';
 import { hrWithdrawalRouter } from './routes/hrWithdrawalRoutes.js';
 import { adminRouter } from './routes/adminRoutes.js';
+import { notifRouter } from './routes/notificationRoutes.js';
 
 // To return client's true IP
 app.set('trust proxy', true);
@@ -49,6 +50,9 @@ app.use('/hr/withdrawals', hrWithdrawalRouter);
 
 // admin routes
 app.use('/admin', adminRouter);
+
+// notif routes
+app.use('/notifications', notifRouter);
 
 app.use('/uploads', express.static('uploads')); // serve uploaded files
 

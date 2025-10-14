@@ -11,6 +11,10 @@ import {
 } from '../services/adminService.js';
 import { resetEmployeePassword } from '../services/hrService.js';
 import type { User } from '../types/user.js';
+import {
+  createNotification,
+  notifyUsersByRole,
+} from '../utils/notificationHelper.js';
 import { isAuthenticatedRequest } from './employeeControllers.js';
 import type { Request, Response } from 'express';
 
@@ -123,6 +127,26 @@ export async function createUserHandler(req: Request, res: Response) {
       }
     );
 
+    if (user.role === 'HR') {
+      // Notify new HR user
+      await createNotification(
+        Number(user.id),
+        'Welcome to the System',
+        `Your HR account has been created. Please log in with your temporary password and change it immediately.`,
+        'info',
+        { link: '/auth/login' }
+      );
+
+      // Notify all admins
+      await notifyUsersByRole(
+        'Admin',
+        'New HR Account Created',
+        `A new HR user (${email}) has been successfully created.`,
+        'info',
+        { userId: Number(user.id), link: `/admin/users/${user.id}` }
+      );
+    }
+
     res.status(201).json({ user });
   } catch (err) {
     console.error('❌ Error creating user:', err);
@@ -197,7 +221,7 @@ export async function toggleLockUserHandler(req: Request, res: Response) {
           error: 'duration must be a positive number (in minutes)',
         });
       }
-      // Optional: Set a maximum lock duration (e.g., 1 year)
+      // Set a maximum lock duration (e.g., 1 year)
       const MAX_DURATION_MINUTES = 365 * 24 * 60;
       if (duration > MAX_DURATION_MINUTES) {
         return res.status(400).json({
@@ -246,6 +270,39 @@ export async function toggleLockUserHandler(req: Request, res: Response) {
       auditDetails
     );
 
+    await createNotification(
+      Number(userId),
+      actionDescription,
+      locked
+        ? `Account locked until ${result.lockUntil?.toLocaleString()}`
+        : 'Account unlocked',
+      'error',
+      {
+        lockUntil: result.lockUntil,
+      }
+    );
+
+    if (!locked) {
+      const user = await getUserById(Number(userId));
+      // Notify user
+      await createNotification(
+        parseInt(userId),
+        'Account Unlocked',
+        `Your account is now unlocked. You may log in again.`,
+        'success',
+        { link: '/auth/login' }
+      );
+
+      // Notify admin who unlocked
+      await createNotification(
+        req.user.id,
+        'Account Unlocked',
+        `User ${user.email} has been unlocked.`,
+        'info',
+        { userId: parseInt(userId) }
+      );
+    }
+
     res.json({
       success: true,
       locked: locked,
@@ -280,6 +337,26 @@ export async function resetUserPasswordHandler(req: Request, res: Response) {
       targetId: Number(req.params.id),
       ipAddress: req.ip ?? '::1',
     });
+
+    const user = await getUserById(Number(req.params.userId));
+
+    // Notify user
+    await createNotification(
+      user.id,
+      'Password Reset',
+      `Your password was successfully reset by an hr. Please log in with your temporary password and change it immediately.`,
+      'warning',
+      { link: '/auth/login' }
+    );
+
+    // Notify admin who performed action
+    await createNotification(
+      req.user.id,
+      'Password Reset Performed',
+      `A password reset was performed for ${user.email}.`,
+      'info',
+      { userId: user.id }
+    );
 
     res.json({
       message: 'Temporary password generated',

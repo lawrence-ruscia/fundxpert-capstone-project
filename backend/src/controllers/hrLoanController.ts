@@ -25,6 +25,8 @@ import { getEmployeeById } from '../services/hrService.js';
 import path from 'path';
 import { SHEET_PASSWORD } from '../config/security.config.js';
 import { pool } from '../config/db.config.js';
+import { createNotification } from '../utils/notificationHelper.js';
+import { getUserById } from '../services/adminService.js';
 
 export const markLoanReadyHandler = async (req: Request, res: Response) => {
   try {
@@ -47,7 +49,35 @@ export const markLoanReadyHandler = async (req: Request, res: Response) => {
         .status(400)
         .json({ error: 'Loan not found or not in Pending state' });
 
-    await recordLoanHistory(loan.id, 'Marked ready for review', assistantId);
+    await recordLoanHistory(
+      Number(loanId),
+      'Marked ready for review',
+      assistantId
+    );
+
+    // NOTIFICATION: Notify employee
+    await createNotification(
+      loan.user_id,
+      'Loan Under Review',
+      `Your loan is now under HR officer review. You'll be notified once a decision is made.`,
+      'info',
+      { loanId: loan.id, link: `/employee/loans/${loanId}` }
+    );
+
+    // NOTIFICATION: Notify HR Officers only
+    const { rows: officers } = await pool.query(
+      `SELECT id FROM users WHERE role = 'HR'` // You may want to add hr_role field
+    );
+
+    for (const officer of officers) {
+      await createNotification(
+        officer.id,
+        'Loan Ready for Review',
+        `Loan #${loanId} is now ready for your review.`,
+        'info',
+        { loanId: loan.id, link: `/hr/loans/${loanId}` }
+      );
+    }
     res.json({ success: true, loan });
   } catch (err) {
     console.error(err);
@@ -63,7 +93,7 @@ export const markLoanIncompleteHandler = async (
     if (!req.user || req.user.role !== 'HR')
       return res.status(403).json({ error: 'Access denied' });
 
-    const { loanId } = req.params;
+    const { loanId: loanId } = req.params;
     const { remarks } = req.body;
     const assistantId = req.user.id;
 
@@ -85,6 +115,15 @@ export const markLoanIncompleteHandler = async (
       'Marked incomplete by HR assistant',
       assistantId,
       remarks
+    );
+
+    // NOTIFICATION: Notify employee
+    await createNotification(
+      loan.user_id,
+      'Loan Application Incomplete',
+      `Your loan request requires additional documents. Please upload the missing files to continue.`,
+      'warning',
+      { loanId: loan.id, link: `/employee/loans/${loanId}` }
     );
     res.json({ success: true, loan });
   } catch (err) {
@@ -160,6 +199,7 @@ export const assignLoanApproversHandler = async (
     const approverIds = approvers.map(
       (a: { approverId: number; sequence: number }) => a.approverId
     );
+
     const hasDuplicates = new Set(approverIds).size !== approverIds.length;
     if (hasDuplicates) {
       return res.status(400).json({
@@ -178,6 +218,18 @@ export const assignLoanApproversHandler = async (
     const result = await assignLoanApprovers(Number(loanId), userId, approvers);
 
     await recordLoanHistory(Number(loanId), 'Approvers assigned', req.user.id);
+
+    const loan = result.loan;
+    const employee = await getUserById(loan.user_id);
+
+    await createNotification(
+      approverIds[0],
+      'Loan Approval Required',
+      `Loan #${loanId} from ${employee.name} (${employee.employee_id}) is awaiting your approval.`,
+      'action_required',
+      { loanId: loan.id, link: `/hr/loans/${loanId}` }
+    );
+
     res.json(result);
   } catch (err) {
     if (err instanceof Error) {
@@ -224,6 +276,7 @@ export const reviewLoanApprovalHandler = async (
       approverId,
       comments
     );
+
     res.json({ success: true, approval });
   } catch (err) {
     if (err instanceof Error) {
@@ -293,11 +346,22 @@ export const cancelLoanRequestHandler = async (req: Request, res: Response) => {
         .json({ error: 'Loan not eligible for cancellation' });
 
     await recordLoanHistory(Number(loanId), 'Loan cancelled by HR', userId);
+
+    //  NOTIFICATION: Notify employee (if cancelled by HR)
+    if (req.user.role === 'HR' && loan.user_id !== userId) {
+      await createNotification(
+        loan.user_id,
+        'Loan Cancelled',
+        `Your loan request has been cancelled by HR. You may submit a new request if necessary.`,
+        'warning',
+        { loanId: loan.id, link: `/employee/loans/${loanId}` }
+      );
+    }
     res.json({ success: true, loan });
   } catch (err) {
     if (err instanceof Error) {
       console.error(err);
-      res.status(500).json({ error: err?.message ?? 'Failed to release loan' });
+      res.status(500).json({ error: err?.message ?? 'Failed to cancel loan' });
     }
   }
 };
