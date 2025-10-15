@@ -1,9 +1,6 @@
 import type { LoginSchema } from '../schemas/loginSchema';
 import type { LoginResponse, UserResponse } from '../types/loginResponse';
-import { logout } from '@/utils/auth';
 import { api } from '@/shared/api/api';
-
-// TODO: Move these to global shared/types folder
 
 export const authService = {
   login: async (data: LoginSchema): Promise<LoginResponse> => {

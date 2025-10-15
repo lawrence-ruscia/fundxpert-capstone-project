@@ -18,13 +18,14 @@ export function useSessionWarning({
 
   // Timer: show modal before expiry
   useEffect(() => {
-    if (!tokenExpiry) return;
+    if (!tokenExpiry || tokenExpiry <= 0) return;
 
     const now = Date.now();
     const timeLeft = tokenExpiry - now;
 
     // Already expired
     if (timeLeft <= 0) {
+      console.log('⚠️ Token already expired, logging out');
       logout();
       navigate('/auth/login', { replace: true });
       return;

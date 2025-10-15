@@ -7,6 +7,18 @@ import jwt, { type JwtPayload } from 'jsonwebtoken';
 import { isAuthenticatedRequest } from './employeeControllers.js';
 import { logUserAction } from '../services/adminService.js';
 
+// Helper function to get cookie options
+function getCookieOptions(maxAge?: number) {
+  const isProduction = process.env.NODE_ENV === 'production';
+
+  return {
+    httpOnly: true,
+    secure: isProduction, // true in production, false in development
+    sameSite: isProduction ? ('none' as const) : ('lax' as const), // 'none' for production, 'lax' for development
+    maxAge: maxAge || 60 * 60 * 1000, // 1 hour default
+  };
+}
+
 export async function register(req: Request, res: Response) {
   try {
     const { name, email, password, role, date_hired } =
@@ -110,9 +122,9 @@ export async function verify2FASetup(req: Request, res: Response) {
   try {
     const { userId, token } = req.body; // 6-digit code from Google Authenticator
 
-    // Fetch stored secret for this user
+    // Fetch stored secret and token_version for this user
     const { rows } = await pool.query(
-      'SELECT id, name, role, twofa_secret FROM users WHERE id = $1',
+      'SELECT id, name, role, twofa_secret, token_version FROM users WHERE id = $1',
       [userId]
     );
     const user = rows[0];
@@ -149,11 +161,11 @@ export async function verify2FASetup(req: Request, res: Response) {
     );
 
     // Store JWT in httpOnly cookie
-    res.cookie('token', jwtToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      maxAge: expiresInMs,
+    res.cookie('token', jwtToken, getCookieOptions(expiresInMs));
+
+    await logUserAction(user.id, 'First 2FA Login', 'Auth', 'System', {
+      details: { role: user.role },
+      ipAddress: req.ip ?? '::1',
     });
 
     return res.json({
@@ -207,12 +219,7 @@ export async function loginWith2FA(req: Request, res: Response) {
     );
 
     // Store JWT in httpOnly cookie
-    res.cookie('token', jwtToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'none', // REQUIRED for cross-site cookies
-      maxAge: expiresInMs,
-    });
+    res.cookie('token', jwtToken, getCookieOptions(expiresInMs));
 
     await pool.query(
       `UPDATE users 
@@ -319,12 +326,9 @@ export async function logout(req: Request, res: Response) {
     [req.user.id]
   );
 
-  // Clear the JWT cookie
-  res.clearCookie('token', {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    sameSite: 'strict',
-  });
+  const cookieOptions = getCookieOptions();
+  delete cookieOptions.maxAge; // Remove maxAge when clearing
+  res.clearCookie('token', cookieOptions);
 
   await logUserAction(userId, 'Successful Logout', 'Auth', 'System', {
     details: { role },
@@ -360,12 +364,7 @@ export async function refreshSession(req: Request, res: Response) {
     );
 
     // Store JWT in httpOnly cookie
-    res.cookie('token', jwtToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'none', // REQUIRED for cross-site cookies
-      maxAge: expiresInMs,
-    });
+    res.cookie('token', jwtToken, getCookieOptions(expiresInMs));
 
     res.json({ success: true, tokenExpiry: expiryDate });
   } catch (err) {

@@ -35,18 +35,27 @@ export const OTPPage = () => {
     try {
       const response: LoginResponse =
         mode === 'setup'
-          ? await authService.verify2FA(userId, data.otp) // first-time setup
-          : await authService.login2FA(userId, data.otp); // normal login
+          ? await authService.verify2FA(userId, data.otp)
+          : await authService.login2FA(userId, data.otp);
 
       if ('user' in response) {
-        // Clear temporary userId
         sessionStorage.removeItem('twofa_userId');
         sessionStorage.removeItem('twofa_mode');
 
         login(response.user, response.tokenExpiry);
-        // Redirect to dashboard
-        console.log('User is: ', response);
-        navigate('/', { replace: true });
+
+        await new Promise(resolve => setTimeout(resolve, 50));
+
+        // Navigate directly to role-based dashboard
+        const dashboardRoute =
+          response.user.role === 'Employee'
+            ? '/employee'
+            : response.user.role === 'HR'
+              ? '/hr'
+              : '/admin';
+
+        navigate(dashboardRoute, { replace: true });
+
         toast.success(
           `Successfully logged in! Welcome back, ${response.user.name}!`
         );

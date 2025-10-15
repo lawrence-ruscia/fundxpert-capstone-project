@@ -33,6 +33,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     let mounted = true;
     async function init() {
+      // Skip auto-fetch if on auth pages
+      const isAuthPage = window.location.pathname.startsWith('/auth');
+      if (isAuthPage) {
+        if (mounted) setLoading(false);
+        return;
+      }
+
       try {
         const { user: userData, tokenExpiry } =
           await authService.fetchCurrentUser();
@@ -57,9 +64,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = (userData: UserType, expiry: number) => {
+    console.log('🟢 AuthContext.login() called', {
+      user: userData,
+      expiry,
+      now: Date.now(),
+      timeLeft: expiry - Date.now(),
+      timeLeftMinutes: (expiry - Date.now()) / 60000,
+    });
     setUser(userData);
     setTokenExpiry(expiry);
     setError(null);
+    setLoading(false);
   };
 
   const logout = async () => {
@@ -73,9 +88,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       setUser(null);
       setTokenExpiry(null);
-
       // Clear client-only data
       sessionStorage.removeItem('twofa_userId');
+      sessionStorage.removeItem('twofa_mode');
       localStorage.removeItem('role');
     }
   };
