@@ -5,6 +5,7 @@ import { DataTableColumnHeader } from '@/shared/components/DataTableColummHeader
 import { LongText } from '@/shared/components/LongText';
 import type { User } from '@/shared/types/user';
 import { UsersTableRowActions } from './UsersTableRowActions';
+import { Shield, User as UserIcon } from 'lucide-react';
 
 const formatDisplayDate = (dateString: Date) => {
   return dateString.toLocaleDateString('en-us', {
@@ -104,15 +105,26 @@ export const usersColumns: ColumnDef<User>[] = [
     ),
     cell: ({ row }) => {
       const role = row.getValue('role') as string;
-      const badgeColor =
-        role === 'Admin'
-          ? 'border-red-200 bg-red-50 text-red-800'
-          : role === 'HR'
-            ? 'border-blue-200 bg-blue-50 text-blue-800'
-            : 'border-gray-200 bg-gray-50 text-gray-800';
+      const roleConfig = {
+        Admin: {
+          icon: Shield,
+          className: 'border-red-200 bg-red-50 text-red-800',
+        },
+        HR: {
+          icon: UserIcon,
+          className: 'border-green-200 bg-green-50 text-green-800',
+        },
+        Employee: {
+          icon: UserIcon,
+          className: 'border-blue-200 bg-blue-50 text-blue-800',
+        },
+      };
+      const config = roleConfig[role];
+      const Icon = config.icon;
 
       return (
-        <Badge variant='outline' className={cn('capitalize', badgeColor)}>
+        <Badge variant='outline' className={cn('gap-1', config.className)}>
+          <Icon className='h-3 w-3' />
           {role}
         </Badge>
       );

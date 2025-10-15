@@ -10,6 +10,7 @@ import {
   getAuditLogsHandler,
   getUserSummaryHandler,
   adminReset2FAHandler,
+  getAuditSummaryCategoryHandler,
 } from '../controllers/adminController.js';
 import { authMiddleware } from '../middleware/authMiddleware.js';
 import {
@@ -34,6 +35,7 @@ adminRouter.patch('/users/:userId', updateUserHandler);
 adminRouter.post('/users/:userId/lock', toggleLockUserHandler);
 adminRouter.post('/users/:userId/reset-password', resetUserPasswordHandler);
 adminRouter.get('/logs', getAuditLogsHandler);
+adminRouter.get('/audit/summary', getAuditSummaryCategoryHandler);
 adminRouter.get('/stats', getAdminStatsHandler);
 adminRouter.get('/departments', getDepartmentsHandler);
 adminRouter.get('/positions', getPositionsHandler);

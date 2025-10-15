@@ -340,6 +340,18 @@ export async function getAuditLogs() {
   return rows;
 }
 
+export async function getAuditSummaryCategory() {
+  const { rows } = await pool.query(
+    `SELECT category,
+     COUNT(*) AS total_actions
+     FROM audit_logs
+     GROUP BY category
+     ORDER BY total_actions DESC;`
+  );
+
+  return rows;
+}
+
 export async function getAdminStats() {
   const query = `
     WITH user_counts AS (

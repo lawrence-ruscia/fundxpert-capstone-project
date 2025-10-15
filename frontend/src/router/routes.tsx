@@ -39,6 +39,7 @@ import { ResetPasswordPage } from '@/features/auth/pages/ResetPasswordPage';
 import { AdminCreateUserPage } from '@/features/userManagement/pages/AdminCreateUserPage';
 import { AdminUpdateUserPage } from '@/features/userManagement/pages/AdminUpdateUserPage';
 import NotificationsPage from '@/features/notifications/pages/NotificationPage';
+import AdminSystemLogsPage from '@/features/systemLogs/pages/AdminSystemLogsPage';
 
 export const router = createBrowserRouter([
   {
@@ -204,6 +205,10 @@ export const router = createBrowserRouter([
       {
         path: 'users/:userId/edit',
         element: <AdminUpdateUserPage />,
+      },
+      {
+        path: 'logs',
+        element: <AdminSystemLogsPage />,
       },
     ],
   },

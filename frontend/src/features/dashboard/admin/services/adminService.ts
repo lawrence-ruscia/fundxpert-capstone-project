@@ -1,7 +1,11 @@
 import { api } from '@/shared/api/api';
 import type { EmploymentStatus } from '../../employee/types/employeeOverview';
-import type { AuditLog, Role, User } from '@/shared/types/user';
+import type { Role, User } from '@/shared/types/user';
 import type { UserSummary } from '../types/admin';
+import type {
+  AuditLog,
+  AuditSummaryCategory,
+} from '@/features/systemLogs/types/audit';
 
 /**
  * Fetch all users with optional filters (role, status, search)
@@ -57,7 +61,8 @@ export async function toggleLockUser(userId: number, locked: boolean) {
  */
 export async function getAuditLogs(): Promise<AuditLog[]> {
   const res = await api.get('/admin/logs');
-  return res.data.logs;
+
+  return res.data;
 }
 
 export async function getAdminStats() {
@@ -67,5 +72,13 @@ export async function getAdminStats() {
 
 export async function getUserSummary(): Promise<UserSummary> {
   const res = await api.get('/admin/users/summary');
+  return res.data;
+}
+
+export async function getAuditSummaryCategory(): Promise<
+  AuditSummaryCategory[]
+> {
+  const res = await api.get('/admin/audit/summary');
+
   return res.data;
 }

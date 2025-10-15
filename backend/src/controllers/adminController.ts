@@ -4,6 +4,7 @@ import {
   getAdminStats,
   getAllUsers,
   getAuditLogs,
+  getAuditSummaryCategory,
   getUserById,
   getUserSummary,
   logUserAction,
@@ -469,10 +470,24 @@ export async function getAuditLogsHandler(req: Request, res: Response) {
   try {
     const logs = await getAuditLogs();
 
-    res.json({ logs });
+    res.json(logs);
   } catch (err) {
     console.error('❌ Error fetching audit logs:', err);
     res.status(500).json({ error: 'Failed to fetch audit logs' });
+  }
+}
+
+export async function getAuditSummaryCategoryHandler(
+  req: Request,
+  res: Response
+) {
+  try {
+    const summary = await getAuditSummaryCategory();
+
+    res.json(summary);
+  } catch (err) {
+    console.error('❌ Error fetching audit summary:', err);
+    res.status(500).json({ error: 'Failed to fetch audit summary' });
   }
 }
 
