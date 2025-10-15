@@ -9,6 +9,7 @@ import {
   getAdminStatsHandler,
   getAuditLogsHandler,
   getUserSummaryHandler,
+  adminReset2FAHandler,
 } from '../controllers/adminController.js';
 import { authMiddleware } from '../middleware/authMiddleware.js';
 import {
@@ -36,3 +37,4 @@ adminRouter.get('/logs', getAuditLogsHandler);
 adminRouter.get('/stats', getAdminStatsHandler);
 adminRouter.get('/departments', getDepartmentsHandler);
 adminRouter.get('/positions', getPositionsHandler);
+adminRouter.post('/reset-2fa', adminReset2FAHandler);

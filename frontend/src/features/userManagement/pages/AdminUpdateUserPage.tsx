@@ -36,6 +36,7 @@ import {
   EyeOff,
   Copy,
   AlertCircle,
+  ShieldAlert,
 } from 'lucide-react';
 import { CurrencyInput } from '@/shared/components/currency-input';
 
@@ -57,6 +58,7 @@ import { UnlockUserDialog } from '../components/UnlockUserDialog.js';
 import { ToggleLockButton } from '../components/ToggleLockButton.js';
 import { useSmartPolling } from '@/shared/hooks/useSmartPolling.js';
 import { usePersistedState } from '@/shared/hooks/usePersistedState.js';
+import { Reset2FADialog } from '../components/Reset2FADialog.js';
 
 // Input schema for form validation
 const updateUserInputSchema = z.object({
@@ -135,6 +137,8 @@ export const AdminUpdateUserPage = () => {
   const [actionLoading, setActionLoading] = useState(false);
   const [openLock, setOpenLock] = useState(false);
   const [openUnlock, setOpenUnlock] = useState(false);
+  const [openReset2fa, setOpenReset2fa] = useState(false);
+  const [reset2faLoading, setReset2faLoading] = useState(false);
 
   const [autoRefreshEnabled] = usePersistedState(
     'admin-dashboard-auto-refresh',
@@ -794,6 +798,26 @@ export const AdminUpdateUserPage = () => {
                     onLockClick={() => setOpenLock(true)}
                     onUnlockClick={() => setOpenUnlock(true)}
                   />
+
+                  <Button
+                    type='button'
+                    variant='secondary'
+                    onClick={() => setOpenReset2fa(true)}
+                    disabled={reset2faLoading}
+                    className='h-12 px-6 text-base sm:w-auto'
+                  >
+                    {resettingPassword ? (
+                      <>
+                        <div className='mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white' />
+                        Resetting...
+                      </>
+                    ) : (
+                      <>
+                        <ShieldAlert className='mr-2 h-4 w-4' />
+                        Reset 2FA
+                      </>
+                    )}
+                  </Button>
                   <Button
                     type='button'
                     variant='secondary'
@@ -870,6 +894,15 @@ export const AdminUpdateUserPage = () => {
                 </div>
 
                 <div className='text-sm'>
+                  <p className='mb-2 font-medium'>Two-Factor Authentication</p>
+                  <p className='text-muted-foreground mb-3 text-xs'>
+                    Reset 2FA will disable the user's current authenticator and
+                    force them to set up 2FA again on their next login. The user
+                    will be immediately logged out from all sessions.
+                  </p>
+                </div>
+
+                <div className='text-sm'>
                   <p className='mb-2 font-medium'>Account Lock/Unlock</p>
                   <p className='text-muted-foreground mb-3 text-xs'>
                     Lock an account to prevent login attempts immediately.
@@ -926,6 +959,16 @@ export const AdminUpdateUserPage = () => {
         userId={userId ?? ''}
         userName={data?.user?.name}
         lockExpiresAt={data?.user?.locked_until}
+        refresh={refresh}
+      />
+
+      <Reset2FADialog
+        open={openReset2fa}
+        onOpenChange={setOpenReset2fa}
+        setActionLoading={setReset2faLoading}
+        userId={Number(userId)}
+        userName={data?.user?.name}
+        employeeId={data?.user?.employee_id}
         refresh={refresh}
       />
     </div>

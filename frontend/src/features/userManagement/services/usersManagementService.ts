@@ -123,3 +123,8 @@ export async function toggleLockUser(
   });
   return res.data;
 }
+
+export async function adminReset2FA(userId: number) {
+  const res = await api.post('/admin/reset-2fa', { userId });
+  return res.data;
+}

@@ -8,6 +8,7 @@ import {
 } from '../validation/authValidation.js';
 import { authMiddleware } from '../middleware/authMiddleware.js';
 import type { Role } from '../types/user.js';
+
 export const authRouter = Router();
 
 authRouter.post(

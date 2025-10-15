@@ -37,7 +37,7 @@ import { formatCurrency } from '@/features/dashboard/employee/utils/formatters';
 import { ExportDropdown } from '@/shared/components/ExportDropdown';
 import { useTablePagination } from '@/shared/hooks/useTablePagination';
 import { useDateRangeFilter } from '@/shared/hooks/useDateRangeFilter';
-import { useContributionsExport } from '../hooks/useContributionsExport';
+import { useHRContributionsExport } from '../hooks/useHRContributionsExport';
 import { usePersistedState } from '@/shared/hooks/usePersistedState';
 import { hrContributionsService } from '../services/hrContributionService';
 import { getEmployeeById } from '@/features/employeeManagement/services/hrService';
@@ -95,7 +95,7 @@ export default function EmployeeContributionsPage() {
   const { pagination, handlePaginationChange } = useTablePagination();
 
   // Export functionality
-  const { handleExport } = useContributionsExport({
+  const { handleExport } = useHRContributionsExport({
     userId,
     dateRange: {
       start: dateRange.start,
@@ -318,7 +318,7 @@ export default function EmployeeContributionsPage() {
                 Contribution History
                 <p className='text-muted-foreground text-sm'>
                   Detailed breakdown of all contributions for this employee
-                </p>
+                </p> 
               </CardTitle>
             </div>
             <ExportDropdown onExport={handleExport} />

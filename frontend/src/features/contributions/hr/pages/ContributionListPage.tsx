@@ -2,7 +2,7 @@ import { hrContributionsService } from '../services/hrContributionService.js';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner.js';
 import { DataError } from '@/shared/components/DataError.js';
 import { Link } from 'react-router-dom';
-import { useContributionsExport } from '../hooks/useContributionsExport.js';
+import { useHRContributionsExport } from '../hooks/useHRContributionsExport.js';
 import { useCallback, useState } from 'react';
 import { useTablePagination } from '@/shared/hooks/useTablePagination.js';
 import { useDateRangeFilter } from '@/shared/hooks/useDateRangeFilter.js';
@@ -89,7 +89,7 @@ export default function ContributionListPage() {
   const { pagination, handlePaginationChange } = useTablePagination();
 
   // Export functionality
-  const { handleExport } = useContributionsExport({
+  const { handleExport } = useHRContributionsExport({
     dateRange: {
       start: dateRange.start,
       end: dateRange.end ?? new Date().toLocaleDateString(),

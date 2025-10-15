@@ -1,3 +1,4 @@
+import { pool } from '../config/db.config.js';
 import {
   createUser,
   getAdminStats,
@@ -17,6 +18,7 @@ import {
 } from '../utils/notificationHelper.js';
 import { isAuthenticatedRequest } from './employeeControllers.js';
 import type { Request, Response } from 'express';
+import speakeasy from 'speakeasy';
 
 /**
  * GET /admin/users
@@ -369,6 +371,93 @@ export async function resetUserPasswordHandler(req: Request, res: Response) {
   } catch (err) {
     console.error('❌ Error resetting password:', err);
     res.status(500).json({ error: 'Failed to reset password' });
+  }
+}
+
+export async function adminReset2FAHandler(req: Request, res: Response) {
+  try {
+    if (!isAuthenticatedRequest(req)) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+
+    // Only admins can reset other users' 2FA
+    if (req.user.role !== 'Admin') {
+      return res
+        .status(403)
+        .json({ error: 'Forbidden: Admin access required' });
+    }
+
+    const { userId } = req.body;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'User ID is required' });
+    }
+
+    // Get user info before reset
+    const { rows: userRows } = await pool.query(
+      'SELECT id, name, email, employee_id FROM users WHERE id = $1',
+      [userId]
+    );
+
+    if (userRows.length === 0) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    const targetUser = userRows[0];
+
+    // 1. Generate a new secret
+    const secret = speakeasy.generateSecret({
+      name: 'FundXpert',
+      length: 20,
+    });
+
+    // 2. Reset 2FA and increment token_version to force logout
+    await pool.query(
+      `UPDATE users
+       SET twofa_secret = $1, 
+           is_twofa_enabled = false,
+           token_version = token_version + 1
+       WHERE id = $2`,
+      [secret.base32, userId]
+    );
+
+    // 3. Log the admin action
+    await logUserAction(
+      req.user.id,
+      'Admin Reset 2FA',
+      'UserManagement',
+      'System',
+      {
+        details: {
+          targetUserId: userId,
+          targetUserName: targetUser.name,
+          targetUserEmail: targetUser.email,
+          reason: 'Admin-initiated 2FA reset',
+        },
+        ipAddress: req.ip ?? '::1',
+      }
+    );
+
+    // 4. Create notification for the affected user
+    await createNotification(
+      userId,
+      '2FA Reset by Administrator',
+      'Your two-factor authentication has been reset by an administrator. You will be logged out and required to set up 2FA again on your next login.',
+      'warning',
+      { requiresAction: true }
+    );
+
+    res.json({
+      message: `2FA has been reset for ${targetUser.name} (${targetUser.employee_id}). User will be forced to logout and set up 2FA on next login.`,
+      user: {
+        id: targetUser.id,
+        name: targetUser.name,
+        employee_id: targetUser.employee_id,
+      },
+    });
+  } catch (err) {
+    console.error('❌ Admin reset 2FA error:', err);
+    res.status(500).json({ error: 'Failed to reset user 2FA' });
   }
 }
 

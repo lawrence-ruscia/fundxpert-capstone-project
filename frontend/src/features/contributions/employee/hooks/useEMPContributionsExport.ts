@@ -1,57 +1,62 @@
 // hooks/useContributionsExport.ts
 import { useCallback } from 'react';
-import { hrContributionsService } from '../services/hrContributionService';
+import * as employeeContributionService from '../services/employeeContributionsService.js';
 import { toast } from 'sonner';
-
+import { fetchEmployeeOverview } from '@/features/dashboard/employee/services/employeeService.js';
+import type { Employee } from '@/features/dashboard/employee/types/employeeOverview.js';
 interface DateRange {
   start?: string;
   end?: string;
 }
 
-interface Employee {
-  name: string;
-  employee_id?: string | number;
-}
-
 interface UseContributionsExportParams {
-  userId?: number; // Optional now - if not provided, exports all employees
+  userId?: number;
   dateRange?: DateRange;
-  employee?: Employee;
 }
 
-export function useContributionsExport({
+export function useEMPContributionsExport({
   userId,
   dateRange,
-  employee,
 }: UseContributionsExportParams = {}) {
   const handleExport = useCallback(
     async (type: 'csv' | 'xlsx' | 'pdf') => {
       try {
         let blob;
         const exportParams = {
-          userId: userId,
           start: dateRange?.start,
           end: dateRange?.end,
         };
 
-        // Call unified export functions with optional employeeId
         if (type === 'csv') {
           blob =
-            await hrContributionsService.exportContributionsCSV(exportParams);
+            await employeeContributionService.exportContributionsCSV(
+              exportParams
+            );
         } else if (type === 'xlsx') {
           blob =
-            await hrContributionsService.exportContributionsExcel(exportParams);
+            await employeeContributionService.exportContributionsExcel(
+              exportParams
+            );
         } else if (type === 'pdf') {
           blob =
-            await hrContributionsService.exportContributionsPDF(exportParams);
+            await employeeContributionService.exportContributionsPDF(
+              exportParams
+            );
         }
 
         if (!blob) {
           throw new Error('Failed to generate export file');
         }
 
+        const res = await fetchEmployeeOverview();
+
         // Generate appropriate filename
-        const filename = generateFilename(type, userId, employee, dateRange);
+        const filename = generateFilename(
+          type,
+          userId,
+          res.employee,
+          dateRange
+        );
 
         // Download file
         const url = window.URL.createObjectURL(new Blob([blob]));
@@ -64,9 +69,8 @@ export function useContributionsExport({
         window.URL.revokeObjectURL(url);
 
         // Success toast with specific message
-        const exportScope = userId
-          ? `for ${employee?.name || 'employee'}`
-          : 'for all employees';
+        const exportScope = `for ${res.employee?.name || 'employee'}`;
+
         toast.success(
           `Successfully exported ${type.toUpperCase()} ${exportScope}`
         );
@@ -75,7 +79,7 @@ export function useContributionsExport({
         toast.error(`Failed to export ${type.toUpperCase()} file`);
       }
     },
-    [userId, dateRange, employee]
+    [userId, dateRange]
   );
 
   return { handleExport };
@@ -96,13 +100,8 @@ function generateFilename(
       ? `_${dateRange.start}_to_${dateRange.end}`
       : '';
 
-  if (userId && employee) {
-    // Single employee export
-    const employeeName = employee.name.toLowerCase().replace(/\s+/g, '_');
-    const employeeId = employee.employee_id || userId;
-    return `contributions_${employeeName}_${employeeId}${dateRangeStr}_${timestamp}.${type}`;
-  } else {
-    // All employees export
-    return `contributions_all_employees${dateRangeStr}_${timestamp}.${type}`;
-  }
+  // Single employee export
+  const employeeName = employee.name.toLowerCase().replace(/\s+/g, '_');
+  const employeeId = employee.employee_id || userId;
+  return `contributions_${employeeName}_${employeeId}${dateRangeStr}_${timestamp}.${type}`;
 }

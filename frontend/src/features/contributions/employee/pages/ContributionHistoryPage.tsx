@@ -1,13 +1,7 @@
-import { useCallback, useMemo, useState } from 'react';
-import { AlertCircle, Calendar, RefreshCw, Timer } from 'lucide-react';
+import { useCallback, useState } from 'react';
+import { AlertCircle, FileText, RefreshCw } from 'lucide-react';
 
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 import {
   getCoreRowModel,
@@ -30,13 +24,14 @@ import {
   fetchEmployeeContributionsSummary,
 } from '../services/employeeContributionsService';
 import { fetchEmployeeOverview } from '@/features/dashboard/employee/services/employeeService';
-import { useContributionsExport } from '../../hr/hooks/useContributionsExport';
 import { ContributionsProvider } from '../../hr/components/ContributionsProvider';
 import { contributionsColumns } from '../components/ContributionColumns';
 import { ContributionStats } from '../components/ContributionStats';
 import { usePersistedState } from '@/shared/hooks/usePersistedState';
 import { useSmartPolling } from '@/shared/hooks/useSmartPolling';
 import { Button } from '@/components/ui/button';
+import { useEMPContributionsExport } from '../hooks/useEMPContributionsExport';
+import { ExportDropdown } from '@/shared/components/ExportDropdown';
 
 export type EmployeeMetadata = Omit<EmployeeOverview['employee'], 'id'>;
 
@@ -80,7 +75,6 @@ export default function ContributionHistoryPage() {
 
   const contributions = data?.contributions;
   const summary = data?.summary;
-  const overview = data?.overview;
 
   // Table states
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -93,7 +87,7 @@ export default function ContributionHistoryPage() {
   // Sync pagination changes to URL
   const { pagination, handlePaginationChange } = useTablePagination();
 
-  const { handleExport } = useContributionsExport({
+  const { handleExport } = useEMPContributionsExport({
     dateRange: {
       start: dateRange.start,
       end: dateRange.end ?? new Date().toLocaleDateString(),
@@ -192,16 +186,26 @@ export default function ContributionHistoryPage() {
         {summary && <ContributionStats summary={summary} />}
         {/* Data Table */}
         <Card>
-          <CardHeader>
-            <CardTitle className='text-lg'>
-              Detailed Contribution History
-            </CardTitle>
-            <CardDescription>
-              Monthly breakdown of your contributions for the selected period
-            </CardDescription>
+          <CardHeader className='mb-4 flex flex-wrap items-center justify-between gap-4 font-semibold'>
+            <div className='flex items-center gap-2'>
+              <div className='bg-primary/10 rounded-lg p-2'>
+                <FileText className='h-5 w-5' />
+              </div>
+              <CardTitle className='text-lg'>
+                Detailed Contribution History
+                <p className='text-muted-foreground text-sm'>
+                  Monthly breakdown of your contributions for the selected
+                  period
+                </p>
+              </CardTitle>
+            </div>
+            <ExportDropdown onExport={handleExport} />
           </CardHeader>
           <CardContent>
-            <EmployeeContributionsTable table={table} />
+            <div className='overflow-auto'>
+              {/* Your existing EmployeeContributionsTable component */}
+              <EmployeeContributionsTable table={table} />
+            </div>
           </CardContent>
         </Card>
       </div>
