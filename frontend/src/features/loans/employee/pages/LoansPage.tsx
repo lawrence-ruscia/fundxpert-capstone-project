@@ -47,11 +47,13 @@ export default function LoansPage() {
     return { loans, overview };
   }, []);
 
+  const [showForm, setShowForm] = useState(false);
+
   const { data, loading, error, refresh, lastUpdated } = useSmartPolling(
     fetchLoansData,
     {
       context: 'loan-detail',
-      enabled: autoRefreshEnabled,
+      enabled: autoRefreshEnabled && !showForm, // Disable when form is shown,,
       pauseWhenHidden: true,
       pauseWhenInactive: true,
     }
@@ -62,8 +64,6 @@ export default function LoansPage() {
     await refresh();
     setIsRefreshing(false);
   };
-
-  const [showForm, setShowForm] = useState(false);
 
   const handleFormSuccess = () => {
     setShowForm(false);

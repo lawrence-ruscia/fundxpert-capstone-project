@@ -55,6 +55,8 @@ export default function WithdrawalsPage() {
 
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  const [showForm, setShowForm] = useState(false);
+
   const fetchWithdrawalDetailsHandler = useCallback(async () => {
     const [withdrawals, eligibility] = await Promise.all([
       fetchWithdrawalHistory(),
@@ -68,7 +70,7 @@ export default function WithdrawalsPage() {
     fetchWithdrawalDetailsHandler,
     {
       context: 'withdrawal-detail',
-      enabled: autoRefreshEnabled,
+      enabled: autoRefreshEnabled && !showForm, // Disable when form is shown,
       pauseWhenHidden: true,
       pauseWhenInactive: true,
     }
@@ -79,8 +81,6 @@ export default function WithdrawalsPage() {
     await refresh();
     setIsRefreshing(false);
   };
-
-  const [showForm, setShowForm] = useState(false);
 
   const handleFormSuccess = () => {
     setShowForm(false);
