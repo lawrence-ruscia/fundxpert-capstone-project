@@ -5,6 +5,7 @@ import * as projectionController from '../controllers/projectionController.js';
 import {
   exportEmpContributionsCSV,
   exportEmpContributionsExcel,
+  exportEmpContributionsPDF,
 } from '../controllers/employeeContributionsExportController.js';
 
 export const employeeRouter = Router();
@@ -37,6 +38,12 @@ employeeRouter.get(
   '/contributions/export/excel',
   authMiddleware('Employee'),
   exportEmpContributionsExcel
+);
+
+employeeRouter.get(
+  '/contributions/export/pdf',
+  authMiddleware('Employee'),
+  exportEmpContributionsPDF
 );
 
 employeeRouter.post(

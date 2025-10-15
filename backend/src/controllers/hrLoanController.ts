@@ -1269,12 +1269,12 @@ export async function exportLoansPDFController(req: Request, res: Response) {
     let currentY = 40;
 
     // ========== COMPANY HEADER WITH LOGO ==========
-    try {
-      const clientLogo = path.join(__dirname, 'client-logo.png');
-      doc.image(clientLogo, 40, 40, { width: 140, height: 40 });
-    } catch (logoError) {
-      console.warn('Logo not found, continuing without logo:', logoError);
-    }
+    // try {
+    //   const clientLogo = path.join(__dirname, 'client-logo.png');
+    //   doc.image(clientLogo, 40, 40, { width: 140, height: 40 });
+    // } catch (logoError) {
+    //   console.warn('Logo not found, continuing without logo:', logoError);
+    // }
 
     // Confidential marking
     doc
