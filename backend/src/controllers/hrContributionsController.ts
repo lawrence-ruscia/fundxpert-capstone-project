@@ -18,6 +18,7 @@ import { getEmployeeById } from '../services/hrService.js';
 import path from 'path';
 import { SHEET_PASSWORD } from '../config/security.config.js';
 import type { Contribution } from '../types/contribution.js';
+import { createNotification } from '../utils/notificationHelper.js';
 
 /**
  * POST /hr/contributions
@@ -51,6 +52,15 @@ export async function recordContributionController(
       notes,
     });
 
+    // Notify employee
+    await createNotification(
+      user_id,
+      'Contribution Record Added',
+      `A new contribution of ₱${(parseFloat(employee_amount) + parseFloat(employer_amount)).toLocaleString()} has been recorded for ${new Date(contribution_date).toLocaleDateString()}.`,
+      'success',
+      { contributionId: contribution.id, link: `/employee/contributions` }
+    );
+
     res.status(201).json(contribution);
   } catch (err) {
     console.error('❌ recordContribution error:', err);
@@ -81,6 +91,15 @@ export async function updateContributionController(
       updated_by,
       notes,
     });
+
+    // Notify the employee about the contribution update
+    await createNotification(
+      updated.user_id,
+      'Contribution Record Updated',
+      `Your contribution record for ${new Date(updated.contribution_date).toLocaleDateString()} has been adjusted to ₱${(updated.employee_amount + updated.employer_amount).toLocaleString()}.`,
+      'info',
+      { contributionId: updated.id, link: `/employee/contributions` }
+    );
 
     res.json(updated);
   } catch (err) {

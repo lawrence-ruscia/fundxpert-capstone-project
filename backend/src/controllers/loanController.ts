@@ -60,13 +60,13 @@ export async function applyLoan(req: Request, res: Response) {
     );
 
     const loanId = loan.id;
-    const employeeId = await getUserById(req.user.id);
+    const employee = await getUserById(req.user.id);
 
     // Notify employee
     await createNotification(
       userId,
       'Loan Request Submitted',
-      `Your loan request for ₱${parseFloat(amount)} has been successfully submitted and is awaiting HR review.`,
+      `Your loan request for ₱${parseFloat(amount).toLocaleString()} has been successfully submitted and is awaiting HR review.`,
       'success',
       { loanId, link: `/employee/loan/${loanId}` }
     );
@@ -75,7 +75,7 @@ export async function applyLoan(req: Request, res: Response) {
     await notifyUsersByRole(
       'HR',
       'New Loan Submitted',
-      `A new loan request from ${req.user.name} (${employeeId}) is awaiting initial review.`,
+      `A new loan request from ${req.user.name} (${employee.id}) is awaiting initial review.`,
       'info',
       { loanId, link: `/hr/loans/${loanId}` }
     );
