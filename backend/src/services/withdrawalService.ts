@@ -1,4 +1,5 @@
 import { pool } from '../config/db.config.js';
+import { MIN_WITHDRAWAL_AMOUNT } from '../config/policy.config.js';
 import type {
   WithdrawalEligibility,
   WithdrawalRequest,
@@ -71,7 +72,26 @@ export async function checkWithdrawalEligibility(
   );
   const { employee_total, employer_total } = contribRes.rows[0];
 
-  // 3. Compute vesting based on policy rules
+  // 3. Check if user has any contributions
+  const totalBalance = Number(employee_total) + Number(employer_total);
+
+  if (totalBalance === 0) {
+    return {
+      eligible: false,
+      eligibleTypes: [],
+      snapshot: {
+        employee_total: 0,
+        employer_total: 0,
+        vested_amount: 0,
+        unvested_amount: 0,
+        total_balance: 0,
+      },
+      reasonIfNotEligible:
+        'No contributions available. You must have contributions in your account before requesting a withdrawal.',
+    };
+  }
+
+  // 4. Compute vesting based on policy rules
   const { vestedAmount, unvestedAmount } = computeVesting(
     user.date_hired,
     Number(employee_total),
@@ -80,7 +100,48 @@ export async function checkWithdrawalEligibility(
     withdrawalType
   );
 
-  // 4. Determine eligible withdrawal types
+  // 5. Check if vested amount meets minimum withdrawal requirement
+  if (vestedAmount < MIN_WITHDRAWAL_AMOUNT) {
+    return {
+      eligible: false,
+      eligibleTypes: [],
+      snapshot: {
+        employee_total: Number(employee_total),
+        employer_total: Number(employer_total),
+        vested_amount: vestedAmount,
+        unvested_amount: unvestedAmount,
+        total_balance: totalBalance,
+      },
+      reasonIfNotEligible: `Insufficient vested balance. Minimum withdrawal amount is ₱${MIN_WITHDRAWAL_AMOUNT.toLocaleString()}, but your vested balance is only ₱${vestedAmount.toLocaleString()}.`,
+    };
+  }
+
+  // 6. Check if a withdrawal already exists
+  const existingWithdrawalRes = await pool.query(
+    `SELECT 1 FROM withdrawal_requests
+     WHERE user_id = $1
+       AND status IN ('Pending', 'Incomplete','UnderReviewOfficer', 'Approved', 'Released')
+     LIMIT 1`,
+    [userId]
+  );
+
+  if (existingWithdrawalRes.rows.length > 0) {
+    return {
+      eligible: false,
+      eligibleTypes: [],
+      snapshot: {
+        employee_total: Number(employee_total),
+        employer_total: Number(employer_total),
+        vested_amount: vestedAmount,
+        unvested_amount: unvestedAmount,
+        total_balance: totalBalance,
+      },
+      reasonIfNotEligible:
+        'You already have a pending or approved withdrawal request.',
+    };
+  }
+
+  // 7. Determine eligible withdrawal types based on employment status
   const eligibleTypes: WithdrawalType[] = [];
 
   switch (user.employment_status) {
@@ -91,49 +152,45 @@ export async function checkWithdrawalEligibility(
       eligibleTypes.push('Resignation');
       break;
     case 'Terminated':
-      eligibleTypes.push('Redundancy'); // maps to policy wording
+      eligibleTypes.push('Redundancy');
+      break;
+    case 'Active':
+      // Active employees can only withdraw for special cases
+      // TODO: might want to add partial withdrawal types here if implemented
+      // eligibleTypes.push('Medical Emergency', 'Education', etc.)
       break;
     default:
-      // Special cases independent of employment_status
-      eligibleTypes.push('Disability', 'Death');
       break;
   }
 
-  // 5. Snapshot for UI/frontend
+  // Special cases available regardless of employment status
+  // (These would typically require additional documentation)
+  eligibleTypes.push('Disability', 'Death');
+
+  // 8. Final eligibility check
   const snapshot = {
     employee_total: Number(employee_total),
     employer_total: Number(employer_total),
     vested_amount: vestedAmount,
     unvested_amount: unvestedAmount,
-    total_balance: Number(employee_total) + Number(employer_total),
+    total_balance: totalBalance,
   };
 
-  // 6. Check if a withdrawal already exists
-  const existingWithdrawalRes = await pool.query(
-    `SELECT 1 FROM withdrawal_requests 
-   WHERE user_id = $1 
-     AND status IN ('Pending', 'Incomplete','UnderReviewOfficer', 'Approved', 'Released')
-   LIMIT 1`,
-    [userId]
-  );
-
-  if (existingWithdrawalRes.rows.length > 0) {
+  if (eligibleTypes.length === 0) {
     return {
       eligible: false,
       eligibleTypes: [],
       snapshot,
-      reasonIfNotEligible: 'A withdrawal request already exists',
+      reasonIfNotEligible:
+        'You are not eligible for withdrawal under your current employment status. Withdrawals are only available upon separation, retirement, or special circumstances.',
     };
   }
 
   return {
-    eligible: eligibleTypes.length > 0,
+    eligible: true,
     eligibleTypes,
     snapshot,
-    reasonIfNotEligible:
-      eligibleTypes.length === 0
-        ? 'Employee not eligible for withdrawal under current status'
-        : '',
+    reasonIfNotEligible: '',
   };
 }
 

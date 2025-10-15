@@ -111,7 +111,6 @@ export default function WithdrawalsPage() {
   }
 
   const { withdrawals, eligibility } = data;
-  // FIX: Filter for active withdrawals and get the latest one
   const activeWithdrawals =
     withdrawals?.filter(
       w =>
@@ -124,14 +123,25 @@ export default function WithdrawalsPage() {
 
   // Show active withdrawal or latest withdrawal
   const withdrawalToShow =
-    activeWithdrawals.length > 0 ? activeWithdrawals[0] : withdrawals?.[0];
+    activeWithdrawals.length > 0 ? activeWithdrawals[0] : null;
 
   const latest = withdrawals && withdrawals.length > 0 ? withdrawals[0] : null;
-  const hasActiveWithdrawal = activeWithdrawals.length > 0;
+  // Can only request new withdrawal if:
+  // 1. Eligible based on backend checks (has balance, no active request, etc.)
+  // 2. No active withdrawals currently pending
+  const canRequestNewWithdrawal =
+    eligibility.eligible && activeWithdrawals.length === 0;
 
-  // FIX: Button should be disabled if not eligible OR if there's already an active withdrawal
-  const canRequestNewWithdrawal = eligibility.eligible && !hasActiveWithdrawal;
-  console.log('Reason if not eligible: ', eligibility.reasonIfNotEligible);
+  // Determine what message to show if can't request
+  const getIneligibilityReason = () => {
+    if (!eligibility.eligible) {
+      return eligibility.reasonIfNotEligible;
+    }
+    if (activeWithdrawals.length > 0) {
+      return 'You have an active withdrawal request. Please wait for it to be processed before requesting another withdrawal.';
+    }
+    return '';
+  };
   return (
     <div>
       {showForm ? (
@@ -321,35 +331,37 @@ export default function WithdrawalsPage() {
                         <Activity className='h-6 w-6' />
                       </div>
                       <p className='font-medium'>No withdrawal requests</p>
-                      <p className='mt-1 text-sm'>
-                        Submit a withdrawal request to access your provident
-                        fund balance
+                      <p className='text-muted-foreground mt-1 text-sm'>
+                        {eligibility.eligible
+                          ? 'Submit a withdrawal request to access your provident fund balance'
+                          : 'You need contributions in your account before you can request a withdrawal'}
                       </p>
                     </div>
                   ) : (
                     <div className='space-y-4'>
-                      {withdrawals?.length === 0 ? (
-                        <div className='py-8 text-center'>
-                          <p className='font-medium'>
-                            No active withdrawal requests
-                          </p>
-                          <p className='text-muted-foreground mt-1 text-sm'>
-                            Your recent requests have been completed or
-                            cancelled
-                          </p>
-                        </div>
-                      ) : withdrawalToShow ? (
+                      {withdrawalToShow ? (
                         <WithdrawalItem withdrawal={withdrawalToShow} />
                       ) : (
-                        // All withdrawals are completed/cancelled message
+                        // All withdrawals are completed/cancelled
                         <div className='py-8 text-center'>
-                          <p className='font-medium'>
-                            No active withdrawal requests
-                          </p>
+                          <div className='mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-green-100'>
+                            <CheckCircle className='h-6 w-6 text-green-600' />
+                          </div>
+                          <p className='font-medium'>All requests completed</p>
                           <p className='text-muted-foreground mt-1 text-sm'>
-                            Your recent requests have been completed or
-                            cancelled
+                            Your withdrawal requests have been processed
+                            successfully
                           </p>
+                          {canRequestNewWithdrawal && (
+                            <Button
+                              onClick={() => setShowForm(true)}
+                              variant='outline'
+                              className='mt-4'
+                            >
+                              <Plus className='mr-2 h-4 w-4' />
+                              Request New Withdrawal
+                            </Button>
+                          )}
                         </div>
                       )}
                     </div>
@@ -398,7 +410,7 @@ export default function WithdrawalsPage() {
                     <Alert className='mt-4 border-amber-200 bg-amber-50 text-amber-800'>
                       <AlertCircle className='h-4 w-4 text-amber-800' />
                       <AlertDescription className='text-amber-800'>
-                        {eligibility.reasonIfNotEligible}
+                        {getIneligibilityReason()}
                       </AlertDescription>
                     </Alert>
                   )}
