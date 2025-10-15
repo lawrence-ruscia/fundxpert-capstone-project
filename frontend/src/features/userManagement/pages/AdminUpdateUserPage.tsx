@@ -492,10 +492,7 @@ export const AdminUpdateUserPage = () => {
                               <SelectItem value='HR' className='text-base'>
                                 HR
                               </SelectItem>
-                              <SelectItem
-                                value='System Admin'
-                                className='text-base'
-                              >
+                              <SelectItem value='Admin' className='text-base'>
                                 System Admin
                               </SelectItem>
                             </SelectContent>

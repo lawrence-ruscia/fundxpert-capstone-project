@@ -12,6 +12,7 @@ app.use(
   cors({
     origin: [
       'http://localhost:5173',
+      'http://localhost:4173',
       'https://fundxpert.vercel.app', // once deployed
     ],
     credentials: true, // Allow cookies/auth headers

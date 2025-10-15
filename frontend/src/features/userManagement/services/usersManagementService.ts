@@ -15,6 +15,7 @@ export const createUser = async (payload: {
   department_id: number;
   position_id: number;
   salary: number;
+  employment_status: string;
   date_hired: string;
   role: string;
   generatedTempPassword: string;

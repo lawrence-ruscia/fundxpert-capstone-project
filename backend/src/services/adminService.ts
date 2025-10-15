@@ -101,6 +101,7 @@ export async function createUser(payload: {
   department_id: number;
   position_id: number;
   salary: number;
+  employment_status: string;
   date_hired: string;
   role: string;
   generatedTempPassword: string;
@@ -113,7 +114,7 @@ export async function createUser(payload: {
       `INSERT INTO users 
      (name, email, employee_id, password_hash, role, department_id, position_id, 
       salary, date_hired, employment_status, temp_password, temp_password_expires)
-   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'Active', true, $10)
+   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, true, $11)
    RETURNING id, name, email, employee_id, role, salary, department_id, position_id, 
              employment_status, date_hired, temp_password, temp_password_expires;`,
       [
@@ -126,6 +127,7 @@ export async function createUser(payload: {
         payload.position_id,
         payload.salary,
         payload.date_hired,
+        payload.employment_status,
         expiresAt,
       ]
     );

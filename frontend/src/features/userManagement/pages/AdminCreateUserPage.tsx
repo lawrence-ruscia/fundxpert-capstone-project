@@ -138,12 +138,14 @@ export const AdminCreateUserPage = () => {
       department_id: '',
       position_id: '',
       salary: '',
+      employment_status: 'Active',
       date_hired: new Date().toISOString().split('T')[0],
       generateTempPassword: '',
     },
   });
 
   const onSubmit = async (data: CreateEmployeeFormData) => {
+    console.log('Payload: ', data);
     // Check if temporary password is generated
     if (!data.generateTempPassword || data.generateTempPassword.trim() === '') {
       toast.error(
@@ -167,6 +169,7 @@ export const AdminCreateUserPage = () => {
         department_id: transformedData.department_id,
         position_id: transformedData.position_id,
         salary: transformedData.salary,
+        employment_status: transformedData.employment_status || 'Active',
         date_hired: transformedData.date_hired,
         generatedTempPassword: data.generateTempPassword, // Send temp password (required)
       });
@@ -369,10 +372,7 @@ export const AdminCreateUserPage = () => {
                               <SelectItem value='HR' className='text-base'>
                                 HR
                               </SelectItem>
-                              <SelectItem
-                                value='System Admin'
-                                className='text-base'
-                              >
+                              <SelectItem value='Admin' className='text-base'>
                                 System Admin
                               </SelectItem>
                             </SelectContent>
@@ -501,28 +501,72 @@ export const AdminCreateUserPage = () => {
 
                     <FormField
                       control={form.control}
-                      name='date_hired'
+                      name='employment_status'
                       render={({ field }) => (
                         <FormItem>
                           <FormLabel className='text-base font-medium'>
-                            Date Hired{' '}
+                            Employment Status{' '}
                             <span className='text-muted-foreground'>*</span>
                           </FormLabel>
-                          <FormControl>
-                            <div className='relative'>
-                              <Calendar className='text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2' />
-                              <Input
-                                type='date'
-                                className='h-12 pl-10 text-base'
-                                {...field}
-                              />
-                            </div>
-                          </FormControl>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value}
+                          >
+                            <FormControl>
+                              <SelectTrigger className='h-12 w-full text-base'>
+                                <SelectValue placeholder='Select status' />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value='Active' className='text-base'>
+                                Active
+                              </SelectItem>
+                              <SelectItem
+                                value='Resigned'
+                                className='text-base'
+                              >
+                                Resigned
+                              </SelectItem>
+                              <SelectItem value='Retired' className='text-base'>
+                                Retired
+                              </SelectItem>
+                              <SelectItem
+                                value='Terminated'
+                                className='text-base'
+                              >
+                                Terminated
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
                   </div>
+
+                  <FormField
+                    control={form.control}
+                    name='date_hired'
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className='text-base font-medium'>
+                          Date Hired{' '}
+                          <span className='text-muted-foreground'>*</span>
+                        </FormLabel>
+                        <FormControl>
+                          <div className='relative'>
+                            <Calendar className='text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2' />
+                            <Input
+                              type='date'
+                              className='h-12 pl-10 text-base'
+                              {...field}
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </CardContent>
               </Card>
 

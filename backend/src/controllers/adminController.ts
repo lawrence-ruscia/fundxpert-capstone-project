@@ -83,6 +83,7 @@ export async function createUserHandler(req: Request, res: Response) {
       department_id,
       position_id,
       salary,
+      employment_status,
       date_hired,
       role,
       generatedTempPassword,
@@ -94,6 +95,7 @@ export async function createUserHandler(req: Request, res: Response) {
       !department_id ||
       !position_id ||
       !salary ||
+      !employment_status ||
       !date_hired ||
       !role ||
       !generatedTempPassword
@@ -108,6 +110,7 @@ export async function createUserHandler(req: Request, res: Response) {
       department_id,
       position_id,
       salary,
+      employment_status,
       date_hired,
       role,
       generatedTempPassword,
