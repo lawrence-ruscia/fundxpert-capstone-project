@@ -25,7 +25,6 @@ import {
 import {
   User,
   Briefcase,
-  Calendar,
   Mail,
   Hash,
   Shield,
@@ -35,8 +34,8 @@ import {
   Eye,
   EyeOff,
   Copy,
-  AlertCircle,
   ShieldAlert,
+  CalendarIcon,
 } from 'lucide-react';
 import { CurrencyInput } from '@/shared/components/currency-input';
 
@@ -59,6 +58,14 @@ import { ToggleLockButton } from '../components/ToggleLockButton.js';
 import { useSmartPolling } from '@/shared/hooks/useSmartPolling.js';
 import { usePersistedState } from '@/shared/hooks/usePersistedState.js';
 import { Reset2FADialog } from '../components/Reset2FADialog.js';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover.js';
+import { cn } from '@/lib/utils.js';
+import { format } from 'date-fns';
+import { Calendar } from '@/components/ui/calendar.js';
 
 // Input schema for form validation
 const updateUserInputSchema = z.object({
@@ -658,21 +665,52 @@ export const AdminUpdateUserPage = () => {
                     control={form.control}
                     name='date_hired'
                     render={({ field }) => (
-                      <FormItem className='md:max-w-md'>
+                      <FormItem className='flex flex-col'>
                         <FormLabel className='text-base font-medium'>
                           Date Hired{' '}
                           <span className='text-muted-foreground'>*</span>
                         </FormLabel>
-                        <FormControl>
-                          <div className='relative'>
-                            <Calendar className='text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2' />
-                            <Input
-                              type='date'
-                              className='h-12 pl-10 text-base'
-                              {...field}
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant='outline'
+                                className={cn(
+                                  'h-12 w-full justify-start text-left font-normal',
+                                  !field.value && 'text-muted-foreground'
+                                )}
+                              >
+                                <CalendarIcon className='mr-2 h-4 w-4' />
+                                {field.value ? (
+                                  format(new Date(field.value), 'PPP')
+                                ) : (
+                                  <span>Pick a date</span>
+                                )}
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className='w-auto p-0' align='start'>
+                            <Calendar
+                              mode='single'
+                              selected={
+                                field.value ? new Date(field.value) : undefined
+                              }
+                              onSelect={date => {
+                                field.onChange(
+                                  date ? format(date, 'yyyy-MM-dd') : ''
+                                );
+                              }}
+                              disabled={date =>
+                                date > new Date() ||
+                                date < new Date('1900-01-01')
+                              }
+                              autoFocus
+                              captionLayout='dropdown'
+                              startMonth={new Date(1950, 0)}
+                              endMonth={new Date()}
                             />
-                          </div>
-                        </FormControl>
+                          </PopoverContent>
+                        </Popover>
                         <FormMessage />
                       </FormItem>
                     )}

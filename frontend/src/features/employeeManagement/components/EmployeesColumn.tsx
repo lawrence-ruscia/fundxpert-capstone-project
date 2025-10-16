@@ -29,7 +29,7 @@ export const employeesColumns: ColumnDef<HREmployeeRecord>[] = [
       <DataTableColumnHeader column={column} title='Employee Id' />
     ),
     cell: ({ row }) => (
-      <Link to={`/hr/employees/${row.original.id}/contributions`}>
+      <Link to={`/hr/employees/${row.original.id}`}>
         <LongText className='max-w-36 ps-3'>
           {row.getValue('employee_id')}
         </LongText>
@@ -51,7 +51,7 @@ export const employeesColumns: ColumnDef<HREmployeeRecord>[] = [
     ),
     cell: ({ row }) => {
       return (
-        <Link to={`/hr/employees/${row.original.id}/contributions`}>
+        <Link to={`/hr/employees/${row.original.id}`}>
           <LongText className='max-w-36'>{row.getValue('name')}</LongText>
         </Link>
       );
