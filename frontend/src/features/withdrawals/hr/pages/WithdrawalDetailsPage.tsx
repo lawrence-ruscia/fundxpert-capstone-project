@@ -1,10 +1,11 @@
 import { useCallback, useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { LoadingSpinner } from '@/shared/components/LoadingSpinner';
 import { DataError } from '@/shared/components/DataError';
 import {
   AlertCircle,
+  ArrowLeft,
   CheckCircle2,
   FileText,
   Paperclip,
@@ -36,6 +37,7 @@ import { usePersistedState } from '@/shared/hooks/usePersistedState';
 
 export default function WithdrawalDetailsPage() {
   const { withdrawalId } = useParams();
+  const navigate = useNavigate();
 
   const [actionLoading, setActionLoading] = useState(false);
 
@@ -103,6 +105,15 @@ export default function WithdrawalDetailsPage() {
     <div className='container px-4 pb-8'>
       {/* Header */}
       <div className='mb-8'>
+        <Button
+          variant='ghost'
+          size='sm'
+          onClick={() => navigate('/hr/withdrawals')}
+          className='mb-4'
+        >
+          <ArrowLeft className='mr-2 h-4 w-4' />
+          Back to Withdrawals
+        </Button>
         <div className='flex flex-wrap items-start justify-between gap-4'>
           <div className='flex items-center gap-3'>
             <div>

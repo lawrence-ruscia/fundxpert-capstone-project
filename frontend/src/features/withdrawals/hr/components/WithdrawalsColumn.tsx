@@ -5,6 +5,7 @@ import { LongText } from '@/shared/components/LongText';
 import type { WithdrawalRequest } from '../../employee/types/withdrawal';
 import { WithdrawalStatusBadge } from '../../employee/components/WithdrawalStatusBadge';
 import { WithdrawalTableRowActions } from './WithdrawalTableRowActions';
+import { Link } from 'react-router-dom';
 
 const formatDisplayDate = (dateString: Date) => {
   return dateString.toLocaleDateString('en-us', {
@@ -40,9 +41,11 @@ export const withdrawalsColumns: ColumnDef<WithdrawalRequest>[] = [
     ),
     cell: ({ row }) => {
       return (
-        <LongText className='max-w-36 text-left font-medium'>
-          {row.getValue('id')}
-        </LongText>
+        <Link to={`/hr/withdrawals/${row.original.id}`}>
+          <LongText className='max-w-36 text-left font-medium'>
+            {row.getValue('id')}
+          </LongText>
+        </Link>
       );
     },
     meta: {

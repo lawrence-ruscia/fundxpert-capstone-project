@@ -12,6 +12,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import { Link } from 'react-router-dom';
 
 const formatDisplayDate = (dateString: Date) => {
   return dateString.toLocaleDateString('en-us', {
@@ -156,21 +157,23 @@ export const systemLogsColumns: ColumnDef<AuditLog>[] = [
     cell: ({ row }) => {
       const userId = row.original.user_id;
       return (
-        <div className='flex items-center gap-2'>
-          <div className='bg-primary/10 rounded-full p-1.5'>
-            <User className='text-primary h-3 w-3' />
-          </div>
-          <div className='flex flex-col'>
-            <span className='text-sm font-medium'>
-              {row.getValue('actor_name')}
-            </span>
-            {userId && (
-              <span className='text-muted-foreground font-mono text-xs'>
-                ID: {userId}
+        <Link to={`/admin/users/${userId}`}>
+          <div className='flex items-center gap-2'>
+            <div className='bg-primary/10 rounded-full p-1.5'>
+              <User className='text-primary h-3 w-3' />
+            </div>
+            <div className='flex flex-col'>
+              <span className='text-sm font-medium'>
+                {row.getValue('actor_name')}
               </span>
-            )}
+              {userId && (
+                <span className='text-muted-foreground font-mono text-xs'>
+                  ID: {userId}
+                </span>
+              )}
+            </div>
           </div>
-        </div>
+        </Link>
       );
     },
     meta: { className: 'w-48' },

@@ -38,12 +38,12 @@ export function UsersTableRowActions({ row }: DataTableRowActionsProps) {
             onClick={() => {
               setCurrentRow(row.original);
               setOpen('edit');
-              navigate(`/admin/users/${row.original.id}/edit`);
+              navigate(`/admin/users/${row.original.id}`);
             }}
           >
-            Edit
+            Manage
             <DropdownMenuShortcut>
-              <UserPen size={16} />
+              <UserCog size={16} />
             </DropdownMenuShortcut>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
@@ -51,12 +51,12 @@ export function UsersTableRowActions({ row }: DataTableRowActionsProps) {
             onClick={() => {
               setCurrentRow(row.original);
               setOpen('edit');
-              navigate(`/admin/users/${row.original.id}`);
+              navigate(`/admin/users/${row.original.id}/edit`);
             }}
           >
-            View
+            Edit User
             <DropdownMenuShortcut>
-              <Eye size={16} />
+              <UserPen size={16} />
             </DropdownMenuShortcut>
           </DropdownMenuItem>
         </DropdownMenuContent>

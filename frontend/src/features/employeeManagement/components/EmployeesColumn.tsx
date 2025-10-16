@@ -7,6 +7,7 @@ import type { HREmployeeRecord } from '../types/employeeTypes';
 import { DataTableRowActions } from './DataTableRowActions';
 import { callTypes } from '../data/data';
 import type { EmploymentStatus } from '@/features/dashboard/employee/types/employeeOverview';
+import { Link } from 'react-router-dom';
 
 const formatDisplayDate = (dateString: Date) => {
   return dateString.toLocaleDateString('en-us');
@@ -28,9 +29,11 @@ export const employeesColumns: ColumnDef<HREmployeeRecord>[] = [
       <DataTableColumnHeader column={column} title='Employee Id' />
     ),
     cell: ({ row }) => (
-      <LongText className='max-w-36 ps-3'>
-        {row.getValue('employee_id')}
-      </LongText>
+      <Link to={`/hr/employees/${row.original.id}/contributions`}>
+        <LongText className='max-w-36 ps-3'>
+          {row.getValue('employee_id')}
+        </LongText>
+      </Link>
     ),
     meta: {
       className: cn(
@@ -47,7 +50,11 @@ export const employeesColumns: ColumnDef<HREmployeeRecord>[] = [
       <DataTableColumnHeader column={column} title='Name' />
     ),
     cell: ({ row }) => {
-      return <LongText className='max-w-36'>{row.getValue('name')}</LongText>;
+      return (
+        <Link to={`/hr/employees/${row.original.id}/contributions`}>
+          <LongText className='max-w-36'>{row.getValue('name')}</LongText>
+        </Link>
+      );
     },
     meta: { className: 'w-36' },
   },

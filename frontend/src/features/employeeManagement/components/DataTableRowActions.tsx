@@ -34,7 +34,7 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align='end' className='w-[160px]'>
-          <DropdownMenuItem
+          {/* <DropdownMenuItem
             onClick={() => {
               setCurrentRow(row.original);
               setOpen('view');
@@ -46,7 +46,7 @@ export function DataTableRowActions({ row }: DataTableRowActionsProps) {
               <User size={16} />
             </DropdownMenuShortcut>
           </DropdownMenuItem>
-          <DropdownMenuSeparator />
+          <DropdownMenuSeparator /> */}
           <DropdownMenuItem
             onClick={() => {
               setCurrentRow(row.original);

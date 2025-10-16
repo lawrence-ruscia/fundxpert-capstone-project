@@ -5,6 +5,7 @@ import { LongText } from '@/shared/components/LongText';
 import type { Loan } from '../../employee/types/loan';
 import { LoanTableRowActions } from './LoansTableRowActions';
 import { LoanStatusBadge } from '../../employee/components/LoanStatusBadge';
+import { Link } from 'react-router-dom';
 
 const formatDisplayDate = (dateString: Date) => {
   return dateString.toLocaleDateString('en-us', {
@@ -40,9 +41,11 @@ export const loansDataColumns: ColumnDef<Loan>[] = [
     ),
     cell: ({ row }) => {
       return (
-        <LongText className='max-w-36 text-left font-medium'>
-          {row.getValue('id')}
-        </LongText>
+        <Link to={`/hr/loans/${row.original.id}`}>
+          <LongText className='max-w-36 text-left font-medium'>
+            {row.getValue('id')}
+          </LongText>
+        </Link>
       );
     },
     meta: {

@@ -140,6 +140,15 @@ export default function EmployeeContributionsPage() {
       <div>
         {/* Header */}
         <div className='mb-8'>
+          <Button
+            variant='ghost'
+            size='sm'
+            onClick={() => navigate('/hr/contributions')}
+            className='mb-4'
+          >
+            <ArrowLeft className='mr-2 h-4 w-4' />
+            Back to Contributions
+          </Button>
           <div className='flex flex-wrap items-start justify-between gap-4'>
             <div className='flex items-center gap-3'>
               <div>
@@ -197,7 +206,7 @@ export default function EmployeeContributionsPage() {
           <div className='bg-background/80 fixed inset-0 z-50 flex items-start justify-center pt-20 backdrop-blur-sm'>
             <div className='bg-card flex items-center gap-2 rounded-lg border p-4 shadow-lg'>
               <RefreshCw className='h-4 w-4 animate-spin' />
-              <span className='text-sm font`-medium'>Updating data...</span>
+              <span className='font`-medium text-sm'>Updating data...</span>
             </div>
           </div>
         )}
@@ -318,7 +327,7 @@ export default function EmployeeContributionsPage() {
                 Contribution History
                 <p className='text-muted-foreground text-sm'>
                   Detailed breakdown of all contributions for this employee
-                </p> 
+                </p>
               </CardTitle>
             </div>
             <ExportDropdown onExport={handleExport} />

@@ -5,6 +5,7 @@ import { DataTableColumnHeader } from '@/shared/components/DataTableColummHeader
 import { LongText } from '@/shared/components/LongText';
 import { ContributionsTableRowActions } from './ContributionsTableRowActions';
 import type { Contribution } from '../../shared/types/contributions';
+import { Link } from 'react-router-dom';
 
 const formatDisplayDate = (dateString: Date) => {
   return dateString.toLocaleDateString('en-us', {
@@ -40,9 +41,11 @@ export const allContributionsColumns: ColumnDef<Contribution>[] = [
     ),
     cell: ({ row }) => {
       return (
-        <LongText className='max-w-36 text-left font-medium'>
-          {row.getValue('id')}
-        </LongText>
+        <Link to={`/hr/contributions/${row.original.id}/edit`}>
+          <LongText className='max-w-36 text-left font-medium'>
+            {row.getValue('id')}
+          </LongText>
+        </Link>
       );
     },
     meta: {

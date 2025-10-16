@@ -6,6 +6,7 @@ import { LongText } from '@/shared/components/LongText';
 import type { User } from '@/shared/types/user';
 import { UsersTableRowActions } from './UsersTableRowActions';
 import { Shield, User as UserIcon } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const formatDisplayDate = (dateString: Date) => {
   return dateString.toLocaleDateString('en-us', {
@@ -56,9 +57,11 @@ export const usersColumns: ColumnDef<User>[] = [
     ),
     cell: ({ row }) => {
       return (
-        <LongText className='max-w-36 text-left font-medium'>
-          {row.getValue('employee_id')}
-        </LongText>
+        <Link to={`/admin/users/${row.original.id}`}>
+          <LongText className='max-w-36 text-left font-medium'>
+            {row.getValue('employee_id')}
+          </LongText>
+        </Link>
       );
     },
     meta: { className: 'w-36' },
@@ -73,9 +76,11 @@ export const usersColumns: ColumnDef<User>[] = [
     ),
     cell: ({ row }) => {
       return (
-        <LongText className='max-w-36 text-left font-medium'>
-          {row.getValue('name')}
-        </LongText>
+        <Link to={`/admin/users/${row.original.id}`}>
+          <LongText className='max-w-36 text-left font-medium'>
+            {row.getValue('name')}
+          </LongText>
+        </Link>
       );
     },
     meta: { className: 'w-48' },
@@ -123,7 +128,11 @@ export const usersColumns: ColumnDef<User>[] = [
       const Icon = config.icon;
 
       return (
-        <Badge variant='outline' className={cn('gap-1', config.className)}>
+        <Badge
+          variant='outline'
+          className={cn('gap-1', config.className)}
+          onCli
+        >
           <Icon className='h-3 w-3' />
           {role}
         </Badge>
