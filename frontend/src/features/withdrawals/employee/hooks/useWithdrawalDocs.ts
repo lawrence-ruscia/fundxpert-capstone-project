@@ -7,6 +7,7 @@ import { uploadFile } from '../services/fileService';
 import type { WithdrawalDocument } from '../types/withdrawal';
 import { getWithdrawalDocumentsHR } from '../../hr/services/hrWithdrawalService';
 import { deleteWithdrawalFile } from '../services/fileService';
+import { getErrorMessage } from '@/shared/api/getErrorMessage';
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 const ALLOWED_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
 
@@ -82,7 +83,7 @@ export const useWithdrawalDocs = (
       setDocuments(prev => [...prev, resDocument.document]);
     } catch (err) {
       console.error(`Error: ${(err as Error).message}`);
-      setError((err as Error).message);
+      setError(getErrorMessage(err, 'Failed to upload file'));
     } finally {
       setLoading(false);
       e.target.value = ''; // reset input

@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useState } from 'react';
 import { cancelWithdrawalRequest } from '../services/hrWithdrawalService';
+import { getErrorMessage } from '@/shared/api/getErrorMessage';
 
 const defaultCancelReason =
   'Your withdrawal request has been cancelled. Please contact HR or review the withdrawal terms if you have any questions.';
@@ -48,8 +49,10 @@ export function CancelWithdrawalDialog({
     } catch (err) {
       console.error(err);
       toast.error(
-        (err as Error).message ??
+        getErrorMessage(
+          err,
           'Failed to cancel withdrawal request. Please try again or contact system support'
+        )
       );
       refetch();
     }

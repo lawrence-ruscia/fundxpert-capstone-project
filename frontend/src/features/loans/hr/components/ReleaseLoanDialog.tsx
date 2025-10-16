@@ -5,6 +5,7 @@ import { releaseLoanToTrustBank } from '../services/hrLoanService';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import type { Loan } from '../../employee/types/loan';
 import { formatCurrency } from '@/features/dashboard/employee/utils/formatters';
+import { getErrorMessage } from '@/shared/api/getErrorMessage';
 
 type ReleaseLoanDialogProps = {
   open: boolean;
@@ -40,8 +41,10 @@ export function ReleaseLoanDialog({
     } catch (err) {
       console.error(err);
       toast.error(
-        (err as Error).message ??
+        getErrorMessage(
+          err,
           'Failed to release loan funds. Please try again or contact the finance department.'
+        )
       );
       refetch();
     }

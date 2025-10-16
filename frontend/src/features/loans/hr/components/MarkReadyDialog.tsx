@@ -2,6 +2,7 @@ import { ConfirmDialog } from '@/shared/components/confirm-dialog';
 import { CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { markLoanReady } from '../services/hrLoanService';
+import { getErrorMessage } from '@/shared/api/getErrorMessage';
 
 type MarkReadyDialogProps = {
   open: boolean;
@@ -37,8 +38,7 @@ export function MarkReadyDialog({
     } catch (err) {
       console.error(err);
       toast.error(
-        (err as Error).message ??
-          'Failed to mark loan as ready. Please try again.'
+        getErrorMessage(err, 'Failed to mark loan as ready. Please try again.')
       );
       refetch();
     }

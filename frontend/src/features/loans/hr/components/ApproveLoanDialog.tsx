@@ -5,6 +5,7 @@ import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import type { Loan } from '../../employee/types/loan.js';
 import { formatCurrency } from '@/features/dashboard/employee/utils/formatters';
 import { reviewLoanApproval } from '../services/hrLoanService.js';
+import { getErrorMessage } from '@/shared/api/getErrorMessage.js';
 
 type ApproveLoanDialogProps = {
   open: boolean;
@@ -40,7 +41,7 @@ export function ApproveLoanDialog({
     } catch (err) {
       console.error(err);
       toast.error(
-        (err as Error).message ?? 'Failed to approve loan. Please try again.'
+        getErrorMessage(err, 'Failed to approve loan. Please try again.')
       );
       setActionLoading(false);
       refetch();

@@ -53,6 +53,7 @@ import {
 import { cn } from '@/lib/utils.js';
 import { Calendar } from '@/components/ui/calendar.js';
 import { format } from 'date-fns';
+import { getErrorMessage } from '@/shared/api/getErrorMessage.js';
 
 type EmployeeEditFormProps = {
   id: number;
@@ -216,7 +217,7 @@ export const EditEmployeeForm = ({ id }: EmployeeEditFormProps) => {
       toast.success(`Employee ${data.employee_id} updated successfully`);
     } catch (err) {
       console.error(err);
-      toast.error('Failed to update employee');
+      toast.error(getErrorMessage(err, 'Failed to update employee'));
     } finally {
       setSaving(false);
     }
@@ -239,7 +240,7 @@ export const EditEmployeeForm = ({ id }: EmployeeEditFormProps) => {
       );
     } catch (error) {
       console.error('Failed to reset password:', error);
-      toast.error('Failed to reset password');
+      toast.error(getErrorMessage(error, 'Failed to reset password:'));
     } finally {
       setResettingPassword(false);
     }

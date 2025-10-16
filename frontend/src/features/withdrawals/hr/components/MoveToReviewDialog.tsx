@@ -2,6 +2,7 @@ import { ConfirmDialog } from '@/shared/components/confirm-dialog';
 import { FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { moveWithdrawalToReview } from '../services/hrWithdrawalService';
+import { getErrorMessage } from '@/shared/api/getErrorMessage';
 
 type MoveToReviewDialogProps = {
   open: boolean;
@@ -37,8 +38,10 @@ export function MoveToReviewDialog({
     } catch (err) {
       console.error(err);
       toast.error(
-        (err as Error).message ??
+        getErrorMessage(
+          err,
           'Failed to move withdrawal request to review. Please try again.'
+        )
       );
       refetch();
     }

@@ -1,14 +1,12 @@
 import { ConfirmDialog } from '@/shared/components/confirm-dialog';
 import { AlertTriangle, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import {
-  cancelLoanRequest,
-  releaseLoanToTrustBank,
-} from '../services/hrLoanService';
+import { cancelLoanRequest } from '../services/hrLoanService';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useState } from 'react';
+import { getErrorMessage } from '@/shared/api/getErrorMessage';
 
 const defaultCancelReason =
   'Your loan application has been cancelled. Please contact HR or review the loan terms if you have any questions.';
@@ -50,8 +48,10 @@ export function CancelLoanDialog({
     } catch (err) {
       console.error(err);
       toast.error(
-        (err as Error).message ??
+        getErrorMessage(
+          err,
           'Failed to cancel loan. Please try again or contact system support'
+        )
       );
       refetch();
     }

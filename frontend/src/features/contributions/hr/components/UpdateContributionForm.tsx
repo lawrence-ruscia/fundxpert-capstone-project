@@ -34,6 +34,7 @@ import {
   History,
 } from 'lucide-react';
 import { CurrencyInput } from '@/shared/components/currency-input';
+import { getErrorMessage } from '@/shared/api/getErrorMessage';
 
 // Helper function to safely parse amount (handles string/number/empty safely)
 const safeParseAmount = (val: string | number | undefined | null): number => {
@@ -195,7 +196,7 @@ export default function UpdateContributionForm() {
         });
       } catch (err: unknown) {
         console.error('Failed to fetch contribution:', err); // Log full error for debugging
-        const errMsg = err.message || 'Failed to load contribution data';
+        const errMsg = getErrorMessage(err, 'Failed to load contribution data');
         setError(errMsg);
         toast.error(errMsg);
       } finally {

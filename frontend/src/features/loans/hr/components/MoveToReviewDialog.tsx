@@ -2,6 +2,7 @@ import { ConfirmDialog } from '@/shared/components/confirm-dialog';
 import { FileText } from 'lucide-react';
 import { toast } from 'sonner';
 import { moveLoanToReview } from '../services/hrLoanService';
+import { getErrorMessage } from '@/shared/api/getErrorMessage';
 
 type MoveToReviewDialogProps = {
   open: boolean;
@@ -37,8 +38,7 @@ export function MoveToReviewDialog({
     } catch (err) {
       console.error(err);
       toast.error(
-        (err as Error).message ??
-          'Failed to move loan to review. Please try again.'
+        getErrorMessage(err, 'Failed to move loan to review. Please try again.')
       );
       refetch();
     }

@@ -46,6 +46,7 @@ import {
 } from 'lucide-react';
 import { CurrencyInput } from '@/shared/components/currency-input';
 import { useNavigate } from 'react-router-dom';
+import { getErrorMessage } from '@/shared/api/getErrorMessage';
 
 export type SearchEmployeesRecord = {
   id: number;
@@ -209,7 +210,7 @@ export default function RecordContributionForm() {
       }
     } catch (error) {
       console.error('Failed to record contribution:', error);
-      toast.error('Failed to record contribution');
+      toast.error(getErrorMessage(error, 'Failed to record contribution'));
     } finally {
       setIsSubmitting(false);
     }

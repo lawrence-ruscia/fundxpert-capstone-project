@@ -5,6 +5,7 @@ import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { formatCurrency } from '@/features/dashboard/employee/utils/formatters';
 import type { WithdrawalRequest } from '../../employee/types/withdrawal';
 import { releaseWithdrawalFunds } from '../services/hrWithdrawalService';
+import { getErrorMessage } from '@/shared/api/getErrorMessage';
 
 type ReleaseWithdrawalDialogProps = {
   open: boolean;
@@ -40,8 +41,10 @@ export function ReleaseWithdrawalDialog({
     } catch (err) {
       console.error(err);
       toast.error(
-        (err as Error).message ??
+        getErrorMessage(
+          err,
           'Failed to release withdrawal funds. Please try again or contact the finance department.'
+        )
       );
       refetch();
     }

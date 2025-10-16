@@ -40,6 +40,7 @@ import type {
   WithdrawalType,
 } from '../types/withdrawal';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/shared/api/getErrorMessage';
 
 const withdrawalSchema = (eligibility: WithdrawalEligibility) =>
   z
@@ -186,10 +187,10 @@ export const WithdrawalApplicationForm = ({
       console.error('Withdrawal application failed:', error);
       // Error toast
       toast.error('Withdrawal Application Failed', {
-        description:
-          error instanceof Error
-            ? error.message
-            : 'Unable to submit your withdrawal application. Please check your details and try again.',
+        description: getErrorMessage(
+          error,
+          'Unable to submit your withdrawal application. Please check your details and try again.'
+        ),
         duration: 6000,
         action: {
           label: 'Retry',

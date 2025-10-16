@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useState } from 'react';
 import { reviewWithdrawalDecision } from '../services/hrWithdrawalService';
+import { getErrorMessage } from '@/shared/api/getErrorMessage';
 
 const defaultRejectReason =
   'Your withdrawal request has been rejected after review. Please contact HR if you need clarification or wish to discuss reapplying.';
@@ -53,7 +54,7 @@ export function RejectWithdrawalDialog({
     } catch (err) {
       console.error(err);
       toast.error(
-        (err as Error).message ?? 'Failed to reject request. Please try again.'
+        getErrorMessage(err, 'Failed to reject request. Please try again.')
       );
       setActionLoading(false);
       refetch();

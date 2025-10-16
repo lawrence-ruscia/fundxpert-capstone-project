@@ -13,8 +13,14 @@ export function getErrorMessage(
     );
   }
 
+  // Non-Axios Error
   if (error instanceof Error) {
     return error.message;
+  }
+
+  // Handle generic or unexpected structures
+  if (typeof error === 'object' && error !== null) {
+    return (error as any)?.message || fallback;
   }
 
   return fallback;

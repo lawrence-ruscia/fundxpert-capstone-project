@@ -30,6 +30,7 @@ import { BalanceCard } from '@/features/dashboard/employee/components/BalanceCar
 import { formatCurrency } from '@/features/dashboard/employee/utils/formatters';
 import { CurrencyInput } from '@/shared/components/currency-input';
 import { toast } from 'sonner';
+import { getErrorMessage } from '@/shared/api/getErrorMessage';
 
 const loanSchema = (maxLoan: number) =>
   z
@@ -135,10 +136,10 @@ export const LoanApplicationForm = ({
     } catch (error) {
       console.error('Loan application failed:', error);
       toast.error('Loan Application Failed', {
-        description:
-          error instanceof Error
-            ? error.message
-            : 'Unable to submit your loan application. Please check your details and try again.',
+        description: getErrorMessage(
+          error,
+          'Unable to submit your loan application. Please check your details and try again.'
+        ),
         duration: 6000,
         action: {
           label: 'Retry',

@@ -19,6 +19,7 @@ import {
 } from '../components/ProjectionParameters';
 import { BalanceCard } from '@/features/dashboard/employee/components/BalanceCard';
 import { formatCurrency } from '@/features/dashboard/employee/utils/formatters';
+import { getErrorMessage } from '@/shared/api/getErrorMessage';
 
 export default function FundProjectionPage() {
   const [data, setData] = useState<ProjectionResponse | null>(null);
@@ -32,9 +33,7 @@ export default function FundProjectionPage() {
       setData(result);
     } catch (err) {
       console.error('Projection failed', err);
-      setError(
-        err instanceof Error ? err.message : 'An unexpected error occurred'
-      );
+      setError(getErrorMessage(err, 'Projection failed'));
     } finally {
       setLoading(false);
     }

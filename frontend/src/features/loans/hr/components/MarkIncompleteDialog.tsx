@@ -5,6 +5,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
 import { markLoanIncomplete } from '../services/hrLoanService';
+import { getErrorMessage } from '@/shared/api/getErrorMessage';
 
 const defaultIncReason =
   'We need you to review and update your loan application. The HR team will proceed with the review once the necessary revisions are complete.';
@@ -47,8 +48,10 @@ export function MarkIncompleteDialog({
     } catch (err) {
       console.error(err);
       toast.error(
-        (err as Error).message ??
+        getErrorMessage(
+          err,
           'Failed to mark loan as incomplete. Please try again.'
+        )
       );
       refetch();
     }

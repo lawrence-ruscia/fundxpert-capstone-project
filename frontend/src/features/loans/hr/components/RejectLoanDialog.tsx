@@ -1,15 +1,12 @@
 import { ConfirmDialog } from '@/shared/components/confirm-dialog';
 import { AlertTriangle, XCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import {
-  cancelLoanRequest,
-  releaseLoanToTrustBank,
-  reviewLoanApproval,
-} from '../services/hrLoanService.js';
+import { reviewLoanApproval } from '../services/hrLoanService.js';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useState } from 'react';
+import { getErrorMessage } from '@/shared/api/getErrorMessage.js';
 
 const defaultRejectReason =
   'Your loan application has been rejected after review. Please contact HR if you need clarification or wish to discuss reapplying.';
@@ -52,7 +49,7 @@ export function RejectLoanDialog({
     } catch (err) {
       console.error(err);
       toast.error(
-        (err as Error).message ?? 'Failed to reject loan. Please try again.'
+        getErrorMessage(err, 'Failed to reject loan. Please try again.')
       );
       setActionLoading(false);
       refetch();

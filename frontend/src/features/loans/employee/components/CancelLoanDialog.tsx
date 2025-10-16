@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { useState } from 'react';
 import type { Loan } from '../types/loan';
 import { formatCurrency } from '@/features/dashboard/employee/utils/formatters';
+import { getErrorMessage } from '@/shared/api/getErrorMessage';
 
 const defaultCancelReason = 'Applicant cancelled the application voluntarily.';
 
@@ -43,9 +44,12 @@ export function CancelLoanDialog({
     } catch (err) {
       console.error(err);
       toast.error(
-        (err as Error).message ??
+        getErrorMessage(
+          err,
           'Failed to cancel your loan application. Please try again or contact support if the issue persists.'
+        )
       );
+
       refetch();
     }
   };

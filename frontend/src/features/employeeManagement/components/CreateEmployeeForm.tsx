@@ -51,6 +51,7 @@ import {
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Calendar } from '@/components/ui/calendar';
+import { getErrorMessage } from '@/shared/api/getErrorMessage';
 
 // Input schema for form validation (keeps strings for form inputs)
 const createEmployeeInputSchema = z.object({
@@ -166,7 +167,7 @@ export const CreateEmployeeForm = () => {
       toast.success(`Employee ${data.employee_id} created successfully`);
     } catch (err) {
       console.error(err);
-      toast.error((err as Error).message || 'Failed to create employee');
+      toast.error(getErrorMessage(err, 'Failed to create employee'));
     } finally {
       setIsSubmitting(false);
     }
