@@ -377,15 +377,6 @@ export async function resetUserPasswordHandler(req: Request, res: Response) {
 
     const user = await getUserById(Number(req.params.userId));
 
-    // Notify user
-    await createNotification(
-      user.id,
-      'Password Reset',
-      `Your password was successfully reset by an hr. Please log in with your temporary password and change it immediately.`,
-      'warning',
-      { link: '/auth/login' }
-    );
-
     // Notify admin who performed action
     await createNotification(
       req.user.id,
