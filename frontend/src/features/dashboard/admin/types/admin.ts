@@ -1,4 +1,5 @@
 import type { Role } from '@/shared/types/user';
+
 export interface UserSummary {
   total_users: number;
   active_users: number;

@@ -7,6 +7,13 @@ interface ToggleLockButtonProps {
   actionLoading: boolean;
   onLockClick: () => void;
   onUnlockClick: () => void;
+  variant?:
+    | 'default'
+    | 'destructive'
+    | 'outline'
+    | 'secondary'
+    | 'ghost'
+    | 'link';
 
   className?: string;
 }
@@ -16,6 +23,7 @@ export function ToggleLockButton({
   actionLoading,
   onLockClick,
   onUnlockClick,
+  variant,
   className,
 }: ToggleLockButtonProps) {
   // Check if user is currently locked
@@ -34,7 +42,7 @@ export function ToggleLockButton({
   return (
     <Button
       type='button'
-      variant='secondary'
+      variant={variant || 'secondary'}
       onClick={handleClick}
       disabled={actionLoading}
       className={className || 'h-12 px-6 text-base sm:w-auto'}

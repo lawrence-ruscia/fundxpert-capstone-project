@@ -40,6 +40,7 @@ import { AdminCreateUserPage } from '@/features/userManagement/pages/AdminCreate
 import { AdminUpdateUserPage } from '@/features/userManagement/pages/AdminUpdateUserPage';
 import NotificationsPage from '@/features/notifications/pages/NotificationPage';
 import AdminSystemLogsPage from '@/features/systemLogs/pages/AdminSystemLogsPage';
+import { AdminUserDetailsPage } from '@/features/userManagement/pages/AdminUserDetailsPage';
 
 export const router = createBrowserRouter([
   {
@@ -209,6 +210,11 @@ export const router = createBrowserRouter([
       {
         path: 'logs',
         element: <AdminSystemLogsPage />,
+      },
+
+      {
+        path: 'users/:userId',
+        element: <AdminUserDetailsPage />,
       },
     ],
   },

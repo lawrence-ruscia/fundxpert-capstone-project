@@ -1,4 +1,4 @@
-import { Ellipsis, UserCog } from 'lucide-react';
+import { Ellipsis, Eye, UserCog } from 'lucide-react';
 import { type Row } from '@tanstack/react-table';
 import { UserPen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -51,12 +51,12 @@ export function UsersTableRowActions({ row }: DataTableRowActionsProps) {
             onClick={() => {
               setCurrentRow(row.original);
               setOpen('edit');
-              navigate(`/admin/detail/${row.original.id}/edit`);
+              navigate(`/admin/users/${row.original.id}`);
             }}
           >
-            Manage
+            View
             <DropdownMenuShortcut>
-              <UserCog size={16} />
+              <Eye size={16} />
             </DropdownMenuShortcut>
           </DropdownMenuItem>
         </DropdownMenuContent>

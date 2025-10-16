@@ -21,7 +21,7 @@ export type User = {
   password_expired: boolean;
   temp_password: boolean;
   is_twofa_enabled: boolean;
-  passsword_last_changed?: string | null;
+  password_last_changed?: string | null;
   created_at: string;
 };
 

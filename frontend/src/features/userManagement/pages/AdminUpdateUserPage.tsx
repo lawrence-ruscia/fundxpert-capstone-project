@@ -140,11 +140,6 @@ export const AdminUpdateUserPage = () => {
   const [openReset2fa, setOpenReset2fa] = useState(false);
   const [reset2faLoading, setReset2faLoading] = useState(false);
 
-  const [autoRefreshEnabled] = usePersistedState(
-    'admin-dashboard-auto-refresh',
-    true
-  );
-
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const fetchUsersData = useCallback(async () => {
@@ -163,7 +158,7 @@ export const AdminUpdateUserPage = () => {
     fetchUsersData,
     {
       context: 'users',
-      enabled: autoRefreshEnabled,
+      enabled: false,
       pauseWhenHidden: true,
       pauseWhenInactive: true,
     }
@@ -313,9 +308,10 @@ export const AdminUpdateUserPage = () => {
             variant='ghost'
             size='sm'
             onClick={() => navigate('/admin/users', { replace: true })}
-            className='p-2'
+            className='mb-4'
           >
-            <ArrowLeft className='h-4 w-4' />
+            <ArrowLeft className='mr-2 h-4 w-4' />
+            Back to Users
           </Button>
         </div>
         <div className='flex flex-wrap items-start justify-between gap-4'>
@@ -356,16 +352,6 @@ export const AdminUpdateUserPage = () => {
             </Button>
           </div>
         </div>
-        {/* Auto-refresh Status Banner */}
-        {!autoRefreshEnabled && (
-          <div className='bg-muted/50 mt-4 mb-8 flex items-center gap-2 rounded-lg border border-dashed px-4 py-2.5'>
-            <AlertCircle className='text-muted-foreground h-4 w-4' />
-            <p className='text-muted-foreground text-sm'>
-              Auto-refresh is disabled. Data will only update when manually
-              refreshed.
-            </p>
-          </div>
-        )}
 
         {/* Loading Overlay for Background Refresh */}
         {loading && data && (
