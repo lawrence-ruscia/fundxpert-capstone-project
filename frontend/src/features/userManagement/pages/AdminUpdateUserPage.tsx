@@ -211,7 +211,11 @@ export const AdminUpdateUserPage = () => {
 
   // Update form when data changes
   useEffect(() => {
-    if (data?.user) {
+    if (
+      data?.user &&
+      data?.departments?.length > 0 &&
+      data?.positions?.length > 0
+    ) {
       form.reset({
         name: data.user.name || '',
         email: data.user.email || '',
@@ -487,7 +491,7 @@ export const AdminUpdateUserPage = () => {
                           </FormLabel>
                           <Select
                             onValueChange={field.onChange}
-                            value={field.value || ''}
+                            value={field.value}
                           >
                             <FormControl>
                               <SelectTrigger className='h-12 w-full text-base'>
@@ -540,7 +544,8 @@ export const AdminUpdateUserPage = () => {
                           </FormLabel>
                           <Select
                             onValueChange={field.onChange}
-                            value={field.value || ''}
+                            key={field.value} // Force re-render when value changes
+                            defaultValue={field.value}
                           >
                             <FormControl>
                               <SelectTrigger className='h-12 w-full text-base'>
@@ -575,7 +580,8 @@ export const AdminUpdateUserPage = () => {
                           </FormLabel>
                           <Select
                             onValueChange={field.onChange}
-                            value={field.value || ''}
+                            key={field.value} // Force re-render when value changes
+                            defaultValue={field.value}
                           >
                             <FormControl>
                               <SelectTrigger className='h-12 w-full text-base'>
