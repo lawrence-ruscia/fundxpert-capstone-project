@@ -5,6 +5,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 import { toggleLockUser } from '../services/usersManagementService';
 import { Check, CheckCircle, Unlock, UnlockKeyhole } from 'lucide-react';
+import { getBackendErrorMessage } from '@/utils/getBackendErrorMessages';
 
 interface UnlockUserDialogProps {
   open: boolean;
@@ -40,10 +41,12 @@ export function UnlockUserDialog({
       );
     } catch (err) {
       setActionLoading(false);
-      console.error(err);
+
+      console.error('❌ Unlock user failed:', err);
+
+      //  Extract backend error message safely
       toast.error(
-        (err as Error).message ??
-          'Failed to unlock user account. Please try again or contact system support'
+        getBackendErrorMessage(err, 'Failed to unlock user account.')
       );
     }
   };

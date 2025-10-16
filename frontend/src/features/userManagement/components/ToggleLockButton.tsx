@@ -47,24 +47,15 @@ export function ToggleLockButton({
       disabled={actionLoading}
       className={className || 'h-12 px-6 text-base sm:w-auto'}
     >
-      {actionLoading ? (
+      {isLocked ? (
         <>
-          <div className='mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-current' />
-          {isLocked ? 'Unlocking...' : 'Locking...'}
+          <Unlock className='mr-2 h-4 w-4' />
+          Unlock User
         </>
       ) : (
         <>
-          {isLocked ? (
-            <>
-              <Unlock className='mr-2 h-4 w-4' />
-              Unlock User
-            </>
-          ) : (
-            <>
-              <Lock className='mr-2 h-4 w-4' />
-              Lock User
-            </>
-          )}
+          <Lock className='mr-2 h-4 w-4' />
+          Lock User
         </>
       )}
     </Button>

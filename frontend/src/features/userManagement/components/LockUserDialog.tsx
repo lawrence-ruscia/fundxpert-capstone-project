@@ -15,6 +15,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AlertTriangle, Lock, LockKeyhole } from 'lucide-react';
 import { toggleLockUser } from '../services/usersManagementService';
 import { NumberInput } from '@/shared/components/number-input';
+import { getBackendErrorMessage } from '@/utils/getBackendErrorMessages';
 
 interface LockUserDialogProps {
   open: boolean;
@@ -69,11 +70,11 @@ export function LockUserDialog({
       );
     } catch (err) {
       setActionLoading(false);
-      console.error(err);
-      toast.error(
-        (err as Error).message ??
-          'Failed to lock user account. Please try again or contact system support'
-      );
+
+      console.error('❌ Lock user account failed:', err);
+
+      //  Extract backend error message safely
+      toast.error(getBackendErrorMessage(err, 'Failed to lock user account.'));
     }
   };
 

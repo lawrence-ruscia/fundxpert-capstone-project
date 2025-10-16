@@ -60,6 +60,7 @@ import {
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
+import { getBackendErrorMessage } from '@/utils/getBackendErrorMessages';
 
 // Input schema for form validation (keeps strings for form inputs)
 const createEmployeeInputSchema = z.object({
@@ -194,8 +195,10 @@ export const AdminCreateUserPage = () => {
       navigate('/admin/users');
       toast.success(`User ${data.employee_id} created successfully`);
     } catch (err) {
-      console.error(err);
-      toast.error((err as Error).message || 'Failed to create user');
+      console.error('❌ Create user failed:', err);
+
+      //  Extract backend error message safely
+      toast.error(getBackendErrorMessage(err, 'Failed to create user.'));
     } finally {
       setIsSubmitting(false);
     }

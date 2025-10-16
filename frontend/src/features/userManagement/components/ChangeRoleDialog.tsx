@@ -13,6 +13,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { updateUser } from '../services/usersManagementService';
 import { type Role } from '@/shared/types/user';
 import { ConfirmDialog } from '@/shared/components/confirm-dialog';
+import { getBackendErrorMessage } from '@/utils/getBackendErrorMessages';
 
 interface ChangeRoleDialogProps {
   open: boolean;
@@ -94,11 +95,11 @@ export function ChangeRoleDialog({
       );
     } catch (err) {
       setActionLoading(false);
-      console.error(err);
-      toast.error(
-        (err as Error).message ||
-          'Failed to change user role. Please try again or contact system support.'
-      );
+
+      console.error('❌ Change user role failed:', err);
+
+      //  Extract backend error message safely
+      toast.error(getBackendErrorMessage(err, 'Failed to change user role.'));
     }
   };
 

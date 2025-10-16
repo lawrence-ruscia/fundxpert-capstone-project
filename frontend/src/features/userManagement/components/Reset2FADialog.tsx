@@ -3,6 +3,7 @@ import { ConfirmDialog } from '@/shared/components/confirm-dialog';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ShieldAlert, ShieldOff, AlertTriangle } from 'lucide-react';
 import { adminReset2FA } from '../services/usersManagementService';
+import { getBackendErrorMessage } from '@/utils/getBackendErrorMessages';
 
 interface Reset2FADialogProps {
   open: boolean;
@@ -38,11 +39,11 @@ export function Reset2FADialog({
       );
     } catch (err) {
       setActionLoading(false);
-      console.error(err);
-      toast.error(
-        (err as Error).message ??
-          'Failed to reset 2FA. Please try again or contact system support.'
-      );
+
+      console.error('❌ Reset 2FA failed:', err);
+
+      //  Extract backend error message safely
+      toast.error(getBackendErrorMessage(err, 'Failed to reset 2FA.'));
     }
   };
 

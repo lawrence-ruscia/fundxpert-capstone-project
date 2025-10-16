@@ -33,7 +33,7 @@ adminRouter.get('/users/:userId', getUserByIdHandler);
 adminRouter.post('/users', createUserHandler);
 adminRouter.patch('/users/:userId', updateUserHandler);
 adminRouter.post('/users/:userId/lock', toggleLockUserHandler);
-adminRouter.post('/users/:userId/reset-password', resetUserPasswordHandler);
+adminRouter.put('/users/:userId/reset-password', resetUserPasswordHandler);
 adminRouter.get('/logs', getAuditLogsHandler);
 adminRouter.get('/audit/summary', getAuditSummaryCategoryHandler);
 adminRouter.get('/stats', getAdminStatsHandler);

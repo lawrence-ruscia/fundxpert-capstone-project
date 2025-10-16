@@ -15,6 +15,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { generateTempPassword } from '@/utils/generateTempPassword';
 import { resetUserPassword } from '../services/usersManagementService';
 import { ConfirmDialog } from '@/shared/components/confirm-dialog';
+import { getBackendErrorMessage } from '@/utils/getBackendErrorMessages';
 
 interface ResetPasswordDialogProps {
   open: boolean;
@@ -77,11 +78,11 @@ export function ResetPasswordDialog({
       );
     } catch (err) {
       setActionLoading(false);
-      console.error(err);
-      toast.error(
-        (err as Error).message ||
-          'Failed to reset password. Please try again or contact system support.'
-      );
+
+      console.error('❌ Reset password failed:', err);
+
+      //  Extract backend error message safely
+      toast.error(getBackendErrorMessage(err, 'Failed to reset password.'));
     }
   };
 

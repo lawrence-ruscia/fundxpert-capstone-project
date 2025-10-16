@@ -170,6 +170,16 @@ export async function updateUserHandler(req: Request, res: Response) {
       return res.status(403).json({ error: 'Forbidden' });
     }
 
+    const targetUserId = Number(req.params.userId);
+    const currentUserId = req.user.id;
+
+    // Prevent an admin from updating their own account
+    if (targetUserId === currentUserId) {
+      return res.status(403).json({
+        error: 'Admins are not allowed to update their own account.',
+      });
+    }
+
     const user = await updateUser(Number(req.params.userId), req.body);
     if (!user) return res.status(404).json({ error: 'User not found' });
 
@@ -206,6 +216,16 @@ export async function toggleLockUserHandler(req: Request, res: Response) {
     // Authorization check
     if (!isAuthenticatedRequest(req) || req.user.role !== 'Admin') {
       return res.status(403).json({ error: 'Forbidden' });
+    }
+
+    const targetUserId = Number(req.params.userId);
+    const currentUserId = req.user.id;
+
+    // Prevent an admin from updating their own account
+    if (targetUserId === currentUserId) {
+      return res.status(403).json({
+        error: 'Admins are not allowed to lock/unlock their own account.',
+      });
     }
 
     const { userId } = req.params;
@@ -333,6 +353,17 @@ export async function resetUserPasswordHandler(req: Request, res: Response) {
       return res.status(403).json({ error: 'Forbidden' });
     }
 
+    const targetUserId = Number(req.params.userId);
+    const currentUserId = req.user.id;
+
+    // Prevent an admin from updating their own account
+    if (targetUserId === currentUserId) {
+      return res.status(403).json({
+        error:
+          'Admins are not allowed to reset their password in their own account.',
+      });
+    }
+
     const result = await resetEmployeePassword(
       Number(req.params.userId),
       req.body.generatedTempPassword
@@ -392,6 +423,17 @@ export async function adminReset2FAHandler(req: Request, res: Response) {
 
     if (!userId) {
       return res.status(400).json({ error: 'User ID is required' });
+    }
+
+    const targetUserId = Number(userId);
+    const currentUserId = req.user.id;
+
+    // Prevent an admin from updating their own account
+    if (targetUserId === currentUserId) {
+      return res.status(403).json({
+        error:
+          'Admins are not allowed to reset their 2fa in their own account.',
+      });
     }
 
     // Get user info before reset

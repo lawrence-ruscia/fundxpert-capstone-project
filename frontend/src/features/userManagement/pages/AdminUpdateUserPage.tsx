@@ -66,6 +66,7 @@ import {
 import { cn } from '@/lib/utils.js';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar.js';
+import { getBackendErrorMessage } from '@/utils/getBackendErrorMessages.js';
 
 // Input schema for form validation
 const updateUserInputSchema = z.object({
@@ -249,8 +250,10 @@ export const AdminUpdateUserPage = () => {
       navigate('/admin/users');
       toast.success(`User ${formData.employee_id} updated successfully`);
     } catch (err) {
-      console.error(err);
-      toast.error('Failed to update user');
+      console.error('❌ Update user failed:', err);
+
+      //  Extract backend error message safely
+      toast.error(getBackendErrorMessage(err, 'Failed to update user.'));
     } finally {
       setSaving(false);
     }
@@ -271,9 +274,11 @@ export const AdminUpdateUserPage = () => {
       toast.success(
         `Password reset successfully using generated temporary password`
       );
-    } catch (error) {
-      console.error('Failed to reset password:', error);
-      toast.error('Failed to reset password');
+    } catch (err) {
+      console.error('❌ Reset password failed:', err);
+
+      //  Extract backend error message safely
+      toast.error(getBackendErrorMessage(err, 'Failed to reset password.'));
     } finally {
       setResettingPassword(false);
     }
@@ -840,17 +845,8 @@ export const AdminUpdateUserPage = () => {
                     disabled={reset2faLoading}
                     className='h-12 px-6 text-base sm:w-auto'
                   >
-                    {resettingPassword ? (
-                      <>
-                        <div className='mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white' />
-                        Resetting...
-                      </>
-                    ) : (
-                      <>
-                        <ShieldAlert className='mr-2 h-4 w-4' />
-                        Reset 2FA
-                      </>
-                    )}
+                    <ShieldAlert className='mr-2 h-4 w-4' />
+                    Reset 2FA
                   </Button>
                   <Button
                     type='button'
@@ -864,17 +860,8 @@ export const AdminUpdateUserPage = () => {
                         : ''
                     }
                   >
-                    {resettingPassword ? (
-                      <>
-                        <div className='mr-2 h-4 w-4 animate-spin rounded-full border-b-2 border-white' />
-                        Resetting...
-                      </>
-                    ) : (
-                      <>
-                        <Shield className='mr-2 h-4 w-4' />
-                        Reset Password
-                      </>
-                    )}
+                    <Shield className='mr-2 h-4 w-4' />
+                    Reset Password
                   </Button>
                 </div>
 
