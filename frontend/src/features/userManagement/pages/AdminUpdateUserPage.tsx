@@ -491,7 +491,8 @@ export const AdminUpdateUserPage = () => {
                           </FormLabel>
                           <Select
                             onValueChange={field.onChange}
-                            value={field.value}
+                            key={field.value}
+                            defaultValue={field.value}
                           >
                             <FormControl>
                               <SelectTrigger className='h-12 w-full text-base'>
@@ -648,7 +649,8 @@ export const AdminUpdateUserPage = () => {
                           </FormLabel>
                           <Select
                             onValueChange={field.onChange}
-                            value={field.value}
+                            key={field.value}
+                            defaultValue={field.value}
                           >
                             <FormControl>
                               <SelectTrigger className='h-12 w-full text-base'>
