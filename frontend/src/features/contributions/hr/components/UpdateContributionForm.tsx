@@ -32,9 +32,11 @@ import {
   Calendar,
   Edit,
   History,
+  Info,
 } from 'lucide-react';
 import { CurrencyInput } from '@/shared/components/currency-input';
 import { getErrorMessage } from '@/shared/api/getErrorMessage';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 // Helper function to safely parse amount (handles string/number/empty safely)
 const safeParseAmount = (val: string | number | undefined | null): number => {
@@ -142,6 +144,14 @@ export default function UpdateContributionForm() {
       notes: '',
     },
   });
+
+  // Watch employee amount and sync to employer amount
+  const employeeAmount = form.watch('employee_amount');
+
+  useEffect(() => {
+    // Sync employer amount with employee amount
+    form.setValue('employer_amount', employeeAmount);
+  }, [employeeAmount, form]);
 
   useEffect(() => {
     async function fetchContribution() {
@@ -299,9 +309,10 @@ export default function UpdateContributionForm() {
           variant='ghost'
           size='sm'
           onClick={() => navigate('/hr/contributions', { replace: true })}
-          className='p-2'
+          className='mb-4'
         >
-          <ArrowLeft className='h-4 w-4' />
+          <ArrowLeft className='mr-2 h-4 w-4' />
+          Back to Contributions
         </Button>
 
         <h1 className='text-3xl font-bold tracking-tight'>
@@ -377,6 +388,16 @@ export default function UpdateContributionForm() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className='space-y-6'>
+                  {/* Info Banner */}
+
+                  <Alert className='rounded-lg border-0 border-l-6 border-blue-500 bg-blue-600/10 text-blue-500'>
+                    <Info className='h-4 w-4 text-blue-500' />
+
+                    <AlertDescription className='text-blue-500 dark:text-blue-700'>
+                      Employer contribution automatically matches the employee
+                      contribution amount
+                    </AlertDescription>
+                  </Alert>
                   {/* Original Amounts Display */}
                   <div className='bg-muted/30 rounded-lg border p-4'>
                     <h4 className='text-muted-foreground mb-3 flex items-center gap-2 text-sm font-medium'>
@@ -446,24 +467,27 @@ export default function UpdateContributionForm() {
                     <FormItem className='relative py-2'>
                       <FormLabel className='text-base font-medium'>
                         New Employer Contribution{' '}
-                        <span className='text-muted-foreground'>*</span>
+                        <span className='text-muted-foreground'>
+                          (Auto-matched)
+                        </span>
                       </FormLabel>
                       <FormControl>
                         <Controller
                           name='employer_amount'
                           control={form.control}
                           render={({
-                            field: { onChange, value, name, ref },
+                            field: { value, name, ref },
                             fieldState: { error },
                           }) => (
                             <CurrencyInput
                               ref={ref}
                               name={name}
                               value={value ?? ''}
-                              onValueChange={onChange}
+                              onValueChange={() => {}}
                               className={`text-base ${error ? 'border-destructive' : ''}`}
-                              placeholder='Enter new employer contribution'
+                              placeholder='Matches employee contribution'
                               min={0}
+                              disabled={true}
                             />
                           )}
                         />

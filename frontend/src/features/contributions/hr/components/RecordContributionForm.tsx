@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -43,10 +43,12 @@ import {
   Save,
   X,
   ArrowLeft,
+  Info,
 } from 'lucide-react';
 import { CurrencyInput } from '@/shared/components/currency-input';
 import { useNavigate } from 'react-router-dom';
 import { getErrorMessage } from '@/shared/api/getErrorMessage';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 export type SearchEmployeesRecord = {
   id: number;
@@ -128,6 +130,14 @@ export default function RecordContributionForm() {
       contribution_date: new Date().toISOString().split('T')[0],
     },
   });
+
+  // Watch employee amount and sync to employer amount
+  const employeeAmount = form.watch('employee_amount');
+
+  useEffect(() => {
+    // Sync employer amount with employee amount
+    form.setValue('employer_amount', employeeAmount);
+  }, [employeeAmount, form]);
 
   const handleEmployeeSelect = (employee: SearchEmployeesRecord) => {
     setSelectedEmployee(employee);
@@ -223,9 +233,10 @@ export default function RecordContributionForm() {
           variant='ghost'
           size='sm'
           onClick={() => navigate('/hr/contributions', { replace: true })}
-          className='p-2'
+          className='mb-4'
         >
-          <ArrowLeft className='h-4 w-4' />
+          <ArrowLeft className='mr-2 h-4 w-4' />
+          Back to Contributions
         </Button>
         <h1 className='text-3xl font-bold tracking-tight'>
           Record Contribution
@@ -416,6 +427,16 @@ export default function RecordContributionForm() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className='space-y-6'>
+                  {/* Info Banner */}
+
+                  <Alert className='rounded-lg border-0 border-l-6 border-blue-500 bg-blue-600/10 text-blue-500'>
+                    <Info className='h-4 w-4 text-blue-500' />
+
+                    <AlertDescription className='text-blue-500 dark:text-blue-700'>
+                      Employer contribution automatically matches the employee
+                      contribution amount
+                    </AlertDescription>
+                  </Alert>
                   <div className='grid grid-cols-1 gap-6 md:grid-cols-2'>
                     <FormItem className='relative py-2'>
                       <FormLabel className='text-base font-medium'>
@@ -448,24 +469,27 @@ export default function RecordContributionForm() {
                     <FormItem className='relative py-2'>
                       <FormLabel className='text-base font-medium'>
                         Employer Contribution{' '}
-                        <span className='text-muted-foreground'>*</span>
+                        <span className='text-muted-foreground'>
+                          (Auto-matched)
+                        </span>
                       </FormLabel>
                       <FormControl>
                         <Controller
                           name='employer_amount'
                           control={form.control}
                           render={({
-                            field: { onChange, value, name, ref },
+                            field: { value, name, ref },
                             fieldState: { error },
                           }) => (
                             <CurrencyInput
                               ref={ref}
                               name={name}
                               value={value ?? ''}
-                              onValueChange={onChange}
+                              onValueChange={() => {}}
                               className={`text-base ${error ? 'border-destructive' : ''}`}
-                              placeholder='Enter employer contribution'
+                              placeholder='Matches employee contribution'
                               min={0}
+                              disabled={true}
                             />
                           )}
                         />
@@ -567,7 +591,8 @@ export default function RecordContributionForm() {
                   <div>
                     <p className='font-medium'>Contribution Amounts</p>
                     <p className='text-muted-foreground text-xs'>
-                      Enter both employee and employer contribution amounts
+                      Enter employee contribution amount. Employer contribution
+                      will automatically match the same amount.
                     </p>
                   </div>
                 </div>
