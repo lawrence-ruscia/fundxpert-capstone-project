@@ -57,7 +57,17 @@ const createEmployeeInputSchema = z.object({
   name: z
     .string()
     .min(2, 'Name must be at least 2 characters')
-    .max(100, 'Name cannot exceed 100 characters'),
+    .max(100, 'Name cannot exceed 100 characters')
+    .refine(
+      val => {
+        const trimmed = val.trim();
+        const parts = trimmed.split(/\s+/);
+        return parts.length >= 2 && parts.every(part => part.length > 0);
+      },
+      {
+        message: 'Please enter both first name and last name',
+      }
+    ),
   email: z
     .email('Invalid email address')
     .refine(val => val.endsWith('@metrobank.com.ph'), {
