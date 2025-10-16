@@ -16,9 +16,10 @@ import {
 import { Badge } from '@/components/ui/badge';
 import type { Loan, LoanStatus } from '../types/loan';
 import { LoanStatusBadge } from './LoanStatusBadge';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export function ApprovedLoanItem({ loan }: { loan: Loan }) {
+  const navigate = useNavigate();
   const getStatusIcon = (status: LoanStatus) => {
     switch (status) {
       case 'Approved':
@@ -160,14 +161,10 @@ export function ApprovedLoanItem({ loan }: { loan: Loan }) {
             variant='default'
             size='lg'
             className='bg-primary/90 hover:bg-primary hover:shadow-primary/20 w-full transition-all duration-200 hover:shadow-md'
+            onClick={() => navigate(`/employee/loans/${loan.id}`)}
           >
-            <Link
-              className='flex items-center gap-2'
-              to={`/employee/loans/${loan.id}`}
-            >
-              <Eye className='mr-2 h-4 w-4' />
-              View Loan Details
-            </Link>
+            <Eye className='mr-2 h-4 w-4' />
+            View Loan Details
           </Button>
         </div>
 

@@ -2,9 +2,11 @@ import { Button } from '@/components/ui/button';
 import type { Loan } from '../types/loan';
 import { LoanStatusBadge } from './LoanStatusBadge';
 import { Eye } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
+import { formatCurrency } from '@/features/dashboard/employee/utils/formatters';
 
 export function HistoryLoanItem({ loan }: { loan: Loan }) {
+  const navigate = useNavigate();
   return (
     <div className='rounded-lg border p-4 transition-shadow hover:shadow-md'>
       <div className='mb-3 flex items-center justify-between'>
@@ -13,14 +15,17 @@ export function HistoryLoanItem({ loan }: { loan: Loan }) {
           <LoanStatusBadge size='sm' status={loan.status} />
         </div>
         <span className='text-lg font-bold'>
-          ₱{loan.amount.toLocaleString()}
+          {formatCurrency(Number(loan.amount))}
         </span>
       </div>
 
       <div className='mb-3 flex items-center justify-between text-sm'>
         <span>Applied: {new Date(loan.created_at).toLocaleDateString()}</span>
         {loan.monthly_amortization && (
-          <span>Monthly: ₱{loan.monthly_amortization.toLocaleString()}</span>
+          <span>
+            Monthly:{' '}
+            {formatCurrency(Number(loan.monthly_amortization.toLocaleString()))}
+          </span>
         )}
       </div>
 
@@ -30,14 +35,14 @@ export function HistoryLoanItem({ loan }: { loan: Loan }) {
         </p>
       )}
 
-      <Button variant='secondary' size='sm' className='w-full'>
-        <Link
-          className='flex items-center gap-2'
-          to={`/employee/loans/${loan.id}`}
-        >
-          <Eye className='mr-2 h-4 w-4' />
-          View Loan Details
-        </Link>
+      <Button
+        variant='secondary'
+        size='sm'
+        className='flex w-full items-center gap-2'
+        onClick={() => navigate(`/employee/loans/${loan.id}`)}
+      >
+        <Eye className='mr-2 h-4 w-4' />
+        View Loan Details
       </Button>
     </div>
   );

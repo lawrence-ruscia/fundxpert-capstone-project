@@ -57,9 +57,9 @@ export function LoansList({ loans }: { loans: Loan[] }) {
             <div className='rounded-lg p-2'>
               <Activity className='h-5 w-5' />
             </div>
-            Approved Loan
+            Approved Loans
           </CardTitle>
-          <CardDescription>Your current approved loan</CardDescription>
+          <CardDescription>Your current approved loans</CardDescription>
         </CardHeader>
         <CardContent>
           {activeLoans.length === 0 ? (
@@ -73,7 +73,7 @@ export function LoansList({ loans }: { loans: Loan[] }) {
               </p>
             </div>
           ) : (
-            <div className='space-y-4'>
+            <div className='max-h-96 space-y-4 overflow-y-auto'>
               {activeLoans.map(loan => (
                 <ApprovedLoanItem key={loan.id} loan={loan} />
               ))}

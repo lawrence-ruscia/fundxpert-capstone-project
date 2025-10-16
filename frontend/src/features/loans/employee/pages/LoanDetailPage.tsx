@@ -8,6 +8,7 @@ import {
 import {
   AlertCircle,
   AlertTriangle,
+  ArrowLeft,
   CalendarDays,
   Clock,
   PhilippinePeso,
@@ -25,7 +26,7 @@ import { NetworkError } from '@/shared/components/NetworkError';
 import { useCallback, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { CancelLoanDialog } from '../components/CancelLoanDialog';
 import type { Loan } from '../types/loan';
 import { useApi } from '@/shared/hooks/useApi';
@@ -42,6 +43,7 @@ const allowedCancelStatuses = [
 
 export default function LoanDetailPage() {
   const { loanId } = useParams<{ loanId: string }>();
+  const navigate = useNavigate();
 
   const [autoRefreshEnabled] = usePersistedState(
     'employee-dashboard-auto-refresh',
@@ -101,6 +103,15 @@ export default function LoanDetailPage() {
       <div className='mx-auto space-y-8'>
         {/* Header */}
         <div className='mb-8'>
+          <Button
+            variant='ghost'
+            size='sm'
+            onClick={() => navigate('/employee/loans')}
+            className='mb-4'
+          >
+            <ArrowLeft className='mr-2 h-4 w-4' />
+            Back to Loans
+          </Button>
           <div className='flex flex-wrap items-start justify-between gap-4'>
             <div className='flex items-center gap-3'>
               <div>

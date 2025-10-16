@@ -37,12 +37,13 @@ export function WithdrawalItem({
   const getStatusIcon = (status: WithdrawalStatus) => {
     switch (status) {
       case 'Approved':
-      case 'Processed':
+      case 'Released':
         return <CheckCircle className='h-5 w-5' />;
       case 'Rejected':
       case 'Cancelled':
         return <XCircle className='h-5 w-5' />;
       case 'Pending':
+      case 'Incomplete':
       default:
         return <Clock className='h-5 w-5' />;
     }

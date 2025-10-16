@@ -150,7 +150,7 @@ export const router = createBrowserRouter([
         path: 'loans',
         children: [
           { index: true, element: <LoansDashboardPage /> },
-
+ 
           // General loan details (any HR can view)
           { path: ':loanId', element: <LoanDetailsPage /> },
 

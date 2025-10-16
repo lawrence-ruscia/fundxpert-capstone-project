@@ -2,11 +2,7 @@ import {
   fetchWithdrawalEligibility,
   fetchWithdrawalHistory,
 } from '../services/withdrawalService';
-import type {
-  WithdrawalEligibility,
-  WithdrawalRequest,
-} from '../types/withdrawal';
-import { useApi } from '@/shared/hooks/useApi';
+
 import { WithdrawalApplicationForm } from '../components/WithdrawalApplicationForm';
 import { useCallback, useState } from 'react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
