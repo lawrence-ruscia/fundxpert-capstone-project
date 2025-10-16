@@ -33,7 +33,6 @@ import {
   AlertCircle,
   User,
   DollarSign,
-  Calendar,
   Search,
   Check,
   ChevronsUpDown,
@@ -44,11 +43,15 @@ import {
   X,
   ArrowLeft,
   Info,
+  CalendarIcon,
 } from 'lucide-react';
 import { CurrencyInput } from '@/shared/components/currency-input';
 import { useNavigate } from 'react-router-dom';
 import { getErrorMessage } from '@/shared/api/getErrorMessage';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { cn } from '@/lib/utils';
+import { format } from 'date-fns';
+import { Calendar } from '@/components/ui/calendar';
 
 export type SearchEmployeesRecord = {
   id: number;
@@ -502,21 +505,52 @@ export default function RecordContributionForm() {
                     control={form.control}
                     name='contribution_date'
                     render={({ field }) => (
-                      <FormItem className='md:max-w-xs'>
+                      <FormItem className='flex flex-col'>
                         <FormLabel className='text-base font-medium'>
                           Contribution Date{' '}
                           <span className='text-muted-foreground'>*</span>
                         </FormLabel>
-                        <FormControl>
-                          <div className='relative'>
-                            <Calendar className='text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2' />
-                            <Input
-                              type='date'
-                              className='h-12 pl-10 text-base'
-                              {...field}
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant='outline'
+                                className={cn(
+                                  'h-12 w-full justify-start text-left font-normal',
+                                  !field.value && 'text-muted-foreground'
+                                )}
+                              >
+                                <CalendarIcon className='mr-2 h-4 w-4' />
+                                {field.value ? (
+                                  format(new Date(field.value), 'PPP')
+                                ) : (
+                                  <span>Pick a date</span>
+                                )}
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
+                          <PopoverContent className='w-auto p-0' align='start'>
+                            <Calendar
+                              mode='single'
+                              selected={
+                                field.value ? new Date(field.value) : undefined
+                              }
+                              onSelect={date => {
+                                field.onChange(
+                                  date ? format(date, 'yyyy-MM-dd') : ''
+                                );
+                              }}
+                              disabled={date =>
+                                date > new Date() ||
+                                date < new Date('1900-01-01')
+                              }
+                              autoFocus
+                              captionLayout='dropdown'
+                              startMonth={new Date(1950, 0)}
+                              endMonth={new Date()}
                             />
-                          </div>
-                        </FormControl>
+                          </PopoverContent>
+                        </Popover>
                         <FormMessage />
                       </FormItem>
                     )}
@@ -598,7 +632,7 @@ export default function RecordContributionForm() {
                 </div>
 
                 <div className='flex items-start gap-3 text-sm'>
-                  <Calendar className='text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0' />
+                  <CalendarIcon className='text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0' />
                   <div>
                     <p className='font-medium'>Contribution Date</p>
                     <p className='text-muted-foreground text-xs'>

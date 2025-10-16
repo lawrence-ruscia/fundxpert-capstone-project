@@ -83,6 +83,13 @@ export async function loginUser(
   // 2. Security checks
   checkAccountLockout(user);
 
+  if (
+    user.employment_status === 'Terminated' ||
+    user.employment_status === 'Resigned'
+  ) {
+    throw new Error('Your account has been deactivated. Please contact HR.');
+  }
+
   // 3. Password validation
   const isValidPassword = await validateUserPassword(
     password,
