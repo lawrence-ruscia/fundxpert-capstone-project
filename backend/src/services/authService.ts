@@ -11,6 +11,7 @@ import {
   resetFailedAttempts,
   validateTemporaryPassword,
 } from './utils/loginUserUtils.js';
+import { getUserById } from './adminService.js';
 
 export type JWTLoginResponse = {
   token: string;

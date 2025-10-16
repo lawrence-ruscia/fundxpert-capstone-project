@@ -2,6 +2,7 @@ import type { Request, Response } from 'express';
 import * as loanDocumentService from '../services/loanDocumentService.js';
 import { pool } from '../config/db.config.js';
 import { isAuthenticatedRequest } from './employeeControllers.js';
+import { getUserById, logUserAction } from '../services/adminService.js';
 
 export async function uploadLoanDocument(req: Request, res: Response) {
   try {
@@ -19,13 +20,25 @@ export async function uploadLoanDocument(req: Request, res: Response) {
         .json({ error: 'fileUrl and fileName are required' });
     }
 
+    const checkStatus = await getUserById(req.user.id);
+
+    if (
+      ['Terminated', 'Resigned', 'Retired'].includes(
+        checkStatus.employment_status
+      )
+    ) {
+      return res.status(403).json({
+        error: 'Your account is inactive. Please contact HR for assistance.',
+      });
+    }
+
     // Fetch loan details
     const { rows } = await pool.query(
       `SELECT id, user_id, status, assistant_id, officer_id
        FROM loans WHERE id = $1`,
       [loanId]
     );
-    
+
     const loan = rows[0];
     if (!loan) return res.status(404).json({ error: 'Loan not found' });
 
@@ -80,7 +93,7 @@ export async function uploadLoanDocument(req: Request, res: Response) {
       }
 
       bucketName = 'hr-loan-documents';
-      uploadedByRole = 'HR';  
+      uploadedByRole = 'HR';
     } else {
       return res
         .status(403)
@@ -92,7 +105,7 @@ export async function uploadLoanDocument(req: Request, res: Response) {
       Number(loanId),
       fileUrl,
       fileName,
-      uploadedByRole, 
+      uploadedByRole,
       bucketName
     );
 
@@ -154,6 +167,18 @@ export async function deleteLoanDocument(req: Request, res: Response) {
 
     const user = req.user;
     const { loanId, docId } = req.params;
+
+    const checkStatus = await getUserById(req.user.id);
+
+    if (
+      ['Terminated', 'Resigned', 'Retired'].includes(
+        checkStatus.employment_status
+      )
+    ) {
+      return res.status(403).json({
+        error: 'Your account is inactive. Please contact HR for assistance.',
+      });
+    }
 
     const success = await loanDocumentService.deleteLoanDocumentWithRole(
       user.id,

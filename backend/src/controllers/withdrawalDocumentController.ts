@@ -44,7 +44,10 @@ export async function uploadWithdrawalDocument(req: Request, res: Response) {
         });
       }
 
-      if (withdrawal.status !== 'Pending') {
+      if (
+        withdrawal.status !== 'Pending' &&
+        withdrawal.status !== 'Incomplete'
+      ) {
         return res.status(400).json({
           error: 'Cannot upload documents once withdrawal is under review',
         });

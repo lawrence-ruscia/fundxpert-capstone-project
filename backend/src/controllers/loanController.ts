@@ -9,7 +9,6 @@ import {
   createNotification,
   notifyUsersByRole,
 } from '../utils/notificationHelper.js';
-import { pool } from '../config/db.config.js';
 import { getUserById } from '../services/adminService.js';
 
 export async function getLoanEligibility(req: Request, res: Response) {

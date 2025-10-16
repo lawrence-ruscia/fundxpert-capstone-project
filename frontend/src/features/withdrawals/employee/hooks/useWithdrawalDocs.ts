@@ -36,7 +36,9 @@ export const useWithdrawalDocs = (
           setDocuments(documents);
         }
       } catch (err) {
-        setError((err as Error).message);
+        const errorMessage = getErrorMessage(err, 'Failed to load documents');
+        console.error(`Error: ${errorMessage}`);
+        setError(errorMessage);
       } finally {
         setLoading(false);
       }
@@ -101,7 +103,8 @@ export const useWithdrawalDocs = (
         await deleteWithdrawalFile(withdrawalId, docId, role);
       } catch (err) {
         console.error(`Error: ${(err as Error).message}`);
-        setError((err as Error).message);
+        setError(getErrorMessage(err, 'Failed to delete file'));
+        return;
       } finally {
         setLoading(false);
       }

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { cancelWithdrawal } from '../services/withdrawalService';
 import type { CancelWithdrawalResponse } from '../types/withdrawal';
+import { getErrorMessage } from '@/shared/api/getErrorMessage';
 
 export function useCancelWithdrawal() {
   const [isLoading, setIsLoading] = useState(false);
@@ -18,8 +19,7 @@ export function useCancelWithdrawal() {
       onSuccess?.(response);
       return response;
     } catch (err) {
-      const errorMessage =
-        err instanceof Error ? err.message : 'An error occurred';
+      const errorMessage = getErrorMessage(err, 'An error occurred');
       setError(errorMessage);
       throw err;
     } finally {
