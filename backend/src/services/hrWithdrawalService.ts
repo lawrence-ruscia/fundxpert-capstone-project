@@ -242,7 +242,7 @@ export async function cancelWithdrawal(
   ];
 
   const { rows } = await pool.query(
-    `UPDATE withdrawals
+    `UPDATE withdrawal_requests
      SET status = 'Cancelled', updated_at = NOW(), notes = $5
      WHERE id = $1
        AND status = ANY($2)
