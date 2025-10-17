@@ -61,57 +61,89 @@ import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/ui/calendar';
 import { getBackendErrorMessage } from '@/utils/getBackendErrorMessages';
+import { getErrorMessage } from '@/shared/api/getErrorMessage';
 
 // Input schema for form validation (keeps strings for form inputs)
-const createEmployeeInputSchema = z.object({
-  name: z
-    .string()
-    .min(2, 'Name must be at least 2 characters')
-    .max(100, 'Name cannot exceed 100 characters')
-    .refine(
-      val => {
-        const trimmed = val.trim();
-        const parts = trimmed.split(/\s+/);
-        return parts.length >= 2 && parts.every(part => part.length > 0);
-      },
-      {
-        message: 'Please enter both first name and last name',
-      }
-    ),
-  email: z
-    .email('Invalid email address')
-    .refine(val => val.endsWith('@metrobank.com.ph'), {
-      message: 'Email must use the @metrobank.com.ph domain',
+const createEmployeeInputSchema = z
+  .object({
+    name: z
+      .string()
+      .min(2, 'Name must be at least 2 characters')
+      .max(100, 'Name cannot exceed 100 characters')
+      .refine(
+        val => {
+          const trimmed = val.trim();
+          const parts = trimmed.split(/\s+/);
+          return parts.length >= 2 && parts.every(part => part.length > 0);
+        },
+        {
+          message: 'Please enter both first name and last name',
+        }
+      ),
+    email: z
+      .email('Invalid email address')
+      .refine(val => val.endsWith('@metrobank.com.ph'), {
+        message: 'Email must use the @metrobank.com.ph domain',
+      }),
+    employee_id: z.string().optional(), // Make it optional initially
+    role: z.enum(['Employee', 'HR', 'Admin'], {
+      required_error: 'Please select a role',
     }),
-  employee_id: z
-    .string()
-    .regex(/^\d{2}-\d{5}$/, 'Employee ID must follow the format NN-NNNNN'),
-  role: z.enum(['Employee', 'HR', 'Admin'], {
-    required_error: 'Please select a role',
-  }),
-  department_id: z.string().min(1, 'Please select a department'),
-  position_id: z.string().min(1, 'Please select a position'),
-  salary: z.union([z.string(), z.number()]).refine(val => {
-    if (val === '' || val === null || val === undefined) return false;
-    const numVal =
-      typeof val === 'string' ? parseFloat(val.replace(/[^\d.-]/g, '')) : val;
-    return !isNaN(numVal) && numVal > 0;
-  }, 'Please enter a valid salary amount'),
-  employment_status: z.enum(['Active', 'Resigned', 'Retired', 'Terminated']),
-  date_hired: z
-    .string()
-    .min(1, 'Date hired is required')
-    .refine(date => !isNaN(Date.parse(date)), 'Please select a valid date'),
-  generateTempPassword: z
-    .string()
-    .min(1, 'Please generate a temporary password for the new employee'), // Required temporary password field
-});
+    department_id: z.string().min(1, 'Please select a department'),
+    position_id: z.string().min(1, 'Please select a position'),
+    salary: z.union([z.string(), z.number()]).refine(val => {
+      if (val === '' || val === null || val === undefined) return false;
+      const numVal =
+        typeof val === 'string' ? parseFloat(val.replace(/[^\d.-]/g, '')) : val;
+      return !isNaN(numVal) && numVal > 0;
+    }, 'Please enter a valid salary amount'),
+    employment_status: z.enum(['Active', 'Resigned', 'Retired', 'Terminated']),
+    date_hired: z
+      .string()
+      .min(1, 'Date hired is required')
+      .refine(date => !isNaN(Date.parse(date)), 'Please select a valid date'),
+    generateTempPassword: z
+      .string()
+      .min(1, 'Please generate a temporary password for the new employee'), // Required temporary password field
+  })
+  .superRefine((data, ctx) => {
+    // Conditional validation: employee_id is required only for Employee role
+    if (data.role === 'Employee') {
+      if (!data.employee_id || data.employee_id.trim() === '') {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Employee ID is required for Employee role',
+          path: ['employee_id'],
+        });
+      } else if (!/^\d{2}-\d{5}$/.test(data.employee_id)) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Employee ID must follow the format NN-NNNNN',
+          path: ['employee_id'],
+        });
+      }
+    } else if (data.employee_id && data.employee_id.trim() !== '') {
+      // For HR/Admin, if employee_id is provided, it must be valid format
+      if (!/^\d{2}-\d{5}$/.test(data.employee_id)) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'Employee ID must follow the format NN-NNNNN',
+          path: ['employee_id'],
+        });
+      }
+    }
+  });
 
 // Output schema for API submission (transforms to correct types)
 const createEmployeeOutputSchema = createEmployeeInputSchema.transform(
   data => ({
     ...data,
     role: data.role,
+    // Send null if employee_id is empty for HR/Admin roles
+    employee_id:
+      data.employee_id && data.employee_id.trim() !== ''
+        ? data.employee_id
+        : null,
     department_id: parseInt(data.department_id, 10),
     position_id: parseInt(data.position_id, 10),
     salary:
@@ -198,7 +230,7 @@ export const AdminCreateUserPage = () => {
       console.error('❌ Create user failed:', err);
 
       //  Extract backend error message safely
-      toast.error(getBackendErrorMessage(err, 'Failed to create user.'));
+      toast.error(getErrorMessage(err, 'Failed to create user.'));
     } finally {
       setIsSubmitting(false);
     }
@@ -256,6 +288,8 @@ export const AdminCreateUserPage = () => {
       </div>
     );
   }
+
+  const selectedRole = form.watch('role'); // Watch the role field
 
   return (
     <div className='container px-4'>
@@ -349,15 +383,28 @@ export const AdminCreateUserPage = () => {
                         <FormItem>
                           <FormLabel className='text-base font-medium'>
                             Employee ID{' '}
-                            <span className='text-muted-foreground'>*</span>
+                            {selectedRole === 'Employee' && (
+                              <span className='text-muted-foreground'>*</span>
+                            )}
+                            {(selectedRole === 'HR' ||
+                              selectedRole === 'Admin') && (
+                              <span className='text-muted-foreground ml-1 text-xs'>
+                                (Optional)
+                              </span>
+                            )}
                           </FormLabel>
                           <FormControl>
                             <div className='relative'>
                               <Hash className='text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2' />
                               <Input
-                                placeholder='XX-XXXXX'
+                                placeholder={
+                                  selectedRole === 'Employee'
+                                    ? 'XX-XXXXX (Required)'
+                                    : 'XX-XXXXX (Optional for HR/Admin)'
+                                }
                                 className='h-12 pl-10 text-base'
                                 {...field}
+                                value={field.value || ''}
                               />
                             </div>
                           </FormControl>
@@ -365,7 +412,6 @@ export const AdminCreateUserPage = () => {
                         </FormItem>
                       )}
                     />
-
                     <FormField
                       control={form.control}
                       name='role'

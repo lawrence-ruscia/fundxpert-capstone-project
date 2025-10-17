@@ -94,7 +94,6 @@ export async function createUserHandler(req: Request, res: Response) {
     if (
       !name ||
       !email ||
-      !employee_id ||
       !department_id ||
       !position_id ||
       !salary ||
@@ -156,7 +155,14 @@ export async function createUserHandler(req: Request, res: Response) {
     res.status(201).json({ user });
   } catch (err) {
     console.error('❌ Error creating user:', err);
-    res.status(500).json({ error: 'Failed to create user' });
+
+    // Pass through friendly known error messages
+    if (err instanceof Error && err.message) {
+      return res.status(400).json({ error: err.message });
+    }
+
+    // Otherwise, fallback to generic
+    res.status(500).json({ error: 'Failed to update user' });
   }
 }
 
@@ -198,6 +204,13 @@ export async function updateUserHandler(req: Request, res: Response) {
     res.json(user);
   } catch (err) {
     console.error('❌ Error updating user:', err);
+
+    // Pass through friendly known error messages
+    if (err instanceof Error && err.message) {
+      return res.status(400).json({ error: err.message });
+    }
+
+    // Otherwise, fallback to generic
     res.status(500).json({ error: 'Failed to update user' });
   }
 }

@@ -59,7 +59,9 @@ export const usersColumns: ColumnDef<User>[] = [
       return (
         <Link to={`/admin/users/${row.original.id}`}>
           <LongText className='max-w-36 text-left font-medium'>
-            {row.getValue('employee_id')}
+            {row.getValue('employee_id') || (
+              <span className='text-muted-foreground italic'>N/A</span>
+            )}
           </LongText>
         </Link>
       );
@@ -128,11 +130,7 @@ export const usersColumns: ColumnDef<User>[] = [
       const Icon = config.icon;
 
       return (
-        <Badge
-          variant='outline'
-          className={cn('gap-1', config.className)}
-          onCli
-        >
+        <Badge variant='outline' className={cn('gap-1', config.className)}>
           <Icon className='h-3 w-3' />
           {role}
         </Badge>

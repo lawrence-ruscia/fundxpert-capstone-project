@@ -109,6 +109,8 @@ export async function createUser(payload: {
   try {
     const hashedPassword = await bcrypt.hash(payload.generatedTempPassword, 10);
     const expiresAt = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000); // 5 days
+    const employeeIdValue =
+      payload.role === 'Employee' ? payload.employee_id : null;
 
     const { rows } = await pool.query(
       `INSERT INTO users 
@@ -120,7 +122,7 @@ export async function createUser(payload: {
       [
         payload.name,
         payload.email,
-        payload.employee_id,
+        employeeIdValue,
         hashedPassword,
         payload.role,
         payload.department_id,
@@ -138,7 +140,11 @@ export async function createUser(payload: {
       if (err.code === '23505') {
         // unique_violation
         if (err.detail.includes('employee_id')) {
-          throw new Error('Employee ID must be unique.');
+          throw new Error(
+            payload.role === 'Employee'
+              ? 'Employee ID must be unique for employees.'
+              : 'Duplicate employee ID detected.'
+          );
         }
         if (err.detail.includes('email')) {
           throw new Error('Email must be unique.');
@@ -182,6 +188,12 @@ export async function updateUser(
     }
 
     const currentUser = currentRows[0];
+
+    // Normalize employee_id based on role
+    if (updates.role && updates.role !== 'Employee') {
+      // If the user is changing to HR/Admin, employee_id can be null
+      updates.employee_id = null;
+    }
 
     // STEP 2: Detect actual changes and sensitive changes
     const fields: string[] = [];
@@ -266,8 +278,12 @@ export async function updateUser(
     if (isPostgresError(err)) {
       if (err.code === '23505') {
         // unique_violation
-        if (err.detail?.includes('employee_id')) {
-          throw new Error('Employee ID must be unique.');
+        if (err.detail.includes('employee_id')) {
+          throw new Error(
+            updates.role === 'Employee'
+              ? 'Employee ID must be unique for employees.'
+              : 'Duplicate employee ID detected.'
+          );
         }
         if (err.detail?.includes('email')) {
           throw new Error('Email must be unique.');
