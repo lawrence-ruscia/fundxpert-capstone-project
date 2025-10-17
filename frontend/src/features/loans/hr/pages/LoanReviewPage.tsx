@@ -56,6 +56,7 @@ import { assignLoanApprovers, getLoanById } from '../services/hrLoanService';
 import { useSearchHR } from '../hooks/useSearchHR';
 import type { Loan } from '../../employee/types/loan';
 import { LoanStatusBadge } from '../../employee/components/LoanStatusBadge';
+import { getErrorMessage } from '@/shared/api/getErrorMessage';
 
 interface SearchHRRecord {
   id: number;
@@ -125,7 +126,7 @@ export const LoanReviewPage = () => {
         setLoan(loanData);
       } catch (error) {
         console.error('Failed to fetch loan:', error);
-        toast.error((error as Error).message ?? 'Failed to load loan details');
+        toast.error(getErrorMessage(error, 'Failed to load loan details'));
       }
     }
     fetchLoan();
@@ -220,10 +221,9 @@ export const LoanReviewPage = () => {
       );
       navigate(`/hr/loans/${loanId}`, { replace: true });
     } catch (error) {
-      console.error('Failed to assign approvers:', error);
+      console.error('Failed to assign approvers:', getErrorMessage(error));
       toast.error(
-        (error as Error).message ??
-          'Failed to assign approvers. Please try again.'
+        getErrorMessage(error, 'Failed to assign approvers. Please try again.')
       );
     } finally {
       setIsSubmitting(false);
