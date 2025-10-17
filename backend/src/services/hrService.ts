@@ -245,7 +245,7 @@ export async function updateEmployee(
     employment_status: 'Active' | 'Resigned' | 'Retired' | 'Terminated';
     date_hired: string;
     generatedTempPassword: string;
-  }>
+  }> 
 ): Promise<UserResponse | null> {
   const client = await pool.connect();
   try {
@@ -384,29 +384,47 @@ export async function resetEmployeePassword(
   userId: number,
   generatedPassword: string
 ): Promise<{ temp_password: string; expires_at: Date } | null> {
-  const hash = await bcrypt.hash(generatedPassword, 10);
-  const expiresAt = new Date(Date.now()); // Immediately
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
 
-  const query = `
-    UPDATE users 
-    SET password_hash = $2, 
-        temp_password = true, 
-        temp_password_expires = $3, 
-        password_last_changed = NOW(),
-        updated_at = NOW()
-    WHERE id = $1
-    RETURNING id;
-  `;
+    const hash = await bcrypt.hash(generatedPassword, 10);
+    const expiresAt = new Date(); // effective immediately
 
-  await pool.query(
-    `INSERT INTO password_history (user_id, password_hash) VALUES ($1, $2)`,
-    [userId, hash]
-  );
+    // Save to password history
+    await client.query(
+      `INSERT INTO password_history (user_id, password_hash) VALUES ($1, $2)`,
+      [userId, hash]
+    );
 
-  const { rows } = await pool.query(query, [userId, hash, expiresAt]);
-  if (!rows[0]) return null;
+    // Reset password and unlock account
+    const { rows } = await client.query(
+      `
+      UPDATE users
+      SET password_hash = $2,
+          temp_password = true,
+          temp_password_expires = $3,
+          password_last_changed = NOW(),
+          updated_at = NOW(),
+          failed_attempts = 0,
+          locked_until = NULL,
+          token_version = token_version + 1
+      WHERE id = $1
+      RETURNING id;
+      `,
+      [userId, hash, expiresAt]
+    );
 
-  return { temp_password: generatedPassword, expires_at: expiresAt };
+    await client.query('COMMIT');
+    if (!rows[0]) return null;
+
+    return { temp_password: generatedPassword, expires_at: expiresAt };
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
 }
 
 export async function updateEmploymentStatus(

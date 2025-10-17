@@ -307,9 +307,11 @@ export async function toggleLockUser(
     }
 
     await client.query(
-      `UPDATE users 
-     SET locked_until = $2, updated_at = NOW() 
-     WHERE id = $1`,
+      `UPDATE users
+       SET locked_until = $2,
+           updated_at = NOW(),
+           failed_attempts = CASE WHEN $2 IS NULL THEN 0 ELSE failed_attempts END
+       WHERE id = $1`,
       [userId, lockUntilDate]
     );
 

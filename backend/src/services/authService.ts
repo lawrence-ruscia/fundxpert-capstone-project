@@ -121,54 +121,69 @@ export async function loginUser(
 }
 
 export async function resetPassword(userId: number, newPassword: string) {
-  // 1. Fetch last N password hashes from history
-  const historyResult = await pool.query(
-    `
-    SELECT password_hash 
-    FROM password_history
-    WHERE user_id = $1
-    ORDER BY changed_at DESC
-    LIMIT $2
-    `,
-    [userId, PASSWORD_HISTORY_LIMIT]
-  );
+  const client = await pool.connect();
 
-  console.log(historyResult.rows);
+  try {
+    await client.query('BEGIN');
 
-  const oldHashes = historyResult.rows.map(row => row.password_hash);
+    // 1. Fetch last N password hashes from history
+    const historyResult = await client.query(
+      `
+      SELECT password_hash 
+      FROM password_history
+      WHERE user_id = $1
+      ORDER BY changed_at DESC
+      LIMIT $2
+      `,
+      [userId, PASSWORD_HISTORY_LIMIT]
+    );
 
-  // 2. Check if new password matches any old password
-  for (const oldHash of oldHashes) {
-    if (await bcrypt.compare(newPassword, oldHash)) {
-      throw new Error('New password must not match last used passwords.');
+    const oldHashes = historyResult.rows.map(row => row.password_hash);
+
+    // 2. Prevent reuse of previous passwords
+    for (const oldHash of oldHashes) {
+      if (await bcrypt.compare(newPassword, oldHash)) {
+        throw new Error('New password must not match last used passwords.');
+      }
     }
+
+    // 3. Hash new password
+    const hash = await bcrypt.hash(newPassword, 10);
+
+    // 4. Update user's password and clear lockout
+    await client.query(
+      `
+      UPDATE users
+      SET password_hash = $1,
+          password_last_changed = NOW(),
+          password_expired = false,
+          temp_password = false,
+          temp_password_expires = NULL,
+          failed_attempts = 0,
+          locked_until = NULL,
+          token_version = token_version + 1,
+          updated_at = NOW()
+      WHERE id = $2
+      `,
+      [hash, userId]
+    );
+
+    // 5. Insert into password history
+    await client.query(
+      `
+      INSERT INTO password_history (user_id, password_hash)
+      VALUES ($1, $2)
+      `,
+      [userId, hash]
+    );
+
+    await client.query('COMMIT');
+
+    return { message: 'Password updated successfully' };
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
   }
-
-  // 3. Hash new password
-  const hash = await bcrypt.hash(newPassword, 10);
-
-  // 4. Update user's password + reset expiration and temp password
-  await pool.query(
-    `
-    UPDATE users
-    SET password_hash = $1, 
-      password_last_changed = NOW(), 
-      password_expired = false,
-      temp_password = false,
-      temp_password_expires = NULL
-    WHERE id = $2
-    `,
-    [hash, userId]
-  );
-
-  // 5. Insert into password history
-  await pool.query(
-    `
-    INSERT INTO password_history (user_id, password_hash)
-    VALUES ($1, $2)
-    `,
-    [userId, hash]
-  );
-
-  return { message: 'Password updated successfully' };
 }

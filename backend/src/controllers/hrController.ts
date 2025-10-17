@@ -246,9 +246,8 @@ export async function resetEmployeePasswordHandler(
     await createNotification(
       user.id,
       'Password Reset',
-      `Your password was successfully reset by an hr. Please log in with your temporary password and change it immediately.`,
-      'warning',
-      { link: '/auth/login' }
+      `Your password was successfully reset by an hr. `,
+      'warning'
     );
 
     // Notify admin who performed action

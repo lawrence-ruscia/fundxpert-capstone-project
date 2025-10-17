@@ -324,23 +324,52 @@ export async function exportUsersExcelController(req: Request, res: Response) {
         statusCell.fill = {
           type: 'pattern',
           pattern: 'solid',
-          fgColor: { argb: 'FFFECACA' },
+          fgColor: { argb: 'FFFECACA' }, // light red
         };
-        statusCell.font = { color: { argb: 'FFDC2626' }, bold: true };
+        statusCell.font = { color: { argb: 'FFDC2626' }, bold: true }; // dark red
       } else if (accountStatus === 'AT RISK') {
         statusCell.fill = {
           type: 'pattern',
           pattern: 'solid',
-          fgColor: { argb: 'FFFED7AA' },
+          fgColor: { argb: 'FFFED7AA' }, // light orange
         };
-        statusCell.font = { color: { argb: 'FFEA580C' }, bold: true };
+        statusCell.font = { color: { argb: 'FFEA580C' }, bold: true }; // dark orange
       } else if (accountStatus === 'TEMP PASSWORD') {
         statusCell.fill = {
           type: 'pattern',
           pattern: 'solid',
-          fgColor: { argb: 'FFFEF3C7' },
+          fgColor: { argb: 'FFFEF3C7' }, // light yellow
         };
-        statusCell.font = { color: { argb: 'FFCA8A04' }, bold: true };
+        statusCell.font = { color: { argb: 'FFCA8A04' }, bold: true }; // amber
+      } else if (accountStatus === 'PASSWORD EXPIRED') {
+        statusCell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFEDE9FE' }, // light purple
+        };
+        statusCell.font = { color: { argb: 'FF7E22CE' }, bold: true }; // deep violet
+      } else if (accountStatus === 'READ-ONLY') {
+        statusCell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFD2E0FA' }, // light blue
+        };
+        statusCell.font = { color: { argb: 'FF1D4ED8' }, bold: true }; // strong blue
+      } else if (accountStatus === 'DEACTIVATED') {
+        statusCell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFF3F4F6' }, // light gray
+        };
+        statusCell.font = { color: { argb: 'FF6B7280' }, bold: true }; // medium gray
+      } else {
+        // ACTIVE
+        statusCell.fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFD1FAE5' }, // light green
+        };
+        statusCell.font = { color: { argb: 'FF166534' }, bold: true }; // deep green
       }
 
       // Highlight 2FA disabled
@@ -813,18 +842,33 @@ export async function exportUsersCSVController(req: Request, res: Response) {
 // ========== HELPER FUNCTIONS ==========
 
 function getAccountStatus(user: User): string {
+  // 1️. Employment-based restrictions first
+  if (['Terminated', 'Resigned'].includes(user.employment_status)) {
+    return 'DEACTIVATED';
+  }
+
+  if (user.employment_status === 'Retired') {
+    return 'READ-ONLY';
+  }
+
+  // 2. System flags (take precedence for active users)
   if (user.locked_until) {
     return 'LOCKED';
   }
+
   if (user.password_expired) {
     return 'PASSWORD EXPIRED';
   }
+
   if (user.temp_password) {
     return 'TEMP PASSWORD';
   }
+
   if (user.failed_attempts >= 3) {
     return 'AT RISK';
   }
+
+  // 3️. Default
   return 'ACTIVE';
 }
 

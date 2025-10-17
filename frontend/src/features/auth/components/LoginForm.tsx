@@ -85,12 +85,12 @@ export const LoginForm = ({ onSubmit }: LoginFormProps) => {
                 <FormLabel className='text-base font-medium'>
                   Password <span className='text-destructive'>*</span>
                 </FormLabel>
-                <Link
+                {/* <Link
                   to='/auth/reset-password'
                   className='text-primary text-sm underline-offset-4 hover:underline'
                 >
                   Forgot password?
-                </Link>
+                </Link> */}
               </div>
               <FormControl>
                 <div className='relative'>

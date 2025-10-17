@@ -195,7 +195,11 @@ export const usersColumns: ColumnDef<User>[] = [
               ? 'border-yellow-200 bg-yellow-50 text-yellow-800'
               : status === 'PASSWORD EXPIRED'
                 ? 'border-purple-200 bg-purple-50 text-purple-800'
-                : 'border-green-200 bg-green-50 text-green-800';
+                : status === 'READ-ONLY'
+                  ? 'border-blue-200 bg-blue-50 text-blue-800'
+                  : status === 'DEACTIVATED'
+                    ? 'border-gray-300 bg-gray-100 text-gray-600'
+                    : 'border-green-200 bg-green-50 text-green-800';
 
       return (
         <Badge variant='outline' className={cn('capitalize', badgeColor)}>
@@ -384,17 +388,32 @@ export const usersColumns: ColumnDef<User>[] = [
 
 // Helper function - same as in export
 function getAccountStatus(user: User): string {
+  // 1️. Employment-based restrictions first
+  if (['Terminated', 'Resigned'].includes(user.employment_status)) {
+    return 'DEACTIVATED';
+  }
+
+  if (user.employment_status === 'Retired') {
+    return 'READ-ONLY';
+  }
+
+  // 2. System flags (take precedence for active users)
   if (user.locked_until) {
     return 'LOCKED';
   }
+
   if (user.password_expired) {
     return 'PASSWORD EXPIRED';
   }
+
   if (user.temp_password) {
     return 'TEMP PASSWORD';
   }
+
   if (user.failed_attempts >= 3) {
     return 'AT RISK';
   }
+
+  // 3️. Default
   return 'ACTIVE';
 }
