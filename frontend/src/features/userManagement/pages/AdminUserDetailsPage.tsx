@@ -44,6 +44,7 @@ import { ToggleLockButton } from '../components/ToggleLockButton';
 import { ChangeRoleDialog } from '../components/ChangeRoleDialog';
 import type { User } from '@/shared/types/user';
 import { formatCurrency } from '@/features/dashboard/employee/utils/formatters';
+import { ChangeEmploymentStatusDialog } from '../components/ChangeEmploymentStatusDialog';
 
 export function AdminUserDetailsPage() {
   const { userId } = useParams<{ userId: string }>();
@@ -55,6 +56,7 @@ export function AdminUserDetailsPage() {
   const [openUnlock, setOpenUnlock] = useState(false);
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [showRoleDialog, setShowRoleDialog] = useState(false);
+  const [showStatusDialog, setShowStatusDialog] = useState(false);
 
   const [autoRefreshEnabled] = usePersistedState(
     'admin-dashboard-auto-refresh',
@@ -580,6 +582,16 @@ export function AdminUserDetailsPage() {
                   <UserCog className='mr-2 h-4 w-4' />
                   Change Role
                 </Button>
+
+                <Button
+                  variant='outline'
+                  className='hover:bg-accent hover:text-accent-foreground w-full justify-start transition-colors'
+                  onClick={() => setShowStatusDialog(true)}
+                  disabled={actionLoading}
+                >
+                  <UserCog className='mr-2 h-4 w-4' />
+                  Change Employment Status
+                </Button>
               </div>
             </CardContent>
           </Card>
@@ -623,6 +635,17 @@ export function AdminUserDetailsPage() {
         userName={user.name}
         employeeId={user.employee_id}
         currentRole={user.role}
+        refresh={refresh}
+      />
+
+      <ChangeEmploymentStatusDialog
+        open={showStatusDialog}
+        onOpenChange={setShowStatusDialog}
+        setActionLoading={setActionLoading}
+        userId={user.id}
+        userName={user.name}
+        employeeId={user.employee_id}
+        currentStatus={user.employment_status}
         refresh={refresh}
       />
     </div>
