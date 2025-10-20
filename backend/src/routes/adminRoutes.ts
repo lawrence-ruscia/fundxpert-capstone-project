@@ -21,6 +21,7 @@ import {
   getDepartmentsHandler,
   getPositionsHandler,
 } from '../controllers/hrController.js';
+import { emailService } from '../services/emailService.js';
 
 export const adminRouter = Router();
 adminRouter.use(authMiddleware('Admin'));
@@ -40,3 +41,19 @@ adminRouter.get('/stats', getAdminStatsHandler);
 adminRouter.get('/departments', getDepartmentsHandler);
 adminRouter.get('/positions', getPositionsHandler);
 adminRouter.post('/reset-2fa', adminReset2FAHandler);
+
+adminRouter.post('/test-email', async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    await emailService.sendEmail({
+      to: email,
+      subject: 'Test Email from FundXpert',
+      html: '<h1>Test Email</h1><p>If you received this, email is working!</p>',
+    });
+
+    res.json({ message: 'Test email sent' });
+  } catch (err) {
+    res.status(500).json({ error: 'Failed to send test email' });
+  }
+});

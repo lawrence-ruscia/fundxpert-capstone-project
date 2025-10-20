@@ -114,13 +114,14 @@ export async function toggleLockUser(
   userId: string,
   locked: boolean,
   duration?: number,
-  lockUntil?: string
+  lockUntil?: Date
 ) {
   const res = await api.post(`/admin/users/${userId}/lock`, {
     locked,
     duration,
     lockUntil,
   });
+
   return res.data;
 }
 

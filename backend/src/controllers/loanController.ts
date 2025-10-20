@@ -67,9 +67,16 @@ export async function applyLoan(req: Request, res: Response) {
       'Loan Request Submitted',
       `Your loan request for ₱${parseFloat(amount).toLocaleString()} has been successfully submitted and is awaiting HR review.`,
       'success',
-      { loanId, link: `/employee/loan/${loanId}` }
+      {
+        loanId,
+        amount: loan.amount,
+        link: `/employee/loans/${loanId}`,
+
+        emailTemplate: 'loan-submitted',
+      }
     );
 
+    // TODO: Notify all HR Assistant
     // NOTIFICATION: Notify all HR users
     await notifyUsersByRole(
       'HR',
@@ -176,7 +183,13 @@ export async function cancelLoanRequestHandler(req: Request, res: Response) {
         'Loan Cancelled',
         `Your loan request has been cancelled by HR. You may submit a new request if necessary.`,
         'warning',
-        { loanId, link: `/employee/loan/${loanId}` }
+        {
+          loanId,
+          link: `/employee/loan/${loanId}`,
+          cancelledBy: 'HR',
+          reason: remarks,
+          emailTemplate: 'loan-cancelled',
+        }
       );
     }
 

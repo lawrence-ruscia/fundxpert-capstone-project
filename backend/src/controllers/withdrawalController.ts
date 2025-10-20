@@ -52,10 +52,17 @@ export async function createWithdrawal(req: Request, res: Response) {
       'Withdrawal Request Submitted',
       `Your withdrawal request has been submitted for HR review.`,
       'success',
-      { withdrawalId, link: `/employee/withdrawals/${withdrawalId}` }
+      {
+        withdrawalId,
+        amount: withdrawal.payout_amount,
+        withdrawalType: withdrawal.request_type,
+        purpose: withdrawal.purpose_detail,
+        link: `/employee/withdrawals/${withdrawalId}`,
+        emailTemplate: 'withdrawal-submitted',
+      }
     );
 
-    // Notify all HR
+    // TODO: Notify all HR Assistant
     await notifyUsersByRole(
       'HR',
       'New Withdrawal Request',

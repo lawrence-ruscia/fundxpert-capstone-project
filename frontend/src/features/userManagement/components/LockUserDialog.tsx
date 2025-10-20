@@ -56,7 +56,10 @@ export function LockUserDialog({
       const durationMinutes =
         duration === 'custom' ? Number(customDuration) : Number(duration);
 
-      await toggleLockUser(userId, true, durationMinutes);
+      const lockUntil = new Date();
+      lockUntil.setMinutes(lockUntil.getMinutes() + durationMinutes);
+
+      await toggleLockUser(userId, true, durationMinutes, lockUntil);
 
       await refresh();
       setActionLoading(false);

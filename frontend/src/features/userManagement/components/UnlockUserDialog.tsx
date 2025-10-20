@@ -31,7 +31,7 @@ export function UnlockUserDialog({
       onOpenChange(false);
       setActionLoading(true);
 
-      await toggleLockUser(userId, false);
+      const res = await toggleLockUser(userId, false);
 
       await refresh();
       setActionLoading(false);

@@ -132,15 +132,19 @@ export async function createUserHandler(req: Request, res: Response) {
       }
     );
 
+    const title = 'Welcome to the System';
+    const message =
+      'Your HR account has been created. Please log in with your temporary password and change it immediately.';
+
     if (user.role === 'HR') {
       // Notify new HR user
-      await createNotification(
-        Number(user.id),
-        'Welcome to the System',
-        `Your HR account has been created. Please log in with your temporary password and change it immediately.`,
-        'info',
-        { link: '/auth/login' }
-      );
+      await createNotification(Number(user.id), title, message, 'info', {
+        username: user.name,
+        title,
+        message,
+        link: '/auth/login',
+        emailTemplate: 'general-notification',
+      });
 
       // Notify all admins
       await notifyUsersByRole(
@@ -317,7 +321,10 @@ export async function toggleLockUserHandler(req: Request, res: Response) {
         : 'Account unlocked',
       'error',
       {
-        lockUntil: result.lockUntil,
+        lockedUntil: result.lockUntil,
+
+        emailTemplate: locked ? 'account-locked' : 'account-unlocked',
+        username: result.username,
       }
     );
 
@@ -329,7 +336,7 @@ export async function toggleLockUserHandler(req: Request, res: Response) {
         'Account Unlocked',
         `Your account is now unlocked. You may log in again.`,
         'success',
-        { link: '/auth/login' }
+        { link: '/auth/login', username: result.username }
       );
 
       // Notify admin who unlocked
@@ -395,7 +402,10 @@ export async function resetUserPasswordHandler(req: Request, res: Response) {
       user.id,
       'Password Reset',
       `Your password was successfully reset by an admin. `,
-      'warning'
+      'warning',
+      {
+        emailTemplate: 'password-reset',
+      }
     );
 
     // Notify admin who performed action
@@ -493,14 +503,15 @@ export async function adminReset2FAHandler(req: Request, res: Response) {
       }
     );
 
+    const title = '2FA Reset by Administrator';
+    const message =
+      'Your two-factor authentication has been reset by an administrator. You will be logged out and required to set up 2FA again on your next login.';
+
     // 4. Create notification for the affected user
-    await createNotification(
-      userId,
-      '2FA Reset by Administrator',
-      'Your two-factor authentication has been reset by an administrator. You will be logged out and required to set up 2FA again on your next login.',
-      'warning',
-      { requiresAction: true }
-    );
+    await createNotification(userId, title, message, 'warning', {
+      requiresAction: true,
+      emailTemplate: '2fa-reset',
+    });
 
     res.json({
       message: `2FA has been reset for ${targetUser.name} (${targetUser.employee_id}). User will be forced to logout and set up 2FA on next login.`,

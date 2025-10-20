@@ -64,8 +64,7 @@ export const markLoanReadyHandler = async (req: Request, res: Response) => {
       { loanId: loan.id, link: `/employee/loans/${loanId}` }
     );
 
-    // NOTIFICATION: Notify HR Officers only
-
+    // TODO: Notify HR Officers only
     await createNotification(
       loan.user_id,
       'Loan Ready for Review',
@@ -119,7 +118,13 @@ export const markLoanIncompleteHandler = async (
       'Loan Application Incomplete',
       `Your loan request requires additional documents. Please upload the missing files to continue.`,
       'warning',
-      { loanId: loan.id, link: `/employee/loans/${loanId}` }
+      {
+        loanId: loan.id,
+        link: `/employee/loans/${loanId}`,
+        reviewedBy: 'HR assistant',
+        remarks,
+        emailTemplate: 'loan-incomplete',
+      }
     );
     res.json({ success: true, loan });
   } catch (err) {

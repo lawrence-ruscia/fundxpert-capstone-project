@@ -298,6 +298,7 @@ export async function updateUser(
 
 interface LockUserResult {
   lockUntil: Date | null;
+  username: string | null;
 }
 
 export async function toggleLockUser(
@@ -324,7 +325,7 @@ export async function toggleLockUser(
 
     await client.query(
       `UPDATE users
-       SET locked_until = $2,
+       SET locked_until = $2::timestamptz,
            updated_at = NOW(),
            failed_attempts = CASE WHEN $2 IS NULL THEN 0 ELSE failed_attempts END
        WHERE id = $1`,
@@ -336,8 +337,13 @@ export async function toggleLockUser(
       [userId]
     );
 
+    const { rows } = await client.query(
+      `SELECT name FROM users WHERE id = $1`,
+      [userId]
+    );
+
     await client.query('COMMIT');
-    return { lockUntil: lockUntilDate };
+    return { lockUntil: lockUntilDate, username: rows[0] };
   } catch (err) {
     await client.query('ROLLBACK');
     throw err;
