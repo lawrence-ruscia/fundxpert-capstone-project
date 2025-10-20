@@ -177,21 +177,20 @@ export async function cancelLoanRequestHandler(req: Request, res: Response) {
     const loanId = loan.id;
 
     //  NOTIFICATION: Notify employee (if cancelled by HR)
-    if (req.user.role === 'HR' && loan.user_id !== userId) {
-      await createNotification(
-        loan.user_id,
-        'Loan Cancelled',
-        `Your loan request has been cancelled by HR. You may submit a new request if necessary.`,
-        'warning',
-        {
-          loanId,
-          link: `/employee/loan/${loanId}`,
-          cancelledBy: 'HR',
-          reason: remarks,
-          emailTemplate: 'loan-cancelled',
-        }
-      );
-    }
+
+    await createNotification(
+      loan.user_id,
+      'Loan Cancelled',
+      `Loan cancelled by Employee. You may submit a new request if necessary.`,
+      'warning',
+      {
+        loanId,
+        link: `/employee/loans/${loanId}`,
+        cancelledBy: 'Employee',
+        reason: remarks,
+        emailTemplate: 'loan-cancelled',
+      }
+    );
 
     res.json({ success: true, message: 'Loan cancelled' });
   } catch (err) {

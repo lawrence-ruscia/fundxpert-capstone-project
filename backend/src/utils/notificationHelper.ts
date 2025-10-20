@@ -59,6 +59,7 @@ async function sendEmailNotification(
   data: NotificationData
 ): Promise<void> {
   try {
+    console.log(`✅ Email sent to user ${userId}`);
     // Get user email
     const { rows } = await pool.query(
       `SELECT email, name FROM users WHERE id = $1`,
