@@ -94,7 +94,7 @@ class EmailService {
     }
 
     try {
-      await this.transporter.sendMail({
+      this.transporter.sendMail({
         from: process.env.EMAIL_FROM || process.env.SMTP_USER,
         to: options.to,
         subject: options.subject,
