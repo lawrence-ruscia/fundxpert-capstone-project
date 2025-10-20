@@ -22,10 +22,13 @@ import PDFDocument from 'pdfkit';
 import ExcelJS from 'exceljs';
 
 import { getEmployeeById } from '../services/hrService.js';
-import path from 'path';
 import { SHEET_PASSWORD } from '../config/security.config.js';
 import { pool } from '../config/db.config.js';
-import { createNotification } from '../utils/notificationHelper.js';
+import {
+  createNotification,
+  getUserDetails,
+  notifyHRByRole,
+} from '../utils/notificationHelper.js';
 import { getUserById, logUserAction } from '../services/adminService.js';
 
 export const markLoanReadyHandler = async (req: Request, res: Response) => {
@@ -37,11 +40,10 @@ export const markLoanReadyHandler = async (req: Request, res: Response) => {
     const assistantId = req.user.id;
 
     const access = await getLoanAccess(assistantId, Number(loanId));
-    if (!access.canMarkReady) {
+    if (!access.canMarkReady)
       return res.status(403).json({
-        error: 'You are not authorized to mark this loan as ready',
+        error: 'You are not authorized to mark this loan as ready for review.',
       });
-    }
 
     const loan = await markLoanReadyForReview(Number(loanId), assistantId);
     if (!loan)
@@ -61,16 +63,30 @@ export const markLoanReadyHandler = async (req: Request, res: Response) => {
       'Loan Under Review',
       `Your loan is now under HR officer review. You'll be notified once a decision is made.`,
       'info',
-      { loanId: loan.id, link: `/employee/loans/${loanId}` }
+      {
+        loanId: loan.id,
+        amount: loan.amount,
+        link: `/employee/loans/${loanId}`,
+        emailTemplate: 'loan-prescreened',
+      }
     );
 
-    // TODO: Notify HR Officers only
-    await createNotification(
-      loan.user_id,
+    const userDetails = await getUserDetails(loan.user_id);
+    // Notify HR Benefits Officers that a new loan is ready for review
+    await notifyHRByRole(
+      'BenefitsOfficer',
       'Loan Ready for Review',
-      `Your loan application #${loanId} has been successfully submitted and is pending review.`,
-      'success',
-      { loanId: loan.id, link: `/hr/loans/${loanId}` }
+      `Loan #${loanId} is ready for HR review. Please log in to process the application.`,
+      'info',
+      {
+        loanId: loan.id,
+        employeeName: userDetails.name,
+        employeeId: userDetails.employee_Id,
+        amount: loan.amount,
+        link: `/hr/loans/${loanId}`,
+        emailTemplate: 'hr-loan-ready',
+      },
+      true // send email as well
     );
 
     res.json({ success: true, loan });
@@ -122,6 +138,7 @@ export const markLoanIncompleteHandler = async (
         loanId: loan.id,
         link: `/employee/loans/${loanId}`,
         reviewedBy: 'HR assistant',
+        amount: loan.amount,
         remarks,
         emailTemplate: 'loan-incomplete',
       }
@@ -216,19 +233,51 @@ export const assignLoanApproversHandler = async (
       });
     }
 
+    // Verify that all selected approvers have correct roles
+    const approverUsers = await Promise.all(
+      approverIds.map(id => getUserById(id))
+    );
+
+    const invalidApprovers = approverUsers.filter(
+      u => !['MgmtApprover', 'DeptHead'].includes(u.hr_role)
+    );
+
+    if (invalidApprovers.length > 0) {
+      const invalidNames = invalidApprovers
+        .map(u => `${u.name} (${u.hr_role})`)
+        .join(', ');
+      return res.status(400).json({
+        error: `Invalid approvers: ${invalidNames}. Only HR Department Head or HR Management Group Approving Officers can be assigned.`,
+      });
+    }
+
     const result = await assignLoanApprovers(Number(loanId), userId, approvers);
 
     await recordLoanHistory(Number(loanId), 'Approvers assigned', req.user.id);
 
     const loan = result.loan;
     const employee = await getUserById(loan.user_id);
+    const { rows: approverRows } = await pool.query(
+      `SELECT name FROM users WHERE id = $1`,
+      [userId]
+    );
+    const assignedBy = approverRows[0]?.name || 'HR Officer';
 
     await createNotification(
       approverIds[0],
       'Loan Approval Required',
       `Loan #${loanId} from ${employee.name} (${employee.employee_id}) is awaiting your approval.`,
       'action_required',
-      { loanId: loan.id, link: `/hr/loans/${loanId}` }
+      {
+        loanId: loan.id,
+        link: `/hr/loans/${loanId}`,
+        emailTemplate: 'hr-loan-pending-approval',
+        employeeName: employee.name,
+        employeeId: employee.employee_id,
+        amount: loan.amount,
+        loanType: loan.loan_type,
+        assignedBy,
+      }
     );
 
     res.json(result);
@@ -340,6 +389,12 @@ export const cancelLoanRequestHandler = async (req: Request, res: Response) => {
     const userId = req.user.id;
     const { remarks } = req.body;
 
+    const access = await getLoanAccess(userId, Number(loanId));
+    if (!access.canCancel)
+      return res.status(403).json({
+        error: 'You are not authorized to cancel this loan.',
+      });
+
     const loan = await cancelLoanRequest(Number(loanId), userId, 'HR', remarks);
     if (!loan)
       return res
@@ -355,7 +410,14 @@ export const cancelLoanRequestHandler = async (req: Request, res: Response) => {
         'Loan Cancelled',
         `Your loan request has been cancelled by HR. You may submit a new request if necessary.`,
         'warning',
-        { loanId: loan.id, link: `/employee/loans/${loanId}` }
+        {
+          loanId: loan.id,
+          link: `/employee/loans/${loanId}`,
+          emailTemplate: 'loan-cancelled',
+          cancelledBy: req.user.hr_role,
+          amount: loan.amount,
+          reason: remarks,
+        }
       );
     }
     res.json({ success: true, loan });

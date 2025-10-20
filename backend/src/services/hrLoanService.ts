@@ -4,6 +4,7 @@ import {
   createNotification,
   notifyUsersByRole,
 } from '../utils/notificationHelper.js';
+import { getUserById } from './adminService.js';
 import { getEmployeeById } from './hrService.js';
 
 /**
@@ -218,7 +219,12 @@ export async function reviewLoanApproval(
         'Loan Request Rejected',
         `Your loan request was not approved. Please check your email or contact HR for details.`,
         'error',
-        { loanId, link: `/employee/loans/${loanId}` }
+        {
+          loanId,
+          link: `/employee/loans/${loanId}`,
+          reason: comments,
+          emailTemplate: 'loan-rejected',
+        }
       );
 
       return { decision };
@@ -226,7 +232,7 @@ export async function reviewLoanApproval(
 
     // 4️. Find next approver in sequence
     const { rows: next } = await client.query(
-      `SELECT approver_id FROM loan_approvals
+      `SELECT approver_id, sequence_order FROM loan_approvals
        WHERE loan_id = $1 AND sequence_order > $2
        ORDER BY sequence_order ASC
        LIMIT 1`,
@@ -249,15 +255,33 @@ export async function reviewLoanApproval(
         [loanId]
       );
 
-      // Notify next approver
+      await client.query('COMMIT');
+
+      // --- Notifications happen AFTER commit ---
       const employee = await getEmployeeById(loan.user_id);
+      const { rows: approverRows } = await pool.query(
+        `SELECT name FROM users WHERE id = $1`,
+        [approverId]
+      );
+      const assignedBy = approverRows[0]?.name || 'HR Officer';
 
       await createNotification(
         next[0].approver_id,
         'Loan Approval Required',
-        `You are the next approver for Loan #${loanId} from ${employee.name}. Please review it in the HR Loan Portal.`,
+        `Loan #${loanId} from ${employee.name} (${employee.employee_id}) is awaiting your approval.`,
         'action_required',
-        { loanId, link: `/hr/loans/${loanId}` }
+        {
+          loanId,
+          link: `/hr/loans/${loanId}/approval`,
+          emailTemplate: 'hr-loan-pending-approval',
+          employeeName: employee.name,
+          employeeId: employee.employee_id,
+          amount: loan.amount,
+          loanType: loan.loan_type,
+          assignedBy,
+          approvalLevel: `Level ${next[0].sequence_order}`,
+        },
+        true // send email notification
       );
     } else {
       // No next approver → all approved
@@ -268,6 +292,8 @@ export async function reviewLoanApproval(
         [loanId]
       );
 
+      await client.query('COMMIT');
+
       // Notify employee
       await createNotification(
         loan.user_id,
@@ -277,7 +303,7 @@ export async function reviewLoanApproval(
         { loanId, link: `/employee/loans/${loanId}` }
       );
 
-      // Notify all HR
+      // Notify all HR officers
       await notifyUsersByRole(
         'HR',
         'Loan Fully Approved',
@@ -341,7 +367,12 @@ export async function releaseLoanToTrustBank(
     'Loan Released',
     `Your approved loan has been released to your registered bank account.`,
     'success',
-    { loanId, link: `/employee/loans/${loanId}` }
+    {
+      loanId,
+      link: `/employee/loans/${loanId}`,
+      amount: loan.amount,
+      emailTemplate: 'loan-released',
+    }
   );
 
   return rows[0] || null;
@@ -509,15 +540,22 @@ export async function getLoanHistory(loanId: number) {
   return rows;
 }
 
-/** Handle Assistant vs Officer context detection */
 export async function getLoanAccess(userId: number, loanId: number) {
+  // Get user info
+  const user = await getUserById(userId);
+  if (!user) throw new Error('User not found.');
+
+  // Load loan details
   const { rows } = await pool.query(
-    `SELECT id, status, officer_id, assistant_id, ready_for_review 
-     FROM loans WHERE id = $1`,
+    `
+    SELECT id, status, ready_for_review, officer_id, assistant_id
+    FROM loans
+    WHERE id = $1
+    `,
     [loanId]
   );
   const loan = rows[0];
-  if (!loan) throw new Error('Loan not found');
+  if (!loan) throw new Error('Loan not found.');
 
   const access = {
     canMarkReady: false,
@@ -529,52 +567,65 @@ export async function getLoanAccess(userId: number, loanId: number) {
     canCancel: false,
   };
 
-  switch (loan.status) {
-    case 'Pending':
-    case 'Incomplete':
-      // Assistant actions
-      if (!loan.assistant_id || loan.assistant_id === userId) {
-        access.canMarkReady = true;
-        access.canMarkIncomplete = true;
-      }
+  const role = user.hr_role;
 
-      // Prevent from res
-      if (loan.ready_for_review) {
-        access.canMarkReady = false;
-        access.canMarkIncomplete = false;
+  switch (role) {
+    // HR Benefits Assistant
+    case 'BenefitsAssistant':
+      if (['Pending', 'Incomplete'].includes(loan.status)) {
+        access.canMarkReady = !loan.ready_for_review;
+        access.canMarkIncomplete = loan.status === 'Pending';
       }
-
-      if (loan.status === 'Incomplete') {
-        access.canMarkIncomplete = false;
-      }
-
-      // Officer can move to review, but NOT the same assistant
-      if (loan.ready_for_review && loan.assistant_id !== userId) {
-        access.canMoveToReview = true;
-      }
-
       access.canCancel = true;
       break;
 
-    case 'UnderReviewOfficer':
-      if (loan.officer_id === userId) {
+    // HR Benefits Officer
+    case 'BenefitsOfficer':
+      if (loan.status === 'Pending' && loan.ready_for_review) {
+        access.canMoveToReview = true;
+      }
+      if (loan.status === 'UnderReviewOfficer') {
         access.canAssignApprovers = true;
         access.canCancel = true;
       }
+      if (loan.status === 'Approved') {
+        access.canRelease = true;
+      }
       break;
 
-    case 'AwaitingApprovals': {
-      const { rows: approverRows } = await pool.query(
-        `SELECT 1 FROM loan_approvals WHERE loan_id = $1 AND approver_id = $2 AND is_current = TRUE`,
-        [loanId, userId]
-      );
-      if (approverRows.length > 0) access.canApprove = true;
+    // HR Department Head (Approving Officer)
+    case 'DeptHead':
+      if (loan.status === 'AwaitingApprovals') {
+        const { rows: approverRows } = await pool.query(
+          `
+          SELECT 1
+          FROM loan_approvals
+          WHERE loan_id = $1 AND approver_id = $2 AND is_current = TRUE
+          `,
+          [loanId, userId]
+        );
+        if (approverRows.length > 0) access.canApprove = true;
+      }
+      break;
+
+    // HR Management Group Approving Officer
+    case 'MgmtApprover':
+      if (loan.status === 'AwaitingApprovals') {
+        const { rows: approverRows } = await pool.query(
+          `
+          SELECT 1
+          FROM loan_approvals
+          WHERE loan_id = $1 AND approver_id = $2 AND is_current = TRUE
+          `,
+          [loanId, userId]
+        );
+        if (approverRows.length > 0) access.canApprove = true;
+      }
+      break;
+
+    // General HR — minimal permissions
+    case 'GeneralHR':
       access.canCancel = true;
-      break;
-    }
-
-    case 'Approved':
-      if (loan.officer_id === userId) access.canRelease = true;
       break;
   }
 

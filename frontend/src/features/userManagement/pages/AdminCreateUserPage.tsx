@@ -80,11 +80,13 @@ const createEmployeeInputSchema = z
           message: 'Please enter both first name and last name',
         }
       ),
-    email: z
-      .email('Invalid email address')
-      .refine(val => val.endsWith('@metrobank.com.ph'), {
-        message: 'Email must use the @metrobank.com.ph domain',
-      }),
+    email: z.email(),
+    // IMPORTANT: Temporarily remove company email constraint
+    // email: z
+    //   .email('Invalid email address')
+    //   .refine(val => val.endsWith('@metrobank.com.ph'), {
+    //     message: 'Email must use the @metrobank.com.ph domain',
+    //   }),
     employee_id: z.string().optional(), // Make it optional initially
     role: z.enum(['Employee', 'HR', 'Admin'], {
       required_error: 'Please select a role',

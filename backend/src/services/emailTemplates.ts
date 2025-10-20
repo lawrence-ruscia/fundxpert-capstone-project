@@ -15,7 +15,7 @@ function getBaseTemplate(content: string): string {
   return `
     <!DOCTYPE html>
     <html>
-    <head>
+    <head> 
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
       <title>${APP_NAME} Notification</title>
@@ -1176,22 +1176,6 @@ export function getEmailTemplate(
         <strong>⚠️ Your Approval Required:</strong><br>
         This loan application requires your review and approval decision. Please review the application details, supporting documents, and employee eligibility before making your decision.
       </div>
-
-      ${
-        data.employeeDetails
-          ? `
-      <div style="background: #F5F7FA; padding: 18px; border-radius: 6px; margin: 20px 0; border: 1px solid #E5E9F0;">
-        <strong style="color: #0033A0;">👤 Employee Information:</strong>
-        <div style="margin-top: 12px; line-height: 1.8; color: #495057;">
-          ${data.employeeDetails.department ? `<div>Department: <strong>${data.employeeDetails.department}</strong></div>` : ''}
-          ${data.employeeDetails.position ? `<div>Position: <strong>${data.employeeDetails.position}</strong></div>` : ''}
-          ${data.employeeDetails.tenure ? `<div>Tenure: <strong>${data.employeeDetails.tenure}</strong></div>` : ''}
-          ${data.employeeDetails.outstandingLoans !== undefined ? `<div>Outstanding Loans: <strong>${data.employeeDetails.outstandingLoans}</strong></div>` : ''}
-        </div>
-      </div>
-      `
-          : ''
-      }
 
       <a href="${FRONTEND_URL}/hr/loans/${data.loanId}/approval" class="button">Review & Approve/Reject</a>
       

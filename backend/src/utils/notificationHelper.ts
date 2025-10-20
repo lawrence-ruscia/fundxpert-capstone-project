@@ -50,7 +50,7 @@ export async function createNotification(
   }
 }
 
-/** 
+/**
  * Send email notification to user
  */
 async function sendEmailNotification(
@@ -110,6 +110,33 @@ export async function notifyUsersByRole(
     }
   } catch (err) {
     console.error('❌ Notify users by role error:', err);
+  }
+}
+
+/**
+ * Helper to notify all HR users by HR sub-role
+ */
+export async function notifyHRByRole(
+  hrRole: 'BenefitsOfficer' | 'DeptHead' | 'MgmtApprover',
+  title: string,
+  message: string,
+  type: NotificationType,
+  data?: NotificationData,
+  sendEmail = false
+): Promise<void> {
+  try {
+    const { rows } = await pool.query(
+      `SELECT id FROM users WHERE hr_role = $1 AND role = 'HR'`,
+      [hrRole]
+    );
+
+    for (const user of rows) {
+      await createNotification(user.id, title, message, type, data, sendEmail);
+    }
+
+    console.log(`📢 Notified ${rows.length} HR users with role ${hrRole}`);
+  } catch (err) {
+    console.error('❌ notifyHRByRole error:', err);
   }
 }
 

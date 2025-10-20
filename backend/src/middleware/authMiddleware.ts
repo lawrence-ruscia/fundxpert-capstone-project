@@ -8,6 +8,12 @@ export type UserRequest = {
   id: number;
   name: string;
   role: Role;
+  hr_role:
+    | 'BenefitsAssistant'
+    | 'BenefitsOfficer'
+    | 'DeptHead'
+    | 'MgmtApprover'
+    | 'GeneralHR';
 };
 
 export function authMiddleware(requiredRole?: string) {
@@ -28,7 +34,7 @@ export function authMiddleware(requiredRole?: string) {
 
       // Fetch user from DB (enrich context)
       const { rows } = await pool.query(
-        `SELECT id, name, email, role, password_last_changed, password_expired, token_version
+        `SELECT id, name, email, role, hr_role, password_last_changed, password_expired, token_version
          FROM users
          WHERE id = $1`,
         [decoded.id]
@@ -61,6 +67,7 @@ export function authMiddleware(requiredRole?: string) {
         id: user.id,
         name: user.name,
         role: user.role,
+        hr_role: user.hr_role,
       };
 
       next();
