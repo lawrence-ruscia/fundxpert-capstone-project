@@ -61,7 +61,7 @@ import { getErrorMessage } from '@/shared/api/getErrorMessage';
 interface SearchHRRecord {
   id: number;
   name: string;
-  employee_id: string;
+  employee_id?: string | null;
   department: string;
   position: string;
   email: string;
@@ -72,7 +72,7 @@ const approverSchema = z.object({
   approver_id: z.number().min(1, 'Approver ID is required'),
   sequence_order: z.number().min(1, 'Sequence must be at least 1'),
   approver_name: z.string(),
-  approver_employee_id: z.string(),
+  approver_employee_id: z.string().nullish(),
   approver_department: z.string(),
   approver_position: z.string(),
 });
@@ -173,7 +173,7 @@ export const LoanReviewPage = () => {
       approver_id: selectedHR.id,
       sequence_order: fields.length + 1,
       approver_name: selectedHR.name,
-      approver_employee_id: selectedHR.employee_id,
+      approver_employee_id: selectedHR.employee_id ?? '',
       approver_department: selectedHR.department,
       approver_position: selectedHR.position,
     });
@@ -200,6 +200,7 @@ export const LoanReviewPage = () => {
   };
 
   const onSubmit = async (data: AssignApproversFormData) => {
+    console.log('Form submitted', data);
     if (data.approvers.length === 0) {
       toast.error('Please add at least one approver');
       return;
@@ -258,7 +259,21 @@ export const LoanReviewPage = () => {
         {/* Main Form */}
         <div className='lg:col-span-2'>
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className='space-y-6'>
+            <form
+              onSubmit={e => {
+                console.log('Form onSubmit event fired', e);
+                form.handleSubmit(
+                  data => {
+                    console.log('Validation passed, calling onSubmit', data);
+                    onSubmit(data);
+                  },
+                  errors => {
+                    console.log('Validation FAILED', errors);
+                  }
+                )(e);
+              }}
+              className='space-y-6'
+            >
               {/* Loan Summary */}
               {loan && (
                 <Card>
@@ -555,6 +570,7 @@ export const LoanReviewPage = () => {
                   type='submit'
                   disabled={isSubmitting || fields.length === 0}
                   className='h-12 px-8 text-base sm:w-auto'
+                  onClick={() => console.log('clicked')}
                 >
                   {isSubmitting ? (
                     <>

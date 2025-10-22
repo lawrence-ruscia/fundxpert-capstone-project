@@ -97,7 +97,7 @@ export async function assignLoanApprovers(
 
     // Validate ownership — must match the officer who moved to review
     const { rows: loanRows } = await client.query(
-      `SELECT officer_id, assistant_id, status FROM loans WHERE id = $1`,
+      `SELECT id, user_id, amount, officer_id, assistant_id, status FROM loans WHERE id = $1`,
       [loanId]
     );
 

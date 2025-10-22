@@ -257,6 +257,13 @@ export const assignLoanApproversHandler = async (
 
     const loan = result.loan;
     const employee = await getUserById(loan.user_id);
+
+    if (!employee) {
+      return res.status(404).json({
+        error: 'Employee associated with this loan not found',
+      });
+    }
+
     const { rows: approverRows } = await pool.query(
       `SELECT name FROM users WHERE id = $1`,
       [userId]
