@@ -58,35 +58,38 @@ async function sendEmailNotification(
   template: EmailTemplate,
   data: NotificationData
 ): Promise<void> {
-  try {
-    // Get user email
-    const { rows } = await pool.query(
-      `SELECT email, name FROM users WHERE id = $1`,
-      [userId]
-    );
+  // Fire and forget - don't block the response
+  (async () => {
+    try {
+      // Get user email
+      const { rows } = await pool.query(
+        `SELECT email, name FROM users WHERE id = $1`,
+        [userId]
+      );
 
-    if (rows.length === 0 || !rows[0].email) {
-      console.warn(`⚠️ No email found for user ${userId}`);
-      return;
+      if (rows.length === 0 || !rows[0].email) {
+        console.warn(`⚠️ No email found for user ${userId}`);
+        return;
+      }
+
+      const user = rows[0];
+
+      // Get email template
+      const { subject, html } = getEmailTemplate(template, {
+        userName: user.name,
+        ...data,
+      });
+
+      // Send email
+      await emailService.sendEmail({
+        to: user.email,
+        subject,
+        html,
+      });
+    } catch (err) {
+      console.error('❌ Send email notification error:', err);
     }
-
-    const user = rows[0];
-
-    // Get email template
-    const { subject, html } = getEmailTemplate(template, {
-      userName: user.name,
-      ...data,
-    });
-
-    // Send email
-    await emailService.sendEmail({
-      to: user.email,
-      subject,
-      html,
-    });
-  } catch (err) {
-    console.error('❌ Send email notification error:', err);
-  }
+  })();
 }
 
 /**

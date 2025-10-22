@@ -1,5 +1,4 @@
-import nodemailer from 'nodemailer';
-import type { Transporter } from 'nodemailer';
+import { Resend } from 'resend';
 
 // Email template types
 export type EmailTemplate =
@@ -46,7 +45,7 @@ interface EmailOptions {
 }
 
 class EmailService {
-  private transporter: Transporter | null = null;
+  private resend: Resend | null = null;
   private isConfigured = false;
 
   constructor() {
@@ -55,32 +54,19 @@ class EmailService {
 
   private initialize() {
     try {
-      // Check if email is configured
-      if (
-        !process.env.SMTP_HOST ||
-        !process.env.SMTP_USER ||
-        !process.env.SMTP_PASSWORD
-      ) {
+      // Check if Resend API key is configured
+      if (!process.env.RESEND_API_KEY) {
         console.warn(
-          '⚠️ Email service not configured. Email notifications will be disabled.'
+          '⚠️ RESEND_API_KEY not configured. Email notifications will be disabled.'
         );
         return;
       }
 
-      this.transporter = nodemailer.createTransport({
-        host: process.env.SMTP_HOST,
-        port: parseInt(process.env.SMTP_PORT || '587'),
-        secure: process.env.SMTP_SECURE === 'true',
-        auth: {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASSWORD,
-        },
-      });
-
+      this.resend = new Resend(process.env.RESEND_API_KEY);
       this.isConfigured = true;
-      console.log('✅ Email service initialized');
+      console.log('✅ Resend email service initialized');
     } catch (error) {
-      console.error('❌ Failed to initialize email service:', error);
+      console.error('❌ Failed to initialize Resend email service:', error);
     }
   }
 
@@ -88,21 +74,31 @@ class EmailService {
    * Send email
    */
   async sendEmail(options: EmailOptions): Promise<boolean> {
-    if (!this.isConfigured || !this.transporter) {
+    if (!this.isConfigured || !this.resend) {
       console.warn('⚠️ Email service not configured. Skipping email send.');
       return false;
     }
 
     try {
-      this.transporter.sendMail({
-        from: process.env.EMAIL_FROM || process.env.SMTP_USER,
+      console.log(`📧 Sending email to ${options.to}: ${options.subject}`);
+
+      const { data, error } = await this.resend.emails.send({
+        from: process.env.EMAIL_FROM || 'FundXpert <onboarding@resend.dev>',
         to: options.to,
         subject: options.subject,
         html: options.html,
-        text: options.text || this.stripHtml(options.html),
       });
 
-      console.log(`✅ Email sent to ${options.to}: ${options.subject}`);
+      if (error) {
+        console.error('❌ Resend API error:', error);
+        return false;
+      }
+
+      console.log(`✅ Email sent successfully!`, {
+        id: data?.id,
+        to: options.to,
+      });
+
       return true;
     } catch (error) {
       console.error('❌ Failed to send email:', error);
@@ -114,28 +110,19 @@ class EmailService {
    * Verify email configuration
    */
   async verifyConnection(): Promise<boolean> {
-    if (!this.isConfigured || !this.transporter) {
+    if (!this.isConfigured || !this.resend) {
+      console.warn('⚠️ Resend not configured');
       return false;
     }
 
     try {
-      await this.transporter.verify();
-      console.log('✅ Email service connection verified');
+      // Resend doesn't have a verify endpoint, so we just check if it's initialized
+      console.log('✅ Resend email service ready');
       return true;
     } catch (error) {
-      console.error('❌ Email service connection failed:', error);
+      console.error('❌ Resend verification failed:', error);
       return false;
     }
-  }
-
-  /**
-   * Strip HTML tags for plain text version
-   */
-  private stripHtml(html: string): string {
-    return html
-      .replace(/<[^>]*>/g, '')
-      .replace(/\s+/g, ' ')
-      .trim();
   }
 }
 
