@@ -65,10 +65,10 @@ export const HRDashboardPage = () => {
     setIsRefreshing(false);
   };
 
-  if (loading && !data && !user)
+  if (loading && (!data || !user))
     return <LoadingSpinner text='Loading hr dashboard...' />;
   if (error) return <NetworkError message={error} />;
-  if (!data)
+  if (!data || !user)
     return (
       <DataError
         title='Failed to load hr dashboard'
