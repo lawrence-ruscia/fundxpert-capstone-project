@@ -1,4 +1,4 @@
-import { Ellipsis, User } from 'lucide-react';
+import { Ellipsis, PiggyBank, User } from 'lucide-react';
 import { type Row } from '@tanstack/react-table';
 import { UserPen } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -36,6 +36,19 @@ export function ContributionsTableRowActions({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align='end' className='w-[160px]'>
+          <DropdownMenuItem
+            onClick={() => {
+              setCurrentRow(row.original);
+              setOpen('view');
+              navigate(`/hr/employees/${row.original.user_id}/contributions`);
+            }}
+          >
+            Contributions
+            <DropdownMenuShortcut>
+              <PiggyBank size={16} />
+            </DropdownMenuShortcut>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
           <DropdownMenuItem
             onClick={() => {
               setCurrentRow(row.original);

@@ -41,7 +41,7 @@ export const allContributionsColumns: ColumnDef<Contribution>[] = [
     ),
     cell: ({ row }) => {
       return (
-        <Link to={`/hr/contributions/${row.original.id}/edit`}>
+        <Link to={`/hr/employees/${row.original.user_id}/contributions`}>
           <LongText className='max-w-36 text-left font-medium'>
             {row.getValue('id')}
           </LongText>
