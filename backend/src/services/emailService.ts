@@ -1,4 +1,4 @@
-import { Resend } from 'resend';
+import * as SibApiV3Sdk from '@sendinblue/client';
 
 // Email template types
 export type EmailTemplate =
@@ -45,7 +45,7 @@ interface EmailOptions {
 }
 
 class EmailService {
-  private resend: Resend | null = null;
+  private apiInstance: any = null;
   private isConfigured = false;
 
   constructor() {
@@ -54,19 +54,21 @@ class EmailService {
 
   private initialize() {
     try {
-      // Check if Resend API key is configured
-      if (!process.env.RESEND_API_KEY) {
+      if (!process.env.BREVO_API_KEY) {
         console.warn(
-          '⚠️ RESEND_API_KEY not configured. Email notifications will be disabled.'
+          '⚠️ BREVO_API_KEY not configured. Email notifications will be disabled.'
         );
         return;
       }
 
-      this.resend = new Resend(process.env.RESEND_API_KEY);
+      this.apiInstance = new SibApiV3Sdk.TransactionalEmailsApi();
+      const apiKey = this.apiInstance.authentications['apiKey'];
+      apiKey.apiKey = process.env.BREVO_API_KEY;
+
       this.isConfigured = true;
-      console.log('✅ Resend email service initialized');
+      console.log('✅ Brevo email service initialized');
     } catch (error) {
-      console.error('❌ Failed to initialize Resend email service:', error);
+      console.error('❌ Failed to initialize Brevo email service:', error);
     }
   }
 
@@ -74,7 +76,7 @@ class EmailService {
    * Send email
    */
   async sendEmail(options: EmailOptions): Promise<boolean> {
-    if (!this.isConfigured || !this.resend) {
+    if (!this.isConfigured || !this.apiInstance) {
       console.warn('⚠️ Email service not configured. Skipping email send.');
       return false;
     }
@@ -82,20 +84,24 @@ class EmailService {
     try {
       console.log(`📧 Sending email to ${options.to}: ${options.subject}`);
 
-      const { data, error } = await this.resend.emails.send({
-        from: process.env.EMAIL_FROM || 'FundXpert <onboarding@resend.dev>',
-        to: options.to,
-        subject: options.subject,
-        html: options.html,
-      });
+      const sendSmtpEmail = new SibApiV3Sdk.SendSmtpEmail();
 
-      if (error) {
-        console.error('❌ Resend API error:', error);
-        return false;
-      }
+      // Sender - no domain needed!
+      sendSmtpEmail.sender = {
+        email: process.env.EMAIL_FROM_ADDRESS || 'noreply@fundxpert.com',
+        name: process.env.APP_NAME || 'FundXpert',
+      };
 
-      console.log(`✅ Email sent successfully!`, {
-        id: data?.id,
+      // Recipient - can be ANY email!
+      sendSmtpEmail.to = [{ email: options.to }];
+
+      sendSmtpEmail.subject = options.subject;
+      sendSmtpEmail.htmlContent = options.html;
+
+      const result = await this.apiInstance.sendTransacEmail(sendSmtpEmail);
+
+      console.log(`Email sent successfully!`, {
+        messageId: result.messageId,
         to: options.to,
       });
 
@@ -110,19 +116,12 @@ class EmailService {
    * Verify email configuration
    */
   async verifyConnection(): Promise<boolean> {
-    if (!this.isConfigured || !this.resend) {
-      console.warn('⚠️ Resend not configured');
+    if (!this.isConfigured) {
+      console.warn('⚠️ Brevo not configured');
       return false;
     }
-
-    try {
-      // Resend doesn't have a verify endpoint, so we just check if it's initialized
-      console.log('✅ Resend email service ready');
-      return true;
-    } catch (error) {
-      console.error('❌ Resend verification failed:', error);
-      return false;
-    }
+    console.log('✅ Brevo email service ready');
+    return true;
   }
 }
 

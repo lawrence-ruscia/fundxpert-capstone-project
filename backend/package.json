@@ -16,6 +16,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@sendinblue/client": "^3.3.1",
     "@supabase/supabase-js": "^2.57.4",
     "bcryptjs": "^3.0.2",
     "cookie-parser": "^1.4.7",
@@ -30,7 +31,6 @@
     "pdfkit": "^0.17.2",
     "pg": "^8.16.3",
     "qrcode": "^1.5.4",
-    "resend": "^6.2.2",
     "speakeasy": "^2.0.0",
     "zod": "^4.1.5"
   },
