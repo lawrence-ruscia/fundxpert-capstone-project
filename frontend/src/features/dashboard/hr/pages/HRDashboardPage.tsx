@@ -26,8 +26,10 @@ import type { HRContributionPeriod } from '../types/hrDashboardTypes';
 import { usePersistedState } from '@/shared/hooks/usePersistedState';
 import { DataError } from '@/shared/components/DataError';
 import { useSmartPolling } from '@/shared/hooks/useSmartPolling';
+import { useAuth } from '@/features/auth/context/AuthContext';
 
 export const HRDashboardPage = () => {
+  const { user } = useAuth();
   const [autoRefreshEnabled, setAutoRefreshEnabled] = usePersistedState(
     'hr-dashboard-auto-refresh',
     true // default value
@@ -63,7 +65,7 @@ export const HRDashboardPage = () => {
     setIsRefreshing(false);
   };
 
-  if (loading && !data)
+  if (loading && !data && !user)
     return <LoadingSpinner text='Loading hr dashboard...' />;
   if (error) return <NetworkError message={error} />;
   if (!data)
@@ -200,7 +202,12 @@ export const HRDashboardPage = () => {
         </div>
 
         {/* Pending Actions */}
-        <AssignedLoans assignedLoans={assignedLoans} />
+        {user && (
+          <AssignedLoans
+            assignedLoans={assignedLoans}
+            userHrRole={user.hr_role}
+          />
+        )}
       </div>
     </div>
   );

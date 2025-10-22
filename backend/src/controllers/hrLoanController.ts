@@ -1976,48 +1976,128 @@ export async function getAssignedLoans(req: Request, res: Response) {
       return res.status(401).json({ error: 'Unauthorized' });
 
     const userId = req.user.id;
+    const userHrRole = req.user.hr_role; // Get the HR role from the authenticated user
 
-    // Query for assistant role
-    const assistantQuery = `
-  SELECT l.*, u.employee_id
-  FROM loans l
-  LEFT JOIN users u ON l.user_id = u.id
-  WHERE l.assistant_id = $1
-  ORDER BY l.created_at DESC
-`;
+    // Define which queries to run based on HR role
+    const roleQueries: Record<string, boolean> = {
+      assistant: false,
+      officer: false,
+      approver: false,
+    };
 
-    // Query for officer role
-    const officerQuery = `
-  SELECT l.*, u.employee_id
-  FROM loans l
-  LEFT JOIN users u ON l.user_id = u.id
-  WHERE l.officer_id = $1
-  ORDER BY l.created_at DESC
-`;
+    // Map HR roles to query permissions
+    switch (userHrRole) {
+      case 'BenefitsAssistant':
+        roleQueries.assistant = true;
+        break;
+      case 'BenefitsOfficer':
+        roleQueries.officer = true;
+        break;
+      case 'MgmtApprover':
+        roleQueries.approver = true;
+        break;
+      case 'GeneralHR':
+        // General HR has access to all queries
+        roleQueries.assistant = true;
+        roleQueries.officer = true;
+        roleQueries.approver = true;
+        break;
+      case 'DeptHead':
+        // Department heads might need a separate query
+        // For now, giving them approver access
+        roleQueries.approver = true;
+        break;
+      default:
+        return res.status(403).json({ error: 'Invalid HR role' });
+    }
 
-    // Query for approver role
-    const approverQuery = `
-  SELECT l.*, u.employee_id
-  FROM loans l
-  JOIN loan_approvals la ON la.loan_id = l.id
-  LEFT JOIN users u ON l.user_id = u.id
-  WHERE la.approver_id = $1
-  ORDER BY l.created_at DESC
-`;
+    const result: {
+      assistant?: unknown[];
+      officer?: unknown[];
+      approver?: unknown[];
+    } = {};
 
-    // Execute all queries in parallel
-    const [assistantResult, officerResult, approverResult] = await Promise.all([
-      pool.query(assistantQuery, [userId]),
-      pool.query(officerQuery, [userId]),
-      pool.query(approverQuery, [userId]),
-    ]);
+    // Query for assistant role - loans assigned for pre-screening
+    if (roleQueries.assistant) {
+      const assistantQuery = `
+        SELECT 
+          l.id,
+          l.amount,
+          l.status,
+          l.purpose_category,
+          l.repayment_term_months,
+          l.created_at,
+          l.updated_at,
+          u.employee_id,
+          u.name as employee_name
+        FROM loans l
+        LEFT JOIN users u ON l.user_id = u.id
+        WHERE l.assistant_id = $1
+          AND l.status IN ('Pending', 'Incomplete')
+          AND l.ready_for_review = FALSE
+        ORDER BY l.created_at ASC
+      `;
+      const assistantResult = await pool.query(assistantQuery, [userId]);
+      result.assistant = assistantResult.rows;
+    }
 
-    // Return structured object with loans for each role
-    res.json({
-      assistant: assistantResult.rows,
-      officer: officerResult.rows,
-      approver: approverResult.rows,
-    });
+    // Query for officer role - loans ready for review after assistant pre-screen
+    if (roleQueries.officer) {
+      const officerQuery = `
+        SELECT 
+          l.id,
+          l.amount,
+          l.status,
+          l.purpose_category,
+          l.repayment_term_months,
+          l.ready_for_review,
+          l.trust_bank_confirmed,
+          l.created_at,
+          l.updated_at,
+          u.employee_id,
+          u.name as employee_name
+        FROM loans l
+        LEFT JOIN users u ON l.user_id = u.id
+        WHERE l.officer_id = $1
+          AND l.status IN ('Pending', 'UnderReviewOfficer')
+          AND (l.ready_for_review = TRUE OR l.status = 'UnderReviewOfficer')
+        ORDER BY l.created_at ASC
+      `;
+      const officerResult = await pool.query(officerQuery, [userId]);
+      result.officer = officerResult.rows;
+    }
+
+    // Query for approver role - loans in approval workflow
+    if (roleQueries.approver) {
+      const approverQuery = `
+        SELECT DISTINCT
+          l.id,
+          l.amount,
+          l.status,
+          l.purpose_category,
+          l.repayment_term_months,
+          l.created_at,
+          l.updated_at,
+          u.employee_id,
+          u.name as employee_name,
+          la.sequence_order,
+          la.is_current,
+          la.status as approval_status
+        FROM loans l
+        JOIN loan_approvals la ON la.loan_id = l.id
+        LEFT JOIN users u ON l.user_id = u.id
+        WHERE la.approver_id = $1
+          AND la.status = 'Pending'
+          AND la.is_current = TRUE
+          AND l.status IN ('AwaitingApprovals', 'PendingNextApproval')
+        ORDER BY l.created_at ASC
+      `;
+      const approverResult = await pool.query(approverQuery, [userId]);
+      result.approver = approverResult.rows;
+    }
+
+    // Return structured object with loans for each accessible category
+    res.json(result);
   } catch (err) {
     console.error('❌ Error fetching assigned loans:', err);
     res.status(500).json({ error: 'Failed to fetch assigned loans' });
