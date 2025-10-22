@@ -89,6 +89,7 @@ export async function createUserHandler(req: Request, res: Response) {
       employment_status,
       date_hired,
       role,
+      hr_role,
       generatedTempPassword,
     } = req.body;
     if (
@@ -100,6 +101,7 @@ export async function createUserHandler(req: Request, res: Response) {
       !employment_status ||
       !date_hired ||
       !role ||
+      !hr_role ||
       !generatedTempPassword
     ) {
       return res.status(400).json({ error: 'Missing required fields' });
@@ -115,6 +117,7 @@ export async function createUserHandler(req: Request, res: Response) {
       employment_status,
       date_hired,
       role,
+      hr_role,
       generatedTempPassword,
     })) as Partial<User>;
 

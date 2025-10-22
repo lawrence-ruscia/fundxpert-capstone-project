@@ -6,7 +6,7 @@ import type {
   ResetPassResponse,
 } from '@/features/employeeManagement/types/employeeTypes';
 import { api } from '@/shared/api/api';
-import type { Role } from '@/shared/types/user';
+import type { HRRole, Role } from '@/shared/types/user';
 
 export const createUser = async (payload: {
   name: string;
@@ -18,6 +18,7 @@ export const createUser = async (payload: {
   employment_status: string;
   date_hired: string;
   role: string;
+  hr_role: string;
   generatedTempPassword: string;
 }) => {
   console.log(JSON.stringify(payload));
@@ -33,6 +34,7 @@ export const updateUser = async (
     email: string;
     employee_id: string;
     role: Role;
+    hr_role: HRRole;
     department_id: number;
     position_id: number;
     salary: number;

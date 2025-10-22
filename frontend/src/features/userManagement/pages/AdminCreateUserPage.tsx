@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Form,
   FormControl,
+  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -91,6 +92,15 @@ const createEmployeeInputSchema = z
     role: z.enum(['Employee', 'HR', 'Admin'], {
       required_error: 'Please select a role',
     }),
+    hr_role: z
+      .enum([
+        'BenefitsAssistant',
+        'BenefitsOfficer',
+        'DeptHead',
+        'MgmtApprover',
+        'GeneralHR',
+      ])
+      .optional(),
     department_id: z.string().min(1, 'Please select a department'),
     position_id: z.string().min(1, 'Please select a position'),
     salary: z.union([z.string(), z.number()]).refine(val => {
@@ -134,6 +144,17 @@ const createEmployeeInputSchema = z
         });
       }
     }
+
+    // Conditional validation: hr_role is required when role is HR
+    if (data.role === 'HR') {
+      if (!data.hr_role) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'HR role is required when role is set to HR',
+          path: ['hr_role'],
+        });
+      }
+    }
   });
 
 // Output schema for API submission (transforms to correct types)
@@ -141,6 +162,7 @@ const createEmployeeOutputSchema = createEmployeeInputSchema.transform(
   data => ({
     ...data,
     role: data.role,
+    hr_role: data.hr_role,
     // Send null if employee_id is empty for HR/Admin roles
     employee_id:
       data.employee_id && data.employee_id.trim() !== ''
@@ -188,6 +210,7 @@ export const AdminCreateUserPage = () => {
       email: '',
       employee_id: '',
       role: undefined,
+      hr_role: undefined,
       department_id: '',
       position_id: '',
       salary: '',
@@ -219,6 +242,7 @@ export const AdminCreateUserPage = () => {
         email: transformedData.email,
         employee_id: transformedData.employee_id,
         role: transformedData.role,
+        hr_role: transformedData.hr_role,
         department_id: transformedData.department_id,
         position_id: transformedData.position_id,
         salary: transformedData.salary,
@@ -373,6 +397,78 @@ export const AdminCreateUserPage = () => {
                               />
                             </div>
                           </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name='hr_role'
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className='text-base font-medium'>
+                            HR Role{' '}
+                            {selectedRole === 'HR' && (
+                              <span className='text-muted-foreground'>*</span>
+                            )}
+                          </FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value || ''}
+                            disabled={selectedRole !== 'HR'}
+                          >
+                            <FormControl>
+                              <SelectTrigger
+                                className={cn(
+                                  'h-12 w-full text-base',
+                                  selectedRole !== 'HR' &&
+                                    'bg-muted cursor-not-allowed'
+                                )}
+                              >
+                                <SelectValue
+                                  placeholder={
+                                    selectedRole === 'HR'
+                                      ? 'Select HR role'
+                                      : 'Only available for HR role'
+                                  }
+                                />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem
+                                value='BenefitsAssistant'
+                                className='text-base'
+                              >
+                                Benefits Assistant
+                              </SelectItem>
+                              <SelectItem
+                                value='BenefitsOfficer'
+                                className='text-base'
+                              >
+                                Benefits Officer
+                              </SelectItem>
+                              <SelectItem
+                                value='DeptHead'
+                                className='text-base'
+                              >
+                                Department Head
+                              </SelectItem>
+                              <SelectItem
+                                value='MgmtApprover'
+                                className='text-base'
+                              >
+                                Management Approver
+                              </SelectItem>
+                              <SelectItem
+                                value='GeneralHR'
+                                className='text-base'
+                              >
+                                General HR
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+
                           <FormMessage />
                         </FormItem>
                       )}

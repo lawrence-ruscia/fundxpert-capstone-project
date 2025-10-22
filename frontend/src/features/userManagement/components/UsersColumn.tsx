@@ -144,6 +144,65 @@ export const usersColumns: ColumnDef<User>[] = [
   },
 
   {
+    accessorKey: 'hr_role',
+    header: ({ column }) => (
+      <DataTableColumnHeader column={column} title='HR Role' />
+    ),
+    cell: ({ row }) => {
+      const hrRole = row.getValue('hr_role') as string | null;
+      const userRole = row.getValue('role') as string;
+
+      // Only show HR role badge if user is HR and has an HR role assigned
+      if (userRole !== 'HR' || !hrRole) {
+        return <span className='text-muted-foreground text-xs'>—</span>;
+      }
+
+      const hrRoleConfig = {
+        BenefitsAssistant: {
+          label: 'Benefits Assistant',
+          className: 'border-purple-200 bg-purple-50 text-purple-800',
+        },
+        BenefitsOfficer: {
+          label: 'Benefits Officer',
+          className: 'border-indigo-200 bg-indigo-50 text-indigo-800',
+        },
+        DeptHead: {
+          label: 'Dept Head',
+          className: 'border-orange-200 bg-orange-50 text-orange-800',
+        },
+        MgmtApprover: {
+          label: 'Mgmt Approver',
+          className: 'border-amber-200 bg-amber-50 text-amber-800',
+        },
+        GeneralHR: {
+          label: 'General HR',
+          className: 'border-teal-200 bg-teal-50 text-teal-800',
+        },
+      };
+
+      const config = hrRoleConfig[hrRole];
+
+      if (!config) {
+        return <span className='text-muted-foreground text-xs'>—</span>;
+      }
+
+      return (
+        <Badge
+          variant='outline'
+          className={cn('gap-1 text-xs', config.className)}
+        >
+          {config.label}
+        </Badge>
+      );
+    },
+    filterFn: (row, id, value) => {
+      return value.includes(row.getValue(id));
+    },
+    meta: { className: 'w-40' },
+    enableSorting: true,
+  },
+
+  {
     accessorKey: 'department',
     header: ({ column }) => (
       <DataTableColumnHeader column={column} title='Department' />

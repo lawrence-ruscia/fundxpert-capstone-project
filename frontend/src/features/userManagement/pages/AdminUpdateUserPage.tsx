@@ -85,15 +85,26 @@ const updateUserInputSchema = z
           message: 'Please enter both first name and last name',
         }
       ),
-    email: z
-      .email('Invalid email address')
-      .refine(val => val.endsWith('@metrobank.com.ph'), {
-        message: 'Email must use the @metrobank.com.ph domain',
-      }),
+    email: z.email(),
+    // IMPORTANT: Temporarily remove company email constraint
+    // email: z
+    //   .email('Invalid email address')
+    //   .refine(val => val.endsWith('@metrobank.com.ph'), {
+    //     message: 'Email must use the @metrobank.com.ph domain',
+    //   }),
     employee_id: z.string().optional(), // Make it optional initially
     role: z.enum(['Employee', 'HR', 'Admin'], {
       required_error: 'Please select a role',
     }),
+    hr_role: z
+      .enum([
+        'BenefitsAssistant',
+        'BenefitsOfficer',
+        'DeptHead',
+        'MgmtApprover',
+        'GeneralHR',
+      ])
+      .optional(),
     department_id: z.string().min(1, 'Please select a department'),
     position_id: z.string().min(1, 'Please select a position'),
     salary: z.union([z.string(), z.number()]).refine(val => {
@@ -135,6 +146,16 @@ const updateUserInputSchema = z
         });
       }
     }
+
+    if (data.role === 'HR') {
+      if (!data.hr_role) {
+        ctx.addIssue({
+          code: 'custom',
+          message: 'HR role is required when role is set to HR',
+          path: ['hr_role'],
+        });
+      }
+    }
   });
 
 // Helper function to format date properly (fixes the -1 day issue)
@@ -161,6 +182,7 @@ const formatDateForInput = (dateString: string | Date): string => {
 const updateUserOutputSchema = updateUserInputSchema.transform(data => ({
   ...data,
   role: data.role,
+  hr_role: data.hr_role,
   department_id: parseInt(data.department_id, 10),
   position_id: parseInt(data.position_id, 10),
   salary:
@@ -222,7 +244,9 @@ export const AdminUpdateUserPage = () => {
       name: '',
       email: '',
       employee_id: '',
+
       role: undefined,
+      hr_role: undefined,
       department_id: '',
       position_id: '',
       salary: '',
@@ -246,7 +270,8 @@ export const AdminUpdateUserPage = () => {
         name: data.user.name || '',
         email: data.user.email || '',
         employee_id: data.user.employee_id?.toString() || '',
-        role: (data.user.role?.toString() as Role) || '',
+        role: data.user.role?.toString() || '',
+        hr_role: data.user.hr_role?.toString() || '',
         department_id: data.user.department_id?.toString() || '',
         position_id: data.user.position_id?.toString() || '',
         salary: data.user.salary?.toString() || '',
@@ -269,6 +294,7 @@ export const AdminUpdateUserPage = () => {
         email: transformedData.email,
         employee_id: transformedData.employee_id,
         role: transformedData.role,
+        hr_role: transformedData.hr_role,
         department_id: transformedData.department_id,
         position_id: transformedData.position_id,
         salary: transformedData.salary,
@@ -554,6 +580,78 @@ export const AdminUpdateUserPage = () => {
                               </SelectItem>
                             </SelectContent>
                           </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name='hr_role'
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className='text-base font-medium'>
+                            HR Role{' '}
+                            {selectedRole === 'HR' && (
+                              <span className='text-muted-foreground'>*</span>
+                            )}
+                          </FormLabel>
+                          <Select
+                            onValueChange={field.onChange}
+                            value={field.value || ''}
+                            disabled={selectedRole !== 'HR'}
+                          >
+                            <FormControl>
+                              <SelectTrigger
+                                className={cn(
+                                  'h-12 w-full text-base',
+                                  selectedRole !== 'HR' &&
+                                    'bg-muted cursor-not-allowed'
+                                )}
+                              >
+                                <SelectValue
+                                  placeholder={
+                                    selectedRole === 'HR'
+                                      ? 'Select HR role'
+                                      : 'Only available for HR role'
+                                  }
+                                />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem
+                                value='BenefitsAssistant'
+                                className='text-base'
+                              >
+                                Benefits Assistant
+                              </SelectItem>
+                              <SelectItem
+                                value='BenefitsOfficer'
+                                className='text-base'
+                              >
+                                Benefits Officer
+                              </SelectItem>
+                              <SelectItem
+                                value='DeptHead'
+                                className='text-base'
+                              >
+                                Department Head
+                              </SelectItem>
+                              <SelectItem
+                                value='MgmtApprover'
+                                className='text-base'
+                              >
+                                Management Approver
+                              </SelectItem>
+                              <SelectItem
+                                value='GeneralHR'
+                                className='text-base'
+                              >
+                                General HR
+                              </SelectItem>
+                            </SelectContent>
+                          </Select>
+
                           <FormMessage />
                         </FormItem>
                       )}

@@ -7,6 +7,12 @@ export type User = {
   name: string;
   email: string;
   role: 'Employee' | 'HR' | 'Admin';
+  hr_role:
+    | 'BenefitsAssistant'
+    | 'BenefitsOfficer'
+    | 'DeptHead'
+    | 'MgmtApprover'
+    | 'GeneralHR';
   department: string | null;
   position: string | null;
   department_id: number;
@@ -24,7 +30,8 @@ export type User = {
   password_last_changed?: string | null;
   created_at: string;
 };
-
+ 
 export type Role = User['role'];
+export type HRRole = User['hr_role'];
 
 export type AccountStatus = 'Locked' | 'Temp Password' | 'Expired' | 'Active';

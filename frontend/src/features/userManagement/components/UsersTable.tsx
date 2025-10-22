@@ -38,6 +38,18 @@ export const UsersTable = ({ table }: UsersTableProps) => {
           },
 
           {
+            columnId: 'hr_role',
+            title: 'HR Role',
+            options: [
+              { label: 'Benefits Assistnat', value: 'BenefitsAssistant' },
+              { label: 'Benefits Officer', value: 'BenefitsOfficer' },
+              { label: 'Department Head', value: 'DeptHead' },
+              { label: 'Management Approver', value: 'MgmtApprover' },
+              { label: 'General HR', value: 'GeneralHR' },
+            ],
+          },
+
+          {
             columnId: 'is_twofa_enabled',
             title: '2FA Enabled',
             options: [

@@ -67,7 +67,7 @@ export async function getAllUsers(query: {
   }
 
   const sqlquery = `
-      SELECT u.id, u.employee_id, u.name, u.email, u.role, u.employment_status, u.failed_attempts, u.locked_until, u.password_expired, u.temp_password, u.is_twofa_enabled, u.password_last_changed, u.created_at, u.last_login, d.name AS department, p.title AS position
+      SELECT u.id, u.employee_id, u.name, u.email, u.role, u.hr_role, u.employment_status, u.failed_attempts, u.locked_until, u.password_expired, u.temp_password, u.is_twofa_enabled, u.password_last_changed, u.created_at, u.last_login, d.name AS department, p.title AS position
       FROM users u 
       LEFT JOIN departments d ON u.department_id = d.id
       LEFT JOIN positions p ON u.position_id = p.id
@@ -104,6 +104,7 @@ export async function createUser(payload: {
   employment_status: string;
   date_hired: string;
   role: string;
+  hr_role: string;
   generatedTempPassword: string;
 }) {
   try {
@@ -113,24 +114,26 @@ export async function createUser(payload: {
       payload.role === 'Employee' ? payload.employee_id : null;
 
     const { rows } = await pool.query(
-      `INSERT INTO users 
-     (name, email, employee_id, password_hash, role, department_id, position_id, 
+      `INSERT INTO users
+     (name, email, employee_id, password_hash, role, hr_role, department_id, position_id,
       salary, date_hired, employment_status, temp_password, temp_password_expires)
-   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, true, $11)
-   RETURNING id, name, email, employee_id, role, salary, department_id, position_id, 
+   VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+   RETURNING id, name, email, employee_id, role, hr_role, salary, department_id, position_id,
              employment_status, date_hired, temp_password, temp_password_expires;`,
       [
-        payload.name,
-        payload.email,
-        employeeIdValue,
-        hashedPassword,
-        payload.role,
-        payload.department_id,
-        payload.position_id,
-        payload.salary,
-        payload.date_hired,
-        payload.employment_status,
-        expiresAt,
+        payload.name, // $1
+        payload.email, // $2
+        employeeIdValue, // $3
+        hashedPassword, // $4
+        payload.role, // $5
+        payload.hr_role, // $6
+        payload.department_id, // $7
+        payload.position_id, // $8
+        payload.salary, // $9
+        payload.date_hired, // $10
+        payload.employment_status, // $11
+        payload.generatedTempPassword, // $12 (temp_password)
+        expiresAt, // $13 (temp_password_expires)
       ]
     );
 
@@ -162,6 +165,7 @@ export async function updateUser(
     email: string;
     employee_id: string;
     role: string;
+    hr_role: string;
     department_id: number;
     position_id: number;
     salary: number;
@@ -176,7 +180,7 @@ export async function updateUser(
 
     // STEP 1: Fetch current user data
     const { rows: currentRows } = await client.query(
-      `SELECT id, name, email, employee_id, role, department_id, position_id, 
+      `SELECT id, name, email, employee_id, role, hr_role, department_id, position_id, 
               salary, employment_status, date_hired
        FROM users WHERE id = $1`,
       [id]
@@ -203,7 +207,7 @@ export async function updateUser(
     const actualChanges: string[] = [];
 
     // Sensitive fields that trigger token version increment
-    const sensitiveFields = ['role', 'employment_status'];
+    const sensitiveFields = ['role', 'hr_role', 'employment_status'];
 
     for (const [key, value] of Object.entries(updates)) {
       if (key === 'generatedTempPassword' && value) {
@@ -265,7 +269,7 @@ export async function updateUser(
       UPDATE users
       SET ${fields.join(', ')}, updated_at = NOW()
       WHERE id = $1
-      RETURNING id, name, email, employee_id, role, department_id, position_id, 
+      RETURNING id, name, email, employee_id, role, hr_role, department_id, position_id, 
                 salary, employment_status, date_hired;
     `;
 
