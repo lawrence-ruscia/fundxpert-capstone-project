@@ -161,7 +161,7 @@ export const router = createBrowserRouter([
               <RequireAccess requiredAccess='canAssignApprovers'>
                 <LoanReviewPage />
               </RequireAccess>
-            ),
+            ), 
           },
         ],
       },

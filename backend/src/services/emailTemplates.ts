@@ -1177,7 +1177,7 @@ export function getEmailTemplate(
         This loan application requires your review and approval decision. Please review the application details, supporting documents, and employee eligibility before making your decision.
       </div>
 
-      <a href="${FRONTEND_URL}/hr/loans/${data.loanId}/approval" class="button">Review & Approve/Reject</a>
+      <a href="${FRONTEND_URL}/hr/loans/${data.loanId}/review" class="button">Review & Approve/Reject</a>
       
       <p style="color: #6c757d; margin-top: 20px;">Expected SLA: Please review within 2 business days. Contact the HR Officer if you need additional information.</p>
     `),
