@@ -120,7 +120,7 @@ export async function notifyUsersByRole(
  * Helper to notify all HR users by HR sub-role
  */
 export async function notifyHRByRole(
-  hrRole: 'BenefitsOfficer' | 'DeptHead' | 'MgmtApprover',
+  hrRole: 'BenefitsAssistant' | 'BenefitsOfficer' | 'DeptHead' | 'MgmtApprover',
   title: string,
   message: string,
   type: NotificationType,

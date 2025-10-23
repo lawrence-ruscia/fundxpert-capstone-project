@@ -361,17 +361,38 @@ export async function releaseLoanToTrustBank(
     [loanId, txRef || null, releasedBy]
   );
 
+  const updatedLoan = rows[0];
+
   //  Notify employee
   await createNotification(
-    loan.user_id,
+    updatedLoan.user_id,
     'Loan Released',
     `Your approved loan has been released to your registered bank account.`,
     'success',
     {
       loanId,
       link: `/employee/loans/${loanId}`,
-      amount: loan.amount,
+      amount: updatedLoan.amount,
       emailTemplate: 'loan-released',
+    }
+  );
+
+  const employee = await getUserById(updatedLoan.user_id);
+
+  //  Notify HR benefits officer
+  await createNotification(
+    updatedLoan.officer_id,
+    'Loan Successfully Released',
+    `Loan #${loanId} for ${employee.name} has been successfully released and disbursed.`,
+    'info',
+    {
+      loanId,
+      link: `/hr/loans/${loanId}`,
+      amount: updatedLoan.amount,
+      employeeName: employee.name,
+      employeeId: employee.employee_id,
+      releasedBy: 'HR Benefits Officer',
+      emailTemplate: 'hr-loan-released-notification',
     }
   );
 

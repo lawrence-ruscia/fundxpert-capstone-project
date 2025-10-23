@@ -62,13 +62,16 @@ export async function createWithdrawal(req: Request, res: Response) {
       }
     );
 
-    // TODO: Notify all HR Assistant
     await notifyUsersByRole(
       'HR',
       'New Withdrawal Request',
       `A new withdrawal request from ${req.user.name} (${employee.employee_id}) is awaiting pre-screening.`,
       'info',
-      { withdrawalId, link: `/hr/withdrawals/${withdrawalId}` }
+      {
+        withdrawalId,
+        link: `/hr/withdrawals/${withdrawalId}`,
+        emailTemplate: 'hr-withdrawal-submitted',
+      }
     );
 
     res.status(201).json(withdrawal);

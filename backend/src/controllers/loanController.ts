@@ -7,6 +7,7 @@ import {
 import { isAuthenticatedRequest } from './employeeControllers.js';
 import {
   createNotification,
+  notifyHRByRole,
   notifyUsersByRole,
 } from '../utils/notificationHelper.js';
 import { getUserById } from '../services/adminService.js';
@@ -76,14 +77,23 @@ export async function applyLoan(req: Request, res: Response) {
       }
     );
 
-    // TODO: Notify all HR Assistant
-    // NOTIFICATION: Notify all HR users
-    await notifyUsersByRole(
-      'HR',
+    // Notify all HR Benefits Assitant
+    await notifyHRByRole(
+      'BenefitsAssistant',
       'New Loan Submitted',
       `A new loan request from ${req.user.name} (${employee.id}) is awaiting initial review.`,
       'info',
-      { loanId, link: `/hr/loans/${loanId}` }
+      {
+        loanId: loan.id,
+        employeeName: employee.name,
+        employeeId: employee.employee_Id,
+        amount: loan.amount,
+        loanType: loan.purpose_category,
+        purpose: loan.purpose_detail,
+        link: `/hr/loans/${loanId}`,
+        emailTemplate: 'hr-loan-submitted',
+      },
+      true // send email as well
     );
 
     res.status(201).json({ success: true, loan });
@@ -176,8 +186,7 @@ export async function cancelLoanRequestHandler(req: Request, res: Response) {
 
     const loanId = loan.id;
 
-    //  NOTIFICATION: Notify employee (if cancelled by HR)
-
+    //  NOTIFICATION: Notify employee
     await createNotification(
       loan.user_id,
       'Loan Cancelled',
@@ -187,6 +196,7 @@ export async function cancelLoanRequestHandler(req: Request, res: Response) {
         loanId,
         link: `/employee/loans/${loanId}`,
         cancelledBy: 'Employee',
+        amount: loan.amount,
         reason: remarks,
         emailTemplate: 'loan-cancelled',
       }
