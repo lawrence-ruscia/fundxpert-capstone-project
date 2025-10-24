@@ -187,7 +187,7 @@ export async function loginWith2FA(req: Request, res: Response) {
     const { userId, token } = req.body;
     // Fetch secret from DB
     const { rows } = await pool.query(
-      'SELECT id, name, role, twofa_secret, token_version FROM users WHERE id = $1',
+      'SELECT id, name, role, hr_role, twofa_secret, token_version FROM users WHERE id = $1',
       [userId]
     );
 
@@ -241,6 +241,7 @@ export async function loginWith2FA(req: Request, res: Response) {
         id: user.id,
         name: user.name,
         role: user.role,
+        hr_role: user.hr_role,
       },
       tokenExpiry: expiryDate,
     });
