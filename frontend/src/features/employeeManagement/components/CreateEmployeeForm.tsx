@@ -69,11 +69,13 @@ const createEmployeeInputSchema = z.object({
         message: 'Please enter both first name and last name',
       }
     ),
-  email: z
-    .email('Invalid email address')
-    .refine(val => val.endsWith('@metrobank.com.ph'), {
-      message: 'Email must use the @metrobank.com.ph domain',
-    }),
+  email: z.email(),
+  // IMPORTANT: Temporarily remove company email constraint
+  // email: z
+  //   .email('Invalid email address')
+  //   .refine(val => val.endsWith('@metrobank.com.ph'), {
+  //     message: 'Email must use the @metrobank.com.ph domain',
+  //   }),
   employee_id: z
     .string()
     .regex(/^\d{2}-\d{5}$/, 'Employee ID must follow the format NN-NNNNN'),
