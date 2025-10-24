@@ -58,7 +58,16 @@ export async function recordContributionController(
       'Contribution Record Added',
       `A new contribution of ₱${(parseFloat(employee_amount) + parseFloat(employer_amount)).toLocaleString()} has been recorded for ${new Date(contribution_date).toLocaleDateString()}.`,
       'success',
-      { contributionId: contribution.id, link: `/employee/contributions` }
+      {
+        contributionId: contribution.id,
+        employeeContribution: employee_amount,
+        employerContribution: employer_amount,
+        totalContribution:
+          parseFloat(employee_amount) + parseFloat(employer_amount),
+        month: contribution_date,
+        link: `/employee/contributions`,
+        emailTemplate: 'contribution-posted',
+      }
     );
 
     res.status(201).json(contribution);
