@@ -19,6 +19,7 @@ export async function addLoanDocument(
      RETURNING *`,
     [loanId, fileUrl, fileName, uploadedByRole, bucketName]
   );
+
   return rows[0];
 }
 

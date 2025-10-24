@@ -3,6 +3,15 @@ import * as loanDocumentService from '../services/loanDocumentService.js';
 import { pool } from '../config/db.config.js';
 import { isAuthenticatedRequest } from './employeeControllers.js';
 import { getUserById, logUserAction } from '../services/adminService.js';
+import { createNotification } from '../utils/notificationHelper.js';
+
+export const hrRoles = {
+  BenefitsAssistant: 'Benefits Assistant',
+  BenefitsOfficer: 'Benefits Officer',
+  DeptHead: 'Department Head',
+  MgmtApprover: 'Management Approver',
+  GeneralHR: 'General HR',
+};
 
 export async function uploadLoanDocument(req: Request, res: Response) {
   try {
@@ -45,6 +54,9 @@ export async function uploadLoanDocument(req: Request, res: Response) {
     let bucketName: string;
     let uploadedByRole: 'Employee' | 'HR' = 'Employee';
 
+    const assistant_id = loan.assistant_id;
+    const officer_id = loan.officer_id;
+
     // --- Determine Access Level ---
     if (user.role === 'Employee') {
       // Employee can upload only their own pending/incomplete loan docs
@@ -60,6 +72,48 @@ export async function uploadLoanDocument(req: Request, res: Response) {
       }
       bucketName = 'loan-documents';
       uploadedByRole = 'Employee';
+
+      const employee = await getUserById(loan.user_id);
+
+      // Notify assistant
+      if (assistant_id) {
+        if (loan.status === 'Incomplete') {
+          await createNotification(
+            assistant_id,
+            `Missing Document Uploaded - Loan #${loanId}`,
+            `${employee.name}} has uploaded ${fileName}} for their loan application.The application may now be ready for review.`,
+            'action_required',
+            {
+              loanId: loan.id,
+              link: `/hr/loans/${loanId}`,
+            }
+          );
+        } else {
+          await createNotification(
+            assistant_id,
+            `New Document Uploaded - Loan #${loanId}`,
+            `${employee.name}} has uploaded ${fileName}} for their loan application. Please review the document.`,
+            'info',
+            {
+              loanId: loan.id,
+              link: `/hr/loans/${loanId}`,
+            }
+          );
+        }
+      }
+
+      if (officer_id) {
+        await createNotification(
+          officer_id,
+          `New Document Uploaded - Loan #${loanId}`,
+          `${employee.name}} has uploaded ${fileName}} for their loan application. Please review the document.`,
+          'success',
+          {
+            loanId: loan.id,
+            link: `/hr/loans/${loanId}`,
+          }
+        );
+      }
     } else if (user.role === 'HR') {
       // HR Assistant can upload only if assigned to the loan and still pre-review
       if (loan.assistant_id === user.id) {
@@ -108,6 +162,22 @@ export async function uploadLoanDocument(req: Request, res: Response) {
       uploadedByRole,
       bucketName
     );
+
+    if (uploadedByRole === 'HR') {
+      const hr = await getUserById(user.id);
+      // Notify HR Benefits Officer
+      await createNotification(
+        officer_id,
+        `Document Uploaded by ${hrRoles[hr.hr_role]} - Loan #${loanId}`,
+        `${hr.name}} has uploaded ${fileName}} for the loan application. Please review the document.`,
+        'success',
+
+        {
+          loanId: loan.id,
+          link: `/hr/loans/${loanId}`,
+        }
+      );
+    }
 
     res.status(201).json({ success: true, document: doc });
   } catch (err) {

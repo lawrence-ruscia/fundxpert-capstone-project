@@ -327,6 +327,7 @@ export const releaseWithdrawalFundsHandler = async (
         link: `/employee/withdrawals/${withdrawalId}`,
         paymentMethod: request.payment_method,
         amount: request.payout_amount,
+        emailTemplate: 'withdrawal-processed',
       }
     );
 
@@ -334,7 +335,7 @@ export const releaseWithdrawalFundsHandler = async (
 
     // Notify HR Officer
     await createNotification(
-      request.officer_id,
+      releasedBy,
       'Withdrawal Successfully Released',
       `Withdrawal #${withdrawalId} for ${employee.name} has been successfully released and disbursed to the employee's account.`,
       'success',
