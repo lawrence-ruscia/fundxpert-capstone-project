@@ -3,6 +3,7 @@ import type {
   Contribution,
   ContributionSummary,
 } from '../types/contribution.js';
+import { getUserById } from './adminService.js';
 
 /**
  * Record a new contribution
@@ -15,6 +16,12 @@ export async function recordContribution(payload: {
   created_by: number; // HR ID
   notes?: string;
 }): Promise<Contribution> {
+  const employee = await getUserById(payload.user_id);
+
+  if (employee.date_hired >= payload.contribution_date) {
+    throw new Error('Contribution date cannot preceed date hired');
+  }
+
   const query = `
     INSERT INTO contributions
       (user_id, contribution_date, employee_amount, employer_amount, created_by, notes)
@@ -61,8 +68,6 @@ export async function updateContribution(
        RETURNING *`,
       [updates.updated_by, contributionId]
     );
-
-    console.log();
 
     if (oldRes.rowCount === 0) {
       throw new Error('Contribution not found');

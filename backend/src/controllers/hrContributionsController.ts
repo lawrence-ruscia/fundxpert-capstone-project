@@ -73,7 +73,9 @@ export async function recordContributionController(
     res.status(201).json(contribution);
   } catch (err) {
     console.error('❌ recordContribution error:', err);
-    res.status(500).json({ error: 'Failed to record contribution' });
+    res
+      .status(500)
+      .json({ error: err?.message ?? 'Failed to record contribution' });
   }
 }
 
