@@ -5,3 +5,11 @@ export const LOAN_CAP = 0.5; // Max loan at 50% vested balance
 export const MIN_LOAN_AMOUNT = 5000; // recommended default, configurable
 export const MIN_WITHDRAWAL_AMOUNT = 5000;
 export const MAX_REPAYMENT_MONTHS = 24; // 24 months to pay
+
+export const hrRoles = {
+  BenefitsAssistant: 'Benefits Assistant',
+  BenefitsOfficer: 'Benefits Officer',
+  DeptHead: 'Department Head',
+  MgmtApprover: 'Management Approver',
+  GeneralHR: 'General HR',
+};

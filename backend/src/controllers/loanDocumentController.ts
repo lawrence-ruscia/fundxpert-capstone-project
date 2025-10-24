@@ -2,16 +2,9 @@ import type { Request, Response } from 'express';
 import * as loanDocumentService from '../services/loanDocumentService.js';
 import { pool } from '../config/db.config.js';
 import { isAuthenticatedRequest } from './employeeControllers.js';
-import { getUserById, logUserAction } from '../services/adminService.js';
+import { getUserById } from '../services/adminService.js';
 import { createNotification } from '../utils/notificationHelper.js';
-
-export const hrRoles = {
-  BenefitsAssistant: 'Benefits Assistant',
-  BenefitsOfficer: 'Benefits Officer',
-  DeptHead: 'Department Head',
-  MgmtApprover: 'Management Approver',
-  GeneralHR: 'General HR',
-};
+import { hrRoles } from '../config/policy.config.js';
 
 export async function uploadLoanDocument(req: Request, res: Response) {
   try {

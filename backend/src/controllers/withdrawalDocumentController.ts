@@ -3,6 +3,9 @@ import { isAuthenticatedRequest } from './employeeControllers.js';
 import * as withdrawalDocService from '../services/withdrawalDocumentService.js';
 import { pool } from '../config/db.config.js';
 import { deleteWithdrawalDocumentWithRole } from '../services/withdrawalDocumentService.js';
+import { createNotification } from '../utils/notificationHelper.js';
+import { getUserById } from '../services/adminService.js';
+import { hrRoles } from '../config/policy.config.js';
 
 export async function uploadWithdrawalDocument(req: Request, res: Response) {
   try {
@@ -35,6 +38,9 @@ export async function uploadWithdrawalDocument(req: Request, res: Response) {
     let bucketName: string;
     let uploadedByRole: 'Employee' | 'HR' = 'Employee';
 
+    const assistant_id = withdrawal.assistant_id;
+    const officer_id = withdrawal.officer_id;
+
     // --- Determine Access Level ---
     if (user.role === 'Employee') {
       // Employee can upload only their own pending withdrawal docs
@@ -55,6 +61,48 @@ export async function uploadWithdrawalDocument(req: Request, res: Response) {
 
       bucketName = 'withdrawal-documents';
       uploadedByRole = 'Employee';
+
+      const employee = await getUserById(withdrawal.user_id);
+
+      // Notify assistant
+      if (assistant_id) {
+        if (withdrawal.status === 'Incomplete') {
+          await createNotification(
+            assistant_id,
+            `Missing Document Uploaded - Withdrawal #${withdrawal.id}`,
+            `${employee.name}} has uploaded ${fileName}} for their withdrawal request. The request may now be ready for review.`,
+            'action_required',
+            {
+              withdrawalId: withdrawal.id,
+              link: `/hr/withdrawals/${withdrawal.id}`,
+            }
+          );
+        } else {
+          await createNotification(
+            assistant_id,
+            `New Document Uploaded - Withdrawal #${withdrawal.id}`,
+            `${employee.name}} has uploaded ${fileName}} for their withdrawal request. Please review the document.`,
+            'info',
+            {
+              withdrawalId: withdrawal.id,
+              link: `/hr/withdrawals/${withdrawal.id}`,
+            }
+          );
+        }
+      }
+
+      if (officer_id) {
+        await createNotification(
+          officer_id,
+          `New Document Uploaded - Withdrawal #${withdrawal.id}`,
+          `${employee.name}} has uploaded ${fileName}} for their withdrawal request. Please review the document.`,
+          'info',
+          {
+            withdrawalId: withdrawal.id,
+            link: `/hr/withdrawals/${withdrawal.id}`,
+          }
+        );
+      }
     } else if (user.role === 'HR') {
       // HR Assistant can upload only if assigned to the withdrawal and status is Pending
       if (withdrawal.assistant_id === user.id) {
@@ -101,6 +149,22 @@ export async function uploadWithdrawalDocument(req: Request, res: Response) {
       uploadedByRole,
       bucketName
     );
+
+    if (uploadedByRole === 'HR') {
+      const hr = await getUserById(user.id);
+      // Notify HR Benefits Officer
+      await createNotification(
+        officer_id,
+        `Document Uploaded by ${hrRoles[hr.hr_role]} - Withdrawal #${withdrawal.id}`,
+        `${hr.name}} has uploaded ${fileName}} for the withdrawal request. Please review the document.`,
+        'success',
+
+        {
+          withdrawalId: withdrawal.id,
+          link: `/hr/withdrawals/${withdrawal.id}`,
+        }
+      );
+    }
 
     res.status(201).json({ success: true, document: doc });
   } catch (err) {
