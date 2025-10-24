@@ -49,10 +49,12 @@ export function ContributionTrends({
   contributions,
   timeRange,
   setTimeRange,
+  refresh,
 }: {
   contributions: HRContributionsResponse;
   timeRange: HRContributionPeriod;
   setTimeRange: (period: HRContributionPeriod) => void;
+  refresh: () => void;
 }) {
   const isMobile = useIsMobile();
 
@@ -114,19 +116,9 @@ export function ContributionTrends({
   }, [transformedData, timeRange]);
 
   const latestTotal = useMemo(() => {
-    if (timeRange === 'all') {
-      return contributions?.totals.grand_total ?? 0;
-    }
-
-    // Calculate cumulative total from filtered data
-    if (filteredData.length > 0) {
-      return filteredData.reduce((sum, entry) => {
-        return sum + entry.employee + entry.employer;
-      }, 0);
-    }
-
-    return 0;
-  }, [filteredData, timeRange, contributions?.totals.grand_total]);
+    if (filteredData.length === 0) return 0;
+    return filteredData.reduce((sum, record) => sum + record.total, 0);
+  }, [filteredData]);
 
   const getTimeRangeLabel = (range: HRContributionPeriod) => {
     switch (range) {
@@ -162,9 +154,10 @@ export function ContributionTrends({
           <ToggleGroup
             type='single'
             value={timeRange}
-            onValueChange={(value: HRContributionPeriod) =>
-              value && setTimeRange(value)
-            }
+            onValueChange={(value: HRContributionPeriod) => {
+              setTimeRange(value);
+              refresh();
+            }}
             variant='outline'
             className='hidden *:data-[slot=toggle-group-item]:!px-4 @[767px]/card:flex'
           >
@@ -176,7 +169,10 @@ export function ContributionTrends({
           </ToggleGroup>
           <Select
             value={timeRange}
-            onValueChange={(value: HRContributionPeriod) => setTimeRange(value)}
+            onValueChange={(value: HRContributionPeriod) => {
+              setTimeRange(value);
+              refresh();
+            }}
           >
             <SelectTrigger
               className='flex w-40 **:data-[slot=select-value]:block **:data-[slot=select-value]:truncate @[767px]/card:hidden'

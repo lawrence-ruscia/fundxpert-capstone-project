@@ -66,19 +66,18 @@ export async function getHRContributions(
   period: HRContributionPeriod = 'year'
 ): Promise<HRContributionsResponse> {
   const { startDate, endDate } = getDateRange(period);
-
   let query = `
-    SELECT
-      contribution_date,
-      TO_CHAR(contribution_date, 'Month') AS month,
-      EXTRACT(MONTH FROM contribution_date) AS month_number,
-      EXTRACT(YEAR FROM contribution_date) AS year,
-      SUM(employee_amount) AS employee,
-      SUM(employer_amount) AS employer
-    FROM contributions
-    WHERE 1=1
+    WITH deduplicated_contributions AS (
+      SELECT DISTINCT ON (user_id, EXTRACT(YEAR FROM contribution_date), EXTRACT(MONTH FROM contribution_date))
+        user_id,
+        contribution_date,
+        employee_amount,
+        employer_amount,
+        EXTRACT(YEAR FROM contribution_date) AS year,
+        EXTRACT(MONTH FROM contribution_date) AS month_number
+      FROM contributions
+      WHERE 1=1
   `;
-
   const params: Date[] = [];
   let paramIndex = 1;
 
@@ -93,8 +92,19 @@ export async function getHRContributions(
   }
 
   query += `
-    GROUP BY contribution_date, month, month_number, year
-    ORDER BY year, month_number
+      ORDER BY user_id, year, month_number, contribution_date DESC
+    )
+    SELECT
+      year,
+      month_number,
+      TO_CHAR(DATE_TRUNC('month', TO_DATE(year || '-' || month_number || '-01', 'YYYY-MM-DD')), 'Month') AS month,
+      SUM(employee_amount) AS employee,
+      SUM(employer_amount) AS employer,
+      SUM(employee_amount + employer_amount) AS total,
+      COUNT(DISTINCT user_id) AS employee_count
+    FROM deduplicated_contributions
+    GROUP BY year, month_number
+    ORDER BY year, month_number;
   `;
 
   const { rows } = await pool.query(query, params);
@@ -245,7 +255,7 @@ export async function updateEmployee(
     employment_status: 'Active' | 'Resigned' | 'Retired' | 'Terminated';
     date_hired: string;
     generatedTempPassword: string;
-  }> 
+  }>
 ): Promise<UserResponse | null> {
   const client = await pool.connect();
   try {

@@ -36,7 +36,7 @@ export const HRDashboardPage = () => {
   );
 
   const [isRefreshing, setIsRefreshing] = useState(false);
-  const [timeRange, setTimeRange] = useState<HRContributionPeriod>('year');
+  const [timeRange, setTimeRange] = useState<HRContributionPeriod>('all');
 
   const fetchDashboardData = useCallback(async () => {
     // This should match what useHRDashboardData returns
@@ -196,6 +196,7 @@ export const HRDashboardPage = () => {
                 contributions={contributions}
                 timeRange={timeRange}
                 setTimeRange={setTimeRange}
+                refresh={() => {}}
               />
             </div>
           </div>
