@@ -262,7 +262,7 @@ export async function reviewLoanApproval(
       const { rows: approverRows } = await pool.query(
         `SELECT name FROM users WHERE id = $1`,
         [approverId]
-      );
+      ); 
       const assignedBy = approverRows[0]?.name || 'HR Officer';
 
       await createNotification(

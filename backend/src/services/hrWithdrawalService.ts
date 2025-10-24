@@ -4,6 +4,7 @@ import {
   createNotification,
   notifyUsersByRole,
 } from '../utils/notificationHelper.js';
+import { getUserById } from './adminService.js';
 
 /**
  * Step 0: Assistant marks as incomplete / missing requirements
@@ -100,7 +101,7 @@ export async function reviewWithdrawalDecision(
 
     // 1. Verify that the officer is the assigned HR officer and request is under review
     const { rows: current } = await client.query(
-      `SELECT id, status, officer_id 
+      `SELECT id, status, officer_id, payout_amount, user_id
        FROM withdrawal_requests 
        WHERE id = $1`,
       [withdrawalId]
@@ -142,29 +143,51 @@ export async function reviewWithdrawalDecision(
     );
 
     if (decision === 'Approved') {
+      // Notify Employee
       await createNotification(
         request.user_id,
         'Withdrawal Request Approved',
-        `Your withdrawal request has been approved. The funds will be released shortly.`,
+        `Great news! Your withdrawal application #${withdrawalId} has been approved and will be processed shortly.`,
         'success',
-        { withdrawalId, link: `/employee/withdrawals/${withdrawalId}` }
+        {
+          withdrawalId,
+          amount: request.payout_amount,
+          link: `/employee/withdrawals/${withdrawalId}`,
+          emailTemplate: 'withdrawal-approved',
+        }
       );
 
-      // Notify HR (for release tracking)
-      await notifyUsersByRole(
-        'HR',
-        'Withdrawal Approved',
-        `Withdrawal #${withdrawalId} has been approved and marked for release.`,
-        'success',
-        { withdrawalId, link: `/hr/withdrawals/${withdrawalId}` }
+      const employee = await getUserById(request.user_id);
+      // Notify HR offier (for release tracking)
+      await createNotification(
+        request.officer_id,
+        'Withdrawal Approved - Pending Release',
+        `Withdrawal #${withdrawalId} has been approved and is pending release for disbursement.`,
+        'info',
+        {
+          withdrawalId,
+          link: `/hr/withdrawals/${withdrawalId}`,
+          amount: request.payout_amount,
+          employeeName: employee.name,
+          employeeId: employee.employee_id,
+          emailTemplate: 'hr-withdrawal-approved-notification',
+        }
       );
     } else {
       await createNotification(
         request.user_id,
-        'Withdrawal Request Rejected',
-        `Your withdrawal request was not approved. Contact HR for further information.`,
+        'Withdrawal Application Not Approved',
+        `Your withdrawal application #${withdrawalId} has not been approved. Please review the reason and contact HR if you have questions.`,
         'error',
-        { withdrawalId, link: `/employee/withdrawals/${withdrawalId}` }
+        {
+          withdrawalId,
+          link: `/employee/withdrawals/${withdrawalId}`,
+          amount: request.amount,
+          reason: request.notes,
+          reviewedBy: 'HR Benefits Officer',
+          canReapply: true,
+          emailTemplate: 'withdrawal-rejected',
+        }
       );
     }
 
@@ -212,15 +235,6 @@ export async function releaseWithdrawalFunds(
      WHERE id = $1 AND status = 'Approved'
      RETURNING *`,
     [withdrawalId, officerId, paymentReference]
-  );
-
-  // Notify employee
-  await createNotification(
-    request.user_id,
-    'Withdrawal Funds Released',
-    `Your withdrawal funds have been released to your account.`,
-    'success',
-    { withdrawalId, link: `/employee/withdrawals/${withdrawalId}` }
   );
 
   return rows[0] || null;

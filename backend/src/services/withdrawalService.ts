@@ -289,19 +289,16 @@ export async function getWithdrawalDetails(
   return { ...request, documents: docsRes.rows };
 }
 
-export async function cancelWithdrawal(
-  userId: number,
-  withdrawalId: number
-): Promise<{ success: boolean }> {
+export async function cancelWithdrawal(userId: number, withdrawalId: number) {
   const res = await pool.query(
     `UPDATE withdrawal_requests
      SET status='Cancelled'
      WHERE id=$1 AND user_id=$2 AND status='Pending'
-     RETURNING id`,
+     RETURNING *`,
     [withdrawalId, userId]
   );
 
   const success = res.rowCount !== null && res.rowCount > 0;
 
-  return { success };
+  return { success, request: res.rows[0] };
 }

@@ -690,6 +690,50 @@ export function getEmailTemplate(
     `),
       };
 
+    case 'withdrawal-prescreened':
+      return {
+        subject: `✓ Withdrawal Request Pre-Screened - #${data.withdrawalId}`,
+        html: getBaseTemplate(`
+      <h2>Hello ${data.userName},</h2>
+      <p>Good news! Your withdrawal request has been <strong style="color: #0033A0;">pre-screened</strong> and is now under HR review.</p>
+     
+      <div class="details">
+        <div class="details-row">
+          <span class="label">Withdrawal ID:</span>
+          <span class="value">#${data.withdrawalId}</span>
+        </div>
+        <div class="details-row">
+          <span class="label">Amount:</span>
+          <span class="value" style="color: #0033A0; font-weight: 700;">₱${data.amount?.toLocaleString()}</span>
+        </div>
+        <div class="details-row">
+          <span class="label">Pre-Screen Date:</span>
+          <span class="value">${new Date().toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+        </div>
+        <div class="details-row">
+          <span class="label">Status:</span>
+          <span class="value" style="color: #0033A0; font-weight: 600;">Ready for HR Review</span>
+        </div>
+      </div>
+
+      <div class="alert alert-info">
+        <strong>📋 Request Status Update:</strong><br>
+        Your withdrawal request has passed the initial pre-screening and all required documents have been verified. It is now being reviewed by the HR department for final approval.
+      </div>
+
+      <div style="background: #E3F2FD; padding: 18px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #0033A0;">
+        <strong style="color: #002776;">⏱️ What's Next:</strong>
+        <p style="margin: 8px 0 0 0; color: #002776; line-height: 1.6;">
+          The HR team will review your withdrawal request and make a final decision. This typically takes 2-3 business days. You'll be notified once a decision has been made.
+        </p>
+      </div>
+
+      <a href="${FRONTEND_URL}/employee/withdrawals/${data.withdrawalId}" class="button">View Request Status</a>
+     
+      <p style="color: #6c757d; margin-top: 20px;">Thank you for your patience. We'll keep you updated on your withdrawal request progress.</p>
+    `),
+      };
+
     case 'withdrawal-approved':
       return {
         subject: `✅ Withdrawal Request Approved - #${data.withdrawalId}`,
@@ -864,6 +908,73 @@ export function getEmailTemplate(
       <a href="${FRONTEND_URL}/employee/withdrawals/${data.withdrawalId}" class="button">View Transaction</a>
       
       <p style="color: #6c757d; margin-top: 20px;">Keep this email for your records. If you notice any discrepancies or have questions, please contact the HR department immediately.</p>
+    `),
+      };
+
+    case 'withdrawal-cancelled':
+      return {
+        subject: `Withdrawal Request Cancelled - #${data.withdrawalId}`,
+        html: getBaseTemplate(`
+      <h2>Hello ${data.userName},</h2>
+      <p>Your withdrawal request has been <strong style="color: #f59e0b;">cancelled</strong>.</p>
+     
+      <div class="details">
+        <div class="details-row">
+          <span class="label">Withdrawal ID:</span>
+          <span class="value">#${data.withdrawalId}</span>
+        </div>
+        <div class="details-row">
+          <span class="label">Amount:</span>
+          <span class="value">₱${data.amount?.toLocaleString()}</span>
+        </div>
+        <div class="details-row">
+          <span class="label">Cancellation Date:</span>
+          <span class="value">${new Date().toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+        </div>
+        ${
+          data.cancelledBy
+            ? `
+        <div class="details-row">
+          <span class="label">Cancelled By:</span>
+          <span class="value">${data.cancelledBy}</span>
+        </div>
+        `
+            : ''
+        }
+        ${
+          data.reason
+            ? `
+        <div class="details-row">
+          <span class="label">Reason:</span>
+          <span class="value">${data.reason}</span>
+        </div>
+        `
+            : ''
+        }
+      </div>
+
+      <div class="alert alert-warning">
+        <strong>ℹ️ Cancellation Notice:</strong><br>
+        ${data.cancelledBy === 'System' || data.cancelledBy === 'Admin' ? 'This withdrawal request has been cancelled by the HR Benefits Officer.' : 'Your withdrawal request has been cancelled.'}
+        ${data.reason ? '' : ' No specific reason was provided.'}
+      </div>
+
+      ${
+        data.canReapply !== false
+          ? `
+      <div style="background: #E3F2FD; padding: 18px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #0033A0;">
+        <strong style="color: #002776;">💡 You can still request a withdrawal:</strong>
+        <p style="margin: 8px 0 0 0; color: #002776;">
+          You're welcome to submit a new withdrawal request anytime. If you need assistance or have questions about withdrawal eligibility, please contact the HR department.
+        </p>
+      </div>
+      `
+          : ''
+      }
+
+      <a href="${FRONTEND_URL}/employee/withdrawals" class="button">View My Withdrawals</a>
+     
+      <p style="color: #6c757d; margin-top: 20px;">For questions or clarifications about this cancellation, please reach out to the HR department.</p>
     `),
       };
 
@@ -1355,8 +1466,100 @@ export function getEmailTemplate(
     `),
       };
 
-    // HR Withdrawal Notifications
+    case 'hr-loan-cancelled':
+      return {
+        subject: `🔔 Loan Application Cancelled by Employee - #${data.loanId}`,
+        html: getBaseTemplate(`
+      <h2>Hello ${data.userName},</h2>
+      <p>An employee has <strong style="color: #f59e0b;">cancelled</strong> their loan application.</p>
+      
+      <div class="details">
+        <div class="details-row">
+          <span class="label">Loan ID:</span>
+          <span class="value">#${data.loanId}</span>
+        </div>
+        <div class="details-row">
+          <span class="label">Employee:</span>
+          <span class="value">${data.employeeName}${data.employeeId ? ` (ID: ${data.employeeId})` : ''}</span>
+        </div>
+        <div class="details-row">
+          <span class="label">Amount:</span>
+          <span class="value">₱${data.amount?.toLocaleString()}</span>
+        </div>
+        <div class="details-row">
+          <span class="label">Cancellation Date:</span>
+          <span class="value">${new Date().toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+        </div>
+        ${
+          data.loanType
+            ? `
+        <div class="details-row">
+          <span class="label">Loan Type:</span>
+          <span class="value">${data.loanType}</span>
+        </div>
+        `
+            : ''
+        }
+        ${
+          data.previousStatus
+            ? `
+        <div class="details-row">
+          <span class="label">Previous Status:</span>
+          <span class="value">${data.previousStatus}</span>
+        </div>
+        `
+            : ''
+        }
+        <div class="details-row">
+          <span class="label">Cancelled By:</span>
+          <span class="value" style="color: #f59e0b; font-weight: 600;">Employee (Self-Cancelled)</span>
+        </div>
+        ${
+          data.reason
+            ? `
+        <div class="details-row">
+          <span class="label">Reason:</span>
+          <span class="value">${data.reason}</span>
+        </div>
+        `
+            : ''
+        }
+      </div>
 
+      <div class="alert alert-warning">
+        <strong>ℹ️ Application Cancelled:</strong><br>
+        The employee has voluntarily cancelled this loan application. This application was still under review when cancelled.}
+      </div>
+
+      ${
+        data.reason
+          ? `
+      <div style="background: #FFF8E1; padding: 18px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #FFD100;">
+        <strong style="color: #7D6608;">📝 Cancellation Reason:</strong>
+        <p style="margin: 8px 0 0 0; color: #7D6608;">${data.reason}</p>
+      </div>
+      `
+          : `
+      <div style="background: #F5F7FA; padding: 18px; border-radius: 6px; margin: 20px 0; border: 1px solid #E5E9F0;">
+        <p style="margin: 0; color: #6c757d; font-style: italic;">No cancellation reason was provided by the employee.</p>
+      </div>
+      `
+      }
+
+      <div style="background: #E3F2FD; padding: 18px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #0033A0;">
+        <strong style="color: #002776;">✓ No Action Required:</strong>
+        <p style="margin: 8px 0 0 0; color: #002776;">
+          This is an informational notification only. The loan application has been automatically removed from your pending queue. The employee may submit a new application in the future if needed.
+        </p>
+      </div>
+
+      <a href="${FRONTEND_URL}/hr/loans/${data.loanId}" class="button">View Details</a>
+      
+      <p style="color: #6c757d; margin-top: 20px;">The loan record remains in the system for audit purposes but has been marked as cancelled.</p>
+    `),
+      };
+
+    // HR Withdrawal Notifications
     case 'hr-withdrawal-submitted':
       return {
         subject: `🔔 New Withdrawal Request Submitted - #${data.withdrawalId}`,
@@ -1485,6 +1688,197 @@ export function getEmailTemplate(
       
       <p style="color: #6c757d; margin-top: 20px;">Please review and approve or reject this withdrawal request.</p>
       `),
+      };
+
+    case 'hr-withdrawal-approved-notification':
+      return {
+        subject: `✅ Withdrawal Fully Approved - Ready for Release #${data.withdrawalId}`,
+        html: getBaseTemplate(`
+      <h2>Hello ${data.userName},</h2>
+      <p>Great news! A withdrawal request has received <strong style="color: #4CAF50;">all required approvals</strong> and is ready for release.</p>
+     
+      <div class="details">
+        <div class="details-row">
+          <span class="label">Withdrawal ID:</span>
+          <span class="value">#${data.withdrawalId}</span>
+        </div>
+        <div class="details-row">
+          <span class="label">Employee:</span>
+          <span class="value">${data.employeeName}${data.employeeId ? ` (ID: ${data.employeeId})` : ''}</span>
+        </div>
+        <div class="details-row">
+          <span class="label">Approved Amount:</span>
+          <span class="value" style="color: #4CAF50; font-weight: 700; font-size: 18px;">₱${data.amount?.toLocaleString()}</span>
+        </div>
+        <div class="details-row">
+          <span class="label">Final Approval Date:</span>
+          <span class="value">${new Date().toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+        </div>
+        <div class="details-row">
+          <span class="label">Status:</span>
+          <span class="value" style="color: #4CAF50; font-weight: 600;">✓ Ready for Trust Bank Release</span>
+        </div>
+      </div>
+
+      <div class="alert alert-success">
+        <strong>🎉 All Approvals Complete!</strong><br>
+        This withdrawal request has been approved by all required signatories and is now ready to be released to Trust Bank for disbursement.
+      </div>
+
+
+      <div class="alert alert-warning">
+        <strong>⚠️ Next Step Required:</strong><br>
+        Please proceed to release this withdrawal to Trust Bank for processing and disbursement to the employee.
+      </div>
+
+      <a href="${FRONTEND_URL}/hr/withdrawals/${data.withdrawalId}/release" class="button">Release to Trust Bank</a>
+     
+      <p style="color: #6c757d; margin-top: 20px;">The employee has been notified of the approval. Please process the release within 1 business day.</p>
+    `),
+      };
+
+    case 'hr-withdrawal-released-notification':
+      return {
+        subject: `🏦 Withdrawal Released Successfully - #${data.withdrawalId}`,
+        html: getBaseTemplate(`
+      <h2>Hello ${data.userName},</h2>
+      <p>A withdrawal has been successfully released to Trust Bank.</p>
+     
+      <div class="details">
+        <div class="details-row">
+          <span class="label">Withdrawal ID:</span>
+          <span class="value">#${data.withdrawalId}</span>
+        </div>
+        <div class="details-row">
+          <span class="label">Employee:</span>
+          <span class="value">${data.employeeName}${data.employeeId ? ` (ID: ${data.employeeId})` : ''}</span>
+        </div>
+        <div class="details-row">
+          <span class="label">Amount Released:</span>
+          <span class="value" style="color: #4CAF50; font-weight: 700;">₱${data.amount?.toLocaleString()}</span>
+        </div>
+        <div class="details-row">
+          <span class="label">Released By:</span>
+          <span class="value">${data.releasedBy || data.officerName}</span>
+        </div>
+        <div class="details-row">
+          <span class="label">Release Date:</span>
+          <span class="value">${new Date().toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+        </div>
+        ${
+          data.transactionReference
+            ? `
+        <div class="details-row">
+          <span class="label">Transaction Ref:</span>
+          <span class="value" style="font-family: monospace; color: #0033A0; font-weight: 600;">${data.transactionReference}</span>
+        </div>
+        `
+            : ''
+        }
+      </div>
+
+      <div class="alert alert-success">
+        <strong>✅ Release Confirmed:</strong><br>
+        The withdrawal has been successfully released to Trust Bank. The employee and relevant parties have been notified.
+      </div>
+
+      <a href="${FRONTEND_URL}/hr/withdrawals/${data.withdrawalId}" class="button">View Withdrawal Details</a>
+     
+      <p style="color: #6c757d; margin-top: 20px;">The withdrawal record has been updated with the release information and is now in the disbursement tracking phase.</p>
+    `),
+      };
+
+    case 'hr-withdrawal-cancelled':
+      return {
+        subject: `🔔 Withdrawal Request Cancelled by Employee - #${data.withdrawalId}`,
+        html: getBaseTemplate(`
+      <h2>Hello ${data.userName},</h2>
+      <p>An employee has <strong style="color: #f59e0b;">cancelled</strong> their provident fund withdrawal request.</p>
+      
+      <div class="details">
+        <div class="details-row">
+          <span class="label">Withdrawal ID:</span>
+          <span class="value">#${data.withdrawalId}</span>
+        </div>
+        <div class="details-row">
+          <span class="label">Employee:</span>
+          <span class="value">${data.employeeName}${data.employeeId ? ` (ID: ${data.employeeId})` : ''}</span>
+        </div>
+        <div class="details-row">
+          <span class="label">Amount:</span>
+          <span class="value">₱${data.amount?.toLocaleString()}</span>
+        </div>
+        <div class="details-row">
+          <span class="label">Cancellation Date:</span>
+          <span class="value">${new Date().toLocaleDateString('en-PH', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+        </div>
+        ${
+          data.withdrawalType
+            ? `
+        <div class="details-row">
+          <span class="label">Type:</span>
+          <span class="value">${data.withdrawalType}</span>
+        </div>
+        `
+            : ''
+        }
+        ${
+          data.previousStatus
+            ? `
+        <div class="details-row">
+          <span class="label">Previous Status:</span>
+          <span class="value">${data.previousStatus}</span>
+        </div>
+        `
+            : ''
+        }
+        <div class="details-row">
+          <span class="label">Cancelled By:</span>
+          <span class="value" style="color: #f59e0b; font-weight: 600;">Employee (Self-Cancelled)</span>
+        </div>
+        ${
+          data.reason
+            ? `
+        <div class="details-row">
+          <span class="label">Reason:</span>
+          <span class="value">${data.reason}</span>
+        </div> 
+        `
+            : ''
+        }
+      </div>
+
+      <div class="alert alert-warning">
+        <strong>ℹ️ Request Cancelled:</strong><br>
+        The employee has voluntarily cancelled this withdrawal request. This request was still under review when cancelled.}
+      </div>
+
+      ${
+        data.reason
+          ? `
+      <div style="background: #FFF8E1; padding: 18px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #FFD100;">
+        <strong style="color: #7D6608;">📝 Cancellation Reason:</strong>
+        <p style="margin: 8px 0 0 0; color: #7D6608;">${data.reason}</p>
+      </div>
+      `
+          : `
+      <div style="background: #F5F7FA; padding: 18px; border-radius: 6px; margin: 20px 0; border: 1px solid #E5E9F0;">
+        <p style="margin: 0; color: #6c757d; font-style: italic;">No cancellation reason was provided by the employee.</p>
+      </div>
+      `
+      }
+
+      <div style="background: #E3F2FD; padding: 18px; border-radius: 6px; margin: 20px 0; border-left: 4px solid #0033A0;">
+        <strong style="color: #002776;">✓ No Action Required:</strong>
+        <p style="margin: 8px 0 0 0; color: #002776;">
+          This is an informational notification only. The withdrawal request has been automatically removed from your pending queue. The employee may submit a new request in the future if needed.
+        </p>
+      </div>
+
+      <a href="${FRONTEND_URL}/hr/withdrawals/${data.withdrawalId}" class="button">View Details</a>
+      
+      <p style="color: #6c757d; margin-top: 20px;">The withdrawal record remains in the system for audit purposes but has been marked as cancelled.</p>
+    `),
       };
 
     case '2fa-reset':

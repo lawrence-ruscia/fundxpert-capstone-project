@@ -184,23 +184,47 @@ export async function cancelLoanRequestHandler(req: Request, res: Response) {
       remarks
     );
 
-    const loanId = loan.id;
+    const assistantId = loan.assistant_id;
+    const officerId = loan.officer_id;
 
-    //  NOTIFICATION: Notify employee
+    const employee = await getUserById(loan.user_id);
+    // Notify HR assistant
     await createNotification(
-      loan.user_id,
-      'Loan Cancelled',
-      `Loan cancelled by Employee. You may submit a new request if necessary.`,
+      assistantId,
+      'Loan Application Cancelled',
+      `Loan application #${loan.id} was cancelled by the Employee.`,
       'warning',
       {
-        loanId,
-        link: `/employee/loans/${loanId}`,
-        cancelledBy: 'Employee',
-        amount: loan.amount,
-        reason: remarks,
-        emailTemplate: 'loan-cancelled',
+        loanId: loan.id,
+        amount: loan.payout_amount,
+        employeeName: employee.name,
+        employeeId: employee.employee_id,
+        withdrawalType: loan.purpose_category,
+        reason: loan.notes,
+        link: `/hr/loans/${loan.id}`,
+        emailTemplate: 'hr-loan-cancelled',
       }
     );
+
+    if (officerId) {
+      // Notify HR officer if request was already pre-screened
+      await createNotification(
+        assistantId,
+        'Loan Application Cancelled',
+        `Loan application #${loan.id} was cancelled by the Employee.`,
+        'warning',
+        {
+          loanId: loan.id,
+          amount: loan.payout_amount,
+          employeeName: employee.name,
+          employeeId: employee.employee_id,
+          withdrawalType: loan.purpose_category,
+          reason: loan.notes,
+          link: `/hr/loans/${loan.id}`,
+          emailTemplate: 'hr-loan-cancelled',
+        }
+      );
+    }
 
     res.json({ success: true, message: 'Loan cancelled' });
   } catch (err) {

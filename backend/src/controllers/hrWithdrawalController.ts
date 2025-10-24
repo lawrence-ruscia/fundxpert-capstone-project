@@ -20,8 +20,11 @@ import PDFDocument from 'pdfkit';
 import ExcelJS from 'exceljs';
 import { SHEET_PASSWORD } from '../config/security.config.js';
 import path from 'path';
-import { createNotification } from '../utils/notificationHelper.js';
-import { logUserAction } from '../services/adminService.js';
+import {
+  createNotification,
+  notifyHRByRole,
+} from '../utils/notificationHelper.js';
+import { getUserById, logUserAction } from '../services/adminService.js';
 
 export const markWithdrawalReadyHandler = async (
   req: Request,
@@ -57,13 +60,39 @@ export const markWithdrawalReadyHandler = async (
       assistantId
     );
 
-    // Notify employee
+    const employee = await getUserById(request.user_id);
+
+    // Notify Employee
     await createNotification(
       request.user_id,
-      'Loan Ready for Review',
-      `Your loan application #${request.id} has been successfully submitted and is pending review.`,
-      'success',
-      { withdrawalId: request.id, link: `/hr/withdrawals/${request.id}` }
+      'Withdrawal Under Review',
+      `Your withdrawal request is now under HR officer review. You'll be notified once a decision is made.`,
+      'info',
+      {
+        withdrawalId: request.id,
+        amount: request.payout_amount,
+        link: `/employee/withdrawals/${request.id}`,
+        employeeName: employee.name,
+        employeeId: employee.id,
+        emailTemplate: 'loan-prescreened',
+      }
+    );
+
+    // Notify HR Benefits Officer
+    await notifyHRByRole(
+      'BenefitsOfficer',
+      'Withdrawal Ready for Review',
+      `Withdrawal application #${withdrawalId} for ${employee.name} is now ready for your review and approval.`,
+      'info',
+      {
+        withdrawalId: request.id,
+        link: `/hr/withdrawals/${withdrawalId}`,
+        amount: request.payout_amount,
+        employeeName: employee.name,
+        employeeId: employee.employee_id,
+        emailTemplate: 'hr-withdrawal-ready',
+      },
+      true
     );
 
     res.json({ success: true, withdrawal: request });
@@ -116,10 +145,12 @@ export const markWithdrawalIncompleteHandler = async (
     await createNotification(
       request.user_id,
       'Withdrawal Request Incomplete',
-      `Your loan request requires additional documents. Please upload the missing files to continue.`,
+      `Your withdrawal application #${withdrawalId} requires additional information. Please review and update your application.`,
       'warning',
       {
-        withdrawalId: Number(withdrawalId),
+        withdrawalId: request.id,
+        amount: request.payout_amount,
+        remarks: request.notes,
         link: `/employee/withdrawals/${withdrawalId}`,
       }
     );
@@ -167,6 +198,27 @@ export const moveWithdrawalToReviewHandler = async (
       'Moved to HR review',
       officerId
     );
+
+    const employee = await getUserById(request.user_id);
+
+    // Notify HR benefits officer
+    await notifyHRByRole(
+      'BenefitsOfficer',
+      'Withdrawal Ready for Review',
+      `Withdrawal application #${withdrawalId} for ${employee.name} is now ready for your review and approval.`,
+      'info',
+      {
+        withdrawalId: request.id,
+        link: `/hr/withdrawals/${withdrawalId}`,
+        amount: request.payout_amount,
+        employeeName: employee.name,
+        employeeId: employee.employee_id,
+
+        emailTemplate: 'hr-withdrawal-ready',
+      },
+      true
+    );
+
     res.json({ success: true, withdrawal: request });
   } catch (err) {
     if (err instanceof Error) {
@@ -263,6 +315,38 @@ export const releaseWithdrawalFundsHandler = async (
       payment_reference || null
     );
 
+    // Notify employee
+    await createNotification(
+      request.user_id,
+      'Withdrawal Funds Released',
+      `Your approved withdrawal has been released and will be deposited to your registered bank account within 2-3 business days.`,
+      'success',
+      {
+        withdrawalId: request.id,
+        link: `/employee/withdrawals/${withdrawalId}`,
+        paymentMethod: request.payment_method,
+        amount: request.payout_amount,
+      }
+    );
+
+    const employee = await getUserById(request.user_id);
+
+    // Notify HR Officer
+    await createNotification(
+      request.officer_id,
+      'Withdrawal Successfully Released',
+      `Withdrawal #${withdrawalId} for ${employee.name} has been successfully released and disbursed to the employee's account.`,
+      'success',
+      {
+        withdrawalId: request.id,
+        link: `/hr/withdrawals/${withdrawalId}`,
+        amount: request.payout_amount,
+        employeeName: employee.name,
+        employeeId: employee.employee_id,
+        emailTemplate: 'hr-withdrawal-released-notification',
+      }
+    );
+
     res.json({ success: true, withdrawal: request });
   } catch (err) {
     if (err instanceof Error) {
@@ -309,7 +393,15 @@ export const cancelWithdrawalRequestHandler = async (
         'Withdrawal Request Cancelled',
         `Your withdrawal request was cancelled by HR.`,
         'warning',
-        { request, link: `/employee/withdrawals/${withdrawalId}` }
+        {
+          withdrawalId: request.id,
+          amount: request.payout_amount,
+          cancelledby: 'HR Benefits Officer',
+          reason: request.notes,
+          canReapply: true,
+          link: `/employee/withdrawals/${withdrawalId}`,
+          emailTemplate: 'withdrawal-cancelled',
+        }
       );
     }
 
