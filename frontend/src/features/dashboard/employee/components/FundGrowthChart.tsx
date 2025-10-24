@@ -53,10 +53,12 @@ export function FundGrowthChart({
   contributionsData,
   timeRange,
   setTimeRange,
+  refresh,
 }: {
   contributionsData: Contribution[];
   timeRange: ContributionPeriod;
   setTimeRange: (period: ContributionPeriod) => void;
+  refresh: () => void;
 }) {
   const isMobile = useIsMobile();
 
@@ -67,11 +69,10 @@ export function FundGrowthChart({
 
     return contributionsData
       .map(record => ({
-        // Create a proper date string from month and year
         date: `${record.year}-${record.month.padStart(2, '0')}-01`,
-        employee: record.employee_amount,
-        employer: record.employer_amount,
-        total: record.total,
+        employee: Number(record.employee_amount) || 0,
+        employer: Number(record.employer_amount) || 0,
+        total: Number(record.total) || 0,
       }))
       .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
   }, [contributionsData]);
@@ -132,14 +133,11 @@ export function FundGrowthChart({
     }
   };
 
-  // Calculate dynamic total based on filtered data
   const latestTotal = useMemo(() => {
-    if (contributionsData && contributionsData.length > 0) {
-      // Every row has the same grand_total (sum of all records in time range)
-      return contributionsData[0].grand_total;
-    }
-    return 0;
-  }, [contributionsData]);
+    if (filteredData.length === 0) return 0;
+
+    return filteredData.reduce((sum, record) => sum + record.total, 0);
+  }, [filteredData]);
 
   return (
     <Card className='@container/card'>
@@ -158,9 +156,10 @@ export function FundGrowthChart({
           <ToggleGroup
             type='single'
             value={timeRange}
-            onValueChange={(value: ContributionPeriod) =>
-              value && setTimeRange(value)
-            }
+            onValueChange={(value: ContributionPeriod) => {
+              setTimeRange(value);
+              refresh();
+            }}
             variant='outline'
             className='hidden *:data-[slot=toggle-group-item]:!px-4 @[767px]/card:flex'
           >
@@ -172,7 +171,10 @@ export function FundGrowthChart({
           </ToggleGroup>
           <Select
             value={timeRange}
-            onValueChange={(value: ContributionPeriod) => setTimeRange(value)}
+            onValueChange={(value: ContributionPeriod) => {
+              setTimeRange(value);
+              refresh();
+            }}
           >
             <SelectTrigger
               className='flex w-40 **:data-[slot=select-value]:block **:data-[slot=select-value]:truncate @[767px]/card:hidden'
@@ -204,7 +206,7 @@ export function FundGrowthChart({
         </CardAction>
       </CardHeader>
       <CardContent className='px-2 pt-4 sm:px-6 sm:pt-6'>
-        {transformedData.length === 0 ? (
+        {filteredData.length === 0 ? (
           <div className='flex h-[350px] items-center justify-center'>
             <div className='text-muted-foreground'>
               No data available for the selected period
@@ -215,7 +217,7 @@ export function FundGrowthChart({
             config={chartConfig}
             className='aspect-auto h-[350px] w-full'
           >
-            <AreaChart data={transformedData}>
+            <AreaChart data={filteredData}>
               <defs>
                 <linearGradient id='fillEmployee' x1='0' y1='0' x2='0' y2='1'>
                   <stop

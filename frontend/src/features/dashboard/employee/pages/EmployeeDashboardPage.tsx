@@ -220,6 +220,7 @@ export default function EmployeeDashboardPage() {
                   contributionsData={contributions}
                   timeRange={timeRange}
                   setTimeRange={setTimeRange}
+                  refresh={handleRefresh}
                 />
               </div>
             </div>
