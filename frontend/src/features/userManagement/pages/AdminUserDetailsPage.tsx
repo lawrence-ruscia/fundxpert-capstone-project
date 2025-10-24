@@ -20,6 +20,7 @@ import {
   ShieldAlert,
   Eye,
   RefreshCw,
+  Users,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -45,6 +46,7 @@ import { ChangeRoleDialog } from '../components/ChangeRoleDialog';
 import type { User } from '@/shared/types/user';
 import { formatCurrency } from '@/features/dashboard/employee/utils/formatters';
 import { ChangeEmploymentStatusDialog } from '../components/ChangeEmploymentStatusDialog';
+import { HRRoleBadge } from '@/features/dashboard/hr/components/HRRoleBadge';
 
 export function AdminUserDetailsPage() {
   const { userId } = useParams<{ userId: string }>();
@@ -137,15 +139,15 @@ export function AdminUserDetailsPage() {
     const config = {
       Admin: {
         icon: Shield,
-        className: 'border-red-200 bg-red-50 text-red-800',
+        className: 'border-red-200 bg-red-50 text-red-800 font-semibold',
       },
       HR: {
         icon: UserIcon,
-        className: 'border-green-200 bg-green-50 text-green-800',
+        className: 'border-green-200 bg-green-50 text-green-800 font-semibold',
       },
       Employee: {
         icon: UserIcon,
-        className: 'border-blue-200 bg-blue-50 text-blue-800',
+        className: 'border-blue-200 bg-blue-50 text-blue-800 font-semibold',
       },
     };
     const { className, icon: Icon } = config[role];
@@ -451,6 +453,18 @@ export function AdminUserDetailsPage() {
                     </div>
                     {getRoleBadge(user.role)}
                   </div>
+
+                  {user.hr_role && (
+                    <div>
+                      <div className='mb-2 flex items-center gap-2'>
+                        <Users className='text-muted-foreground h-4 w-4' />
+                        <span className='text-muted-foreground text-sm font-medium'>
+                          HR Role
+                        </span>
+                      </div>
+                      {<HRRoleBadge hrRole={user.hr_role} size='sm' />}
+                    </div>
+                  )}
                 </div>
               </div>
             </CardContent>

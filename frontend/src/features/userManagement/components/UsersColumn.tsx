@@ -3,10 +3,11 @@ import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { DataTableColumnHeader } from '@/shared/components/DataTableColummHeader';
 import { LongText } from '@/shared/components/LongText';
-import type { User } from '@/shared/types/user';
+import type { HRRole, User } from '@/shared/types/user';
 import { UsersTableRowActions } from './UsersTableRowActions';
 import { Shield, User as UserIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { HRRoleBadge } from '@/features/dashboard/hr/components/HRRoleBadge';
 
 const formatDisplayDate = (dateString: Date) => {
   return dateString.toLocaleDateString('en-us', {
@@ -115,15 +116,16 @@ export const usersColumns: ColumnDef<User>[] = [
       const roleConfig = {
         Admin: {
           icon: Shield,
-          className: 'border-red-200 bg-red-50 text-red-800',
+          className: 'border-red-200 bg-red-50 text-red-800 font-semibold',
         },
         HR: {
           icon: UserIcon,
-          className: 'border-green-200 bg-green-50 text-green-800',
+          className:
+            'border-green-200 bg-green-50 text-green-800 font-semibold',
         },
         Employee: {
           icon: UserIcon,
-          className: 'border-blue-200 bg-blue-50 text-blue-800',
+          className: 'border-blue-200 bg-blue-50 text-blue-800 font-semibold',
         },
       };
       const config = roleConfig[role];
@@ -157,43 +159,7 @@ export const usersColumns: ColumnDef<User>[] = [
         return <span className='text-muted-foreground text-xs'>—</span>;
       }
 
-      const hrRoleConfig = {
-        BenefitsAssistant: {
-          label: 'Benefits Assistant',
-          className: 'border-purple-200 bg-purple-50 text-purple-800',
-        },
-        BenefitsOfficer: {
-          label: 'Benefits Officer',
-          className: 'border-indigo-200 bg-indigo-50 text-indigo-800',
-        },
-        DeptHead: {
-          label: 'Dept Head',
-          className: 'border-orange-200 bg-orange-50 text-orange-800',
-        },
-        MgmtApprover: {
-          label: 'Mgmt Approver',
-          className: 'border-amber-200 bg-amber-50 text-amber-800',
-        },
-        GeneralHR: {
-          label: 'General HR',
-          className: 'border-teal-200 bg-teal-50 text-teal-800',
-        },
-      };
-
-      const config = hrRoleConfig[hrRole];
-
-      if (!config) {
-        return <span className='text-muted-foreground text-xs'>—</span>;
-      }
-
-      return (
-        <Badge
-          variant='outline'
-          className={cn('gap-1 text-xs', config.className)}
-        >
-          {config.label}
-        </Badge>
-      );
+      return <HRRoleBadge hrRole={hrRole as HRRole} size='xs' />;
     },
     filterFn: (row, id, value) => {
       return value.includes(row.getValue(id));

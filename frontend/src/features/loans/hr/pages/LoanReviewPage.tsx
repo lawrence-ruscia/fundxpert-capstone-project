@@ -51,6 +51,7 @@ import {
   Hash,
   Plus,
   Save,
+  Gavel,
 } from 'lucide-react';
 import { assignLoanApprovers, getLoanById } from '../services/hrLoanService';
 import { useSearchHR } from '../hooks/useSearchHR';
@@ -61,10 +62,10 @@ import { getErrorMessage } from '@/shared/api/getErrorMessage';
 interface SearchHRRecord {
   id: number;
   name: string;
+  hr_role: 'DeptHead' | 'MgmtApprover';
   employee_id?: string | null;
   department: string;
   position: string;
-  email: string;
 }
 
 // Schema for individual approver
@@ -72,6 +73,7 @@ const approverSchema = z.object({
   approver_id: z.number().min(1, 'Approver ID is required'),
   sequence_order: z.number().min(1, 'Sequence must be at least 1'),
   approver_name: z.string(),
+  approver_hr_role: z.enum(['DeptHead', 'MgmtApprover']),
   approver_employee_id: z.string().nullish(),
   approver_department: z.string(),
   approver_position: z.string(),
@@ -173,6 +175,7 @@ export const LoanReviewPage = () => {
       approver_id: selectedHR.id,
       sequence_order: fields.length + 1,
       approver_name: selectedHR.name,
+      approver_hr_role: selectedHR.hr_role,
       approver_employee_id: selectedHR.employee_id ?? '',
       approver_department: selectedHR.department,
       approver_position: selectedHR.position,
@@ -314,17 +317,17 @@ export const LoanReviewPage = () => {
                 </Card>
               )}
 
-              {/* Search HR Officers */}
+              {/* Search HR Approvers */}
               <Card>
                 <CardHeader className='pb-4'>
                   <CardTitle className='flex items-center gap-2 text-lg'>
                     <div className='bg-primary/10 rounded-lg p-2'>
                       <Search className='text-primary h-5 w-5' />
                     </div>
-                    Search HR Officers
+                    Search HR Approvers
                   </CardTitle>
                   <CardDescription>
-                    Search and select HR officers to add to the approval chain
+                    Search and select HR Approvers to add to the approval chain
                   </CardDescription>
                 </CardHeader>
                 <CardContent className='space-y-4'>
@@ -386,7 +389,7 @@ export const LoanReviewPage = () => {
                                 <CommandEmpty>
                                   {searchQuery.length < 2
                                     ? 'Type at least 2 characters to search...'
-                                    : 'No HR officers found.'}
+                                    : 'No HR approvers found.'}
                                 </CommandEmpty>
                                 <CommandGroup>
                                   {results.map(hrApprover => (
@@ -416,6 +419,10 @@ export const LoanReviewPage = () => {
                                           </span>
                                         </div>
                                         <div className='text-muted-foreground mt-1 flex items-center gap-4 text-sm'>
+                                          <div className='flex items-center gap-1'>
+                                            <Gavel className='h-3 w-3' />
+                                            {hrApprover.hr_role}
+                                          </div>
                                           <div className='flex items-center gap-1'>
                                             <Building className='h-3 w-3' />
                                             {hrApprover.department}
@@ -453,6 +460,10 @@ export const LoanReviewPage = () => {
                               <div className='flex items-center gap-1'>
                                 <Hash className='h-3 w-3' />
                                 {selectedHR.employee_id}
+                              </div>
+                              <div className='flex items-center gap-1'>
+                                <Gavel className='h-3 w-3' />
+                                {selectedHR.hr_role}
                               </div>
                               <div className='flex items-center gap-1'>
                                 <Building className='h-3 w-3' />
@@ -612,9 +623,9 @@ export const LoanReviewPage = () => {
                 <div className='flex items-start gap-3 text-sm'>
                   <User className='text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0' />
                   <div>
-                    <p className='font-medium'>HR Officers Only</p>
+                    <p className='font-medium'>HR Approvers Only</p>
                     <p className='text-muted-foreground text-xs'>
-                      Only authorized HR officers can be assigned as approvers.
+                      Only authorized HR approvers can be assigned as approvers.
                     </p>
                   </div>
                 </div>

@@ -19,12 +19,15 @@ import { SignOutDialog } from './sign-out-dialog';
 import { getInitials } from '@/utils/getInitials';
 import { ResetQRDialog } from './reset-qr-dialog';
 import { ResetPasswordDialog } from './reset-password-dialog';
+import { hrRoles } from './profile-dropdown';
+import type { HRRole } from '../types/user';
 
 type NavUserProps = {
   user: {
     id: number;
     name: string;
     role: 'Employee' | 'HR' | 'Admin';
+    hr_role: HRRole;
   };
 };
 
@@ -53,7 +56,9 @@ export function NavUser({ user }: NavUserProps) {
                 </Avatar>
                 <div className='grid flex-1 text-start text-sm leading-tight'>
                   <span className='truncate font-semibold'>{user.name}</span>
-                  <span className='truncate text-xs'>{user.role}</span>
+                  <span className='truncate text-xs'>
+                    {user.role} | {hrRoles[user?.hr_role]}
+                  </span>
                 </div>
                 <ChevronsUpDown className='ms-auto size-4' />
               </SidebarMenuButton>
@@ -74,7 +79,9 @@ export function NavUser({ user }: NavUserProps) {
                   </Avatar>
                   <div className='grid flex-1 text-start text-sm leading-tight'>
                     <span className='truncate font-semibold'>{user.name}</span>
-                    <span className='truncate text-xs'>{user.role}</span>
+                    <span className='truncate text-xs'>
+                      {user.role} | {hrRoles[user?.hr_role]}
+                    </span>
                   </div>
                 </div>
               </DropdownMenuLabel>

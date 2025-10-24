@@ -15,7 +15,13 @@ import { getInitials } from '@/utils/getInitials';
 import { KeyRound, LogOut, QrCode } from 'lucide-react';
 import { ResetQRDialog } from './reset-qr-dialog';
 import { ResetPasswordDialog } from './reset-password-dialog';
-
+export const hrRoles = {
+  BenefitsAssistant: 'Benefits Assistant',
+  BenefitsOfficer: 'Benefits Officer',
+  DeptHead: 'Department Head',
+  MgmtApprover: 'Management Approver',
+  GeneralHR: 'General HR',
+};
 export function ProfileDropdown() {
   const { user, loading } = useAuth();
   const [resetOpen, setResetOpen] = useDialogState();
@@ -39,7 +45,7 @@ export function ProfileDropdown() {
               <div className='flex flex-col gap-1.5'>
                 <p className='text-sm leading-none font-medium'>{user?.name}</p>
                 <p className='text-muted-foreground text-xs leading-none'>
-                  {user?.role}
+                  {user?.role} | {hrRoles[user?.hr_role]}
                 </p>
               </div>
             )}

@@ -49,6 +49,7 @@ export type SearchHRRecord = {
   id: number;
   employee_id: string;
   name: string;
+  hr_role: string;
   department: string;
   position: string;
 };
