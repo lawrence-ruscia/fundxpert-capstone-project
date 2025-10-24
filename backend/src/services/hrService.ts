@@ -575,12 +575,14 @@ export async function searchHR(query: string) {
       u.id,
       u.employee_id,
       u.name,
+      u.hr_role,
       d.name AS department,
       p.title AS position
     FROM users u
     LEFT JOIN departments d ON u.department_id = d.id
     LEFT JOIN positions p ON u.position_id = p.id
     WHERE u.role = 'HR'
+      AND u.hr_role IN ('DeptHead', 'MgmtApprover')
       AND (u.name ILIKE $1 OR u.employee_id ILIKE $1)
     ORDER BY u.name
     LIMIT 10;

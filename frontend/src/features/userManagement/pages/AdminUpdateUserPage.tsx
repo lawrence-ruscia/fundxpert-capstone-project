@@ -144,7 +144,7 @@ const updateUserInputSchema = z
           message: 'Employee ID must follow the format NN-NNNNN',
           path: ['employee_id'],
         });
-      }
+      } 
     }
 
     if (data.role === 'HR') {

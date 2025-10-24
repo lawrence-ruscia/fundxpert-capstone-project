@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { Shield, UserCog, AlertTriangle } from 'lucide-react';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import {
   Select,
   SelectContent,
@@ -73,10 +74,50 @@ export function ChangeRoleDialog({
   refresh,
 }: ChangeRoleDialogProps) {
   const [selectedRole, setSelectedRole] = useState<Role>(currentRole);
+  const [newEmployeeId, setNewEmployeeId] = useState<string>(employeeId || '');
+  const [employeeIdError, setEmployeeIdError] = useState<string>('');
+
+  const validateEmployeeId = (id: string, role: Role): string => {
+    if (role === 'Employee') {
+      if (!id || id.trim() === '') {
+        return 'Employee ID is required for Employee role';
+      }
+      if (!/^\d{2}-\d{5}$/.test(id)) {
+        return 'Employee ID must follow the format NN-NNNNN';
+      }
+    } else if (id && id.trim() !== '') {
+      // For HR/Admin, if employee_id is provided, it must be valid format
+      if (!/^\d{2}-\d{5}$/.test(id)) {
+        return 'Employee ID must follow the format NN-NNNNN';
+      }
+    }
+    return '';
+  };
+
+  const handleEmployeeIdChange = (value: string) => {
+    setNewEmployeeId(value);
+    setEmployeeIdError(validateEmployeeId(value, selectedRole));
+  };
+
+  const handleRoleChange = (value: Role) => {
+    setSelectedRole(value);
+    setEmployeeIdError(validateEmployeeId(newEmployeeId, value));
+  };
 
   const handleChangeRole = async () => {
-    if (selectedRole === currentRole) {
-      toast.info('No changes made. The role is already set to this value.');
+    // Validate employee ID
+    const validationError = validateEmployeeId(newEmployeeId, selectedRole);
+    if (validationError) {
+      setEmployeeIdError(validationError);
+      return;
+    }
+
+    // Check if anything changed
+    const roleChanged = selectedRole !== currentRole;
+    const employeeIdChanged = newEmployeeId !== (employeeId || '');
+
+    if (!roleChanged && !employeeIdChanged) {
+      toast.info('No changes made.');
       onOpenChange(false);
       return;
     }
@@ -85,14 +126,30 @@ export function ChangeRoleDialog({
       onOpenChange(false);
       setActionLoading(true);
 
-      await updateUser(userId, { role: selectedRole });
+      const updateData: { role: Role; employee_id?: string } = {
+        role: selectedRole,
+      };
+
+      // Include employee_id in the update
+      if (selectedRole === 'Employee' || newEmployeeId.trim() !== '') {
+        updateData.employee_id = newEmployeeId.trim();
+      }
+
+      await updateUser(userId, updateData);
       await refresh();
 
       setActionLoading(false);
 
-      toast.success(
-        `${userName || 'User'}'s role has been changed from ${currentRole} to ${selectedRole}. They may need to log out and back in for changes to take effect.`
-      );
+      let message = '';
+      if (roleChanged && employeeIdChanged) {
+        message = `${userName || 'User'}'s role has been changed from ${currentRole} to ${selectedRole} and Employee ID updated. They may need to log out and back in for changes to take effect.`;
+      } else if (roleChanged) {
+        message = `${userName || 'User'}'s role has been changed from ${currentRole} to ${selectedRole}. They may need to log out and back in for changes to take effect.`;
+      } else {
+        message = `${userName || 'User'}'s Employee ID has been updated.`;
+      }
+
+      toast.success(message);
     } catch (err) {
       setActionLoading(false);
 
@@ -105,13 +162,17 @@ export function ChangeRoleDialog({
 
   const handleOpenChange = (isOpen: boolean) => {
     if (!isOpen) {
-      // Reset to current role when dialog closes
+      // Reset to current values when dialog closes
       setSelectedRole(currentRole);
+      setNewEmployeeId(employeeId || '');
+      setEmployeeIdError('');
     }
     onOpenChange(isOpen);
   };
 
   const isRoleChanged = selectedRole !== currentRole;
+  const isEmployeeIdChanged = newEmployeeId !== (employeeId || '');
+  const hasChanges = isRoleChanged || isEmployeeIdChanged;
   const selectedRoleInfo = ROLE_DESCRIPTIONS[selectedRole];
 
   return (
@@ -119,7 +180,8 @@ export function ChangeRoleDialog({
       open={open}
       onOpenChange={handleOpenChange}
       handleConfirm={handleChangeRole}
-      disabled={!isRoleChanged}
+      disabled={!hasChanges || !!employeeIdError}
+      className='max-h-[85vh] max-w-2xl overflow-y-auto'
       title={
         <span className='flex items-center gap-2'>
           <UserCog className='me-1 inline-block' size={18} />
@@ -142,10 +204,7 @@ export function ChangeRoleDialog({
 
           <div className='space-y-2'>
             <Label htmlFor='role'>Select New Role:</Label>
-            <Select
-              value={selectedRole}
-              onValueChange={value => setSelectedRole(value as Role)}
-            >
+            <Select value={selectedRole} onValueChange={handleRoleChange}>
               <SelectTrigger className='w-full' id='role'>
                 <SelectValue placeholder='Select a role' />
               </SelectTrigger>
@@ -172,6 +231,30 @@ export function ChangeRoleDialog({
             </Select>
           </div>
 
+          {/* Employee ID Field - Only show for Employee role */}
+          {selectedRole === 'Employee' && (
+            <div className='space-y-2'>
+              <Label htmlFor='employee_id'>
+                Employee ID
+                <span className='ml-1 text-red-500'>*</span>
+              </Label>
+              <Input
+                id='employee_id'
+                type='text'
+                placeholder='NN-NNNNN (e.g., 24-12345)'
+                value={newEmployeeId}
+                onChange={e => handleEmployeeIdChange(e.target.value)}
+                className={employeeIdError ? 'border-red-500' : ''}
+              />
+              {employeeIdError && (
+                <p className='text-sm text-red-500'>{employeeIdError}</p>
+              )}
+              <p className='text-muted-foreground text-xs'>
+                Format: NN-NNNNN (e.g., 24-12345)
+              </p>
+            </div>
+          )}
+
           {/* Role Information Card */}
           <div className='bg-muted/50 rounded-lg border p-4'>
             <div className='mb-2 flex items-center gap-2'>
@@ -192,17 +275,31 @@ export function ChangeRoleDialog({
           </div>
 
           {/* Current vs New Role Comparison */}
-          {isRoleChanged && (
+          {hasChanges && (
             <div className='rounded-lg border bg-blue-50 p-3 dark:bg-blue-900/20'>
               <div className='flex items-start gap-2 text-sm'>
                 <div className='flex-1'>
                   <p className='font-medium text-blue-900 dark:text-blue-100'>
-                    Role Change Summary
+                    Change Summary
                   </p>
-                  <p className='mt-1 text-xs text-blue-700 dark:text-blue-300'>
-                    From: <span className='font-semibold'>{currentRole}</span> →
-                    To: <span className='font-semibold'>{selectedRole}</span>
-                  </p>
+                  {isRoleChanged && (
+                    <p className='mt-1 text-xs text-blue-700 dark:text-blue-300'>
+                      Role: <span className='font-semibold'>{currentRole}</span>{' '}
+                      → <span className='font-semibold'>{selectedRole}</span>
+                    </p>
+                  )}
+                  {isEmployeeIdChanged && (
+                    <p className='mt-1 text-xs text-blue-700 dark:text-blue-300'>
+                      Employee ID:{' '}
+                      <span className='font-semibold'>
+                        {employeeId || '(none)'}
+                      </span>{' '}
+                      →{' '}
+                      <span className='font-semibold'>
+                        {newEmployeeId || '(none)'}
+                      </span>
+                    </p>
+                  )}
                 </div>
               </div>
             </div>
@@ -230,9 +327,9 @@ export function ChangeRoleDialog({
             </AlertDescription>
           </Alert>
 
-          {!isRoleChanged && (
+          {!hasChanges && (
             <p className='text-muted-foreground text-sm italic'>
-              Please select a different role to proceed.
+              Please make changes to proceed.
             </p>
           )}
         </div>

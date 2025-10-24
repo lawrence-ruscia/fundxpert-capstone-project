@@ -199,6 +199,12 @@ export async function updateUser(
       updates.employee_id = null;
     }
 
+    // Normalize hr_role based on role
+    if (updates.role === 'Employee' || updates.role === 'Admin') {
+      // If the user is changing to Employee/Admin, hr_role must be null
+      updates.hr_role = null;
+    }
+
     // STEP 2: Detect actual changes and sensitive changes
     const fields: string[] = [];
     const values: unknown[] = [id];
