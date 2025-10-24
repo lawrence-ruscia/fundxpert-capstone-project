@@ -129,7 +129,7 @@ export async function notifyHRByRole(
 ): Promise<void> {
   try {
     const { rows } = await pool.query(
-      `SELECT id FROM users WHERE hr_role = $1 AND role = 'HR'`,
+      `SELECT id, email FROM users WHERE hr_role = $1 AND role = 'HR'`,
       [hrRole]
     );
 

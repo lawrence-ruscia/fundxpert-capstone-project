@@ -74,7 +74,7 @@ export const markWithdrawalReadyHandler = async (
         link: `/employee/withdrawals/${request.id}`,
         employeeName: employee.name,
         employeeId: employee.id,
-        emailTemplate: 'loan-prescreened',
+        emailTemplate: 'withdrawal-prescreened',
       }
     );
 
@@ -152,6 +152,7 @@ export const markWithdrawalIncompleteHandler = async (
         amount: request.payout_amount,
         remarks: request.notes,
         link: `/employee/withdrawals/${withdrawalId}`,
+        emailTemplate: 'withdrawal-incomplete',
       }
     );
     res.json({ success: true, withdrawal: request });

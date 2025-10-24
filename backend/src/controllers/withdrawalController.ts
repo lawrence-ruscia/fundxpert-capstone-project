@@ -79,7 +79,8 @@ export async function createWithdrawal(req: Request, res: Response) {
         employeeId: employee.employee_id,
         link: `/hr/withdrawals/${withdrawalId}`,
         emailTemplate: 'hr-withdrawal-submitted',
-      }
+      },
+      true
     );
 
     res.status(201).json(withdrawal);
@@ -143,25 +144,27 @@ export async function cancelWithdrawalRequest(req: Request, res: Response) {
     const officerId = request.officer_id;
 
     const employee = await getUserById(request.user_id);
-    // Notify HR assistant
-    await createNotification(
-      assistantId,
-      'Withdrawal Request Cancelled',
-      `Withdrawal request #${request.id} was cancelled by the Employee.`,
-      'warning',
-      {
-        withdrawalId: request.id,
-        amount: request.payout_amount,
-        employeeName: employee.name,
-        employeeId: employee.employee_id,
-        withdrawalType: request.purpose_category,
-        cancelledby: 'HR Benefits Officer',
-        reason: request.notes,
-        canReapply: true,
-        link: `/hr/withdrawals/${request.id}`,
-        emailTemplate: 'hr-withdrawal-cancelled',
-      }
-    );
+    if (assistantId) {
+      // Notify HR assistant
+      await createNotification(
+        assistantId,
+        'Withdrawal Request Cancelled',
+        `Withdrawal request #${request.id} was cancelled by the Employee.`,
+        'warning',
+        {
+          withdrawalId: request.id,
+          amount: request.payout_amount,
+          employeeName: employee.name,
+          employeeId: employee.employee_id,
+          withdrawalType: request.purpose_category,
+          cancelledby: 'HR Benefits Officer',
+          reason: request.notes,
+          canReapply: true,
+          link: `/hr/withdrawals/${request.id}`,
+          emailTemplate: 'hr-withdrawal-cancelled',
+        }
+      );
+    }
 
     if (officerId) {
       // Notify HR officer if request was already pre-screened

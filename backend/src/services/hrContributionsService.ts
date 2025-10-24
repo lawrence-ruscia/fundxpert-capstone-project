@@ -18,7 +18,7 @@ export async function recordContribution(payload: {
 }): Promise<Contribution> {
   const employee = await getUserById(payload.user_id);
 
-  if (employee.date_hired >= payload.contribution_date) {
+  if (payload.contribution_date < employee.date_hired) {
     throw new Error('Contribution date cannot preceed date hired');
   }
 

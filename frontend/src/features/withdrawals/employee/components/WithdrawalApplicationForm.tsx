@@ -182,6 +182,8 @@ export const WithdrawalApplicationForm = ({
         duration: 5000,
       });
 
+      console.log('Withdrawal submitted');
+
       onSuccess();
     } catch (error) {
       console.error('Withdrawal application failed:', error);
