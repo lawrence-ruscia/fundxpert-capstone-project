@@ -2021,21 +2021,22 @@ export async function getAssignedLoans(req: Request, res: Response) {
     if (roleQueries.assistant) {
       const assistantQuery = `
         SELECT 
-          l.id,
-          l.amount,
-          l.status,
-          l.purpose_category,
-          l.repayment_term_months,
-          l.created_at,
-          l.updated_at,
-          u.employee_id,
-          u.name as employee_name
-        FROM loans l
-        LEFT JOIN users u ON l.user_id = u.id
-        WHERE l.assistant_id = $1
-          AND l.status IN ('Pending', 'Incomplete')
-          AND l.ready_for_review = FALSE
-        ORDER BY l.created_at ASC
+        l.id,
+        l.assistant_id,
+        l.amount,
+        l.status,
+        l.purpose_category,
+        l.repayment_term_months,
+        l.created_at,
+        l.updated_at,
+        u.employee_id,
+        u.name AS employee_name
+      FROM loans l
+      LEFT JOIN users u ON l.user_id = u.id
+      WHERE (l.assistant_id = $1 OR l.assistant_id IS NULL)
+        AND l.status IN ('Pending', 'Incomplete')
+        AND l.ready_for_review = FALSE
+      ORDER BY l.created_at ASC;
       `;
       const assistantResult = await pool.query(assistantQuery, [userId]);
       result.assistant = assistantResult.rows;
