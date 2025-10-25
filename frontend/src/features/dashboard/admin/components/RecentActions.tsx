@@ -9,12 +9,14 @@ import { Clock, Users, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { RecentAction } from '../types/admin';
 import { Badge } from '@/components/ui/badge';
+import { useNavigate } from 'react-router-dom';
 
 export const RecentActions = ({
   recent_actions,
 }: {
   recent_actions: RecentAction[];
 }) => {
+  const navigate = useNavigate();
   return (
     <Card>
       <CardHeader className='pb-4'>
@@ -40,7 +42,7 @@ export const RecentActions = ({
       </CardHeader>
       <CardContent>
         {recent_actions.length > 0 ? (
-          <div className='space-y-3'>
+          <div className='max-h-96 space-y-3 overflow-y-auto'>
             {recent_actions.map((action, idx) => {
               const isRecent = idx < 3; // Highlight first 3 as most recent
 
@@ -110,7 +112,12 @@ export const RecentActions = ({
             {/* View All Link (optional) */}
             {recent_actions.length >= 5 && (
               <div className='border-t pt-4 text-center'>
-                <Button variant='ghost' size='sm' className='text-xs'>
+                <Button
+                  variant='ghost'
+                  size='sm'
+                  className='text-xs'
+                  onClick={() => navigate('/admin/logs')}
+                >
                   View All Actions
                   <ChevronRight className='ml-1 h-3 w-3' />
                 </Button>
