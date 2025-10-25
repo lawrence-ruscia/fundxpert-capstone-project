@@ -96,13 +96,17 @@ const updateUserInputSchema = z
     role: z.enum(['Employee', 'HR', 'Admin'], {
       required_error: 'Please select a role',
     }),
+    // Allow the HR role enum values OR 'N/A'
     hr_role: z
-      .enum([
-        'BenefitsAssistant',
-        'BenefitsOfficer',
-        'DeptHead',
-        'MgmtApprover',
-        'GeneralHR',
+      .union([
+        z.enum([
+          'BenefitsAssistant',
+          'BenefitsOfficer',
+          'DeptHead',
+          'MgmtApprover',
+          'GeneralHR',
+        ]),
+        z.literal('N/A'),
       ])
       .optional(),
     department_id: z.string().min(1, 'Please select a department'),
@@ -144,11 +148,12 @@ const updateUserInputSchema = z
           message: 'Employee ID must follow the format NN-NNNNN',
           path: ['employee_id'],
         });
-      } 
+      }
     }
 
+    // HR role validation - must be selected when role is HR
     if (data.role === 'HR') {
-      if (!data.hr_role) {
+      if (!data.hr_role || data.hr_role === 'N/A') {
         ctx.addIssue({
           code: 'custom',
           message: 'HR role is required when role is set to HR',
@@ -182,7 +187,7 @@ const formatDateForInput = (dateString: string | Date): string => {
 const updateUserOutputSchema = updateUserInputSchema.transform(data => ({
   ...data,
   role: data.role,
-  hr_role: data.hr_role,
+  hr_role: data.hr_role === 'N/A' || data.role !== 'HR' ? null : data.hr_role,
   department_id: parseInt(data.department_id, 10),
   position_id: parseInt(data.position_id, 10),
   salary:
@@ -246,7 +251,7 @@ export const AdminUpdateUserPage = () => {
       employee_id: '',
 
       role: undefined,
-      hr_role: undefined,
+      hr_role: 'N/A', // Default to N/A
       department_id: '',
       position_id: '',
       salary: '',
@@ -271,7 +276,11 @@ export const AdminUpdateUserPage = () => {
         email: data.user.email || '',
         employee_id: data.user.employee_id?.toString() || '',
         role: data.user.role?.toString() || '',
-        hr_role: data.user.hr_role?.toString() || '',
+        // Set to N/A for non-HR users, or the actual HR role
+        hr_role:
+          data.user.role === 'HR' && data.user.hr_role
+            ? (data.user.hr_role as any)
+            : 'N/A',
         department_id: data.user.department_id?.toString() || '',
         position_id: data.user.position_id?.toString() || '',
         salary: data.user.salary?.toString() || '',
@@ -281,6 +290,17 @@ export const AdminUpdateUserPage = () => {
       });
     }
   }, [data, form]);
+
+  const selectedRole = form.watch('role'); // Watch the role
+
+  useEffect(() => {
+    if (selectedRole !== 'HR') {
+      form.setValue('hr_role', 'N/A', {
+        shouldValidate: false,
+        shouldDirty: false,
+      });
+    }
+  }, [selectedRole, form]);
 
   const onSubmit = async (formData: UpdateUserFormData) => {
     try {
@@ -376,8 +396,6 @@ export const AdminUpdateUserPage = () => {
   if (!data?.user) {
     return <DataError message='User not found' />;
   }
-
-  const selectedRole = form.watch('role'); // Watch the role field
 
   return (
     <div className='container px-4'>
@@ -596,61 +614,56 @@ export const AdminUpdateUserPage = () => {
                               <span className='text-muted-foreground'>*</span>
                             )}
                           </FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            value={field.value || ''}
-                            disabled={selectedRole !== 'HR'}
-                          >
-                            <FormControl>
-                              <SelectTrigger
-                                className={cn(
-                                  'h-12 w-full text-base',
-                                  selectedRole !== 'HR' &&
-                                    'bg-muted cursor-not-allowed'
-                                )}
-                              >
-                                <SelectValue
-                                  placeholder={
-                                    selectedRole === 'HR'
-                                      ? 'Select HR role'
-                                      : 'Only available for HR role'
-                                  }
-                                />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem
-                                value='BenefitsAssistant'
-                                className='text-base'
-                              >
-                                Benefits Assistant
-                              </SelectItem>
-                              <SelectItem
-                                value='BenefitsOfficer'
-                                className='text-base'
-                              >
-                                Benefits Officer
-                              </SelectItem>
-                              <SelectItem
-                                value='DeptHead'
-                                className='text-base'
-                              >
-                                Department Head
-                              </SelectItem>
-                              <SelectItem
-                                value='MgmtApprover'
-                                className='text-base'
-                              >
-                                Management Approver
-                              </SelectItem>
-                              <SelectItem
-                                value='GeneralHR'
-                                className='text-base'
-                              >
-                                General HR
-                              </SelectItem>
-                            </SelectContent>
-                          </Select>
+                          {selectedRole !== 'HR' ? (
+                            // Show a disabled input with N/A for non-HR users
+                            <div className='border-input bg-muted text-muted-foreground flex w-full items-center rounded-md border px-3 py-2 text-base'>
+                              N/A - Not an HR user
+                            </div>
+                          ) : (
+                            // Show the select for HR users
+                            <Select
+                              onValueChange={field.onChange}
+                              value={field.value === 'N/A' ? '' : field.value}
+                            >
+                              <FormControl>
+                                <SelectTrigger className='h-12 w-full text-base'>
+                                  <SelectValue placeholder='Select HR role' />
+                                </SelectTrigger>
+                              </FormControl>
+                              <SelectContent>
+                                <SelectItem
+                                  value='BenefitsAssistant'
+                                  className='text-base'
+                                >
+                                  Benefits Assistant
+                                </SelectItem>
+                                <SelectItem
+                                  value='BenefitsOfficer'
+                                  className='text-base'
+                                >
+                                  Benefits Officer
+                                </SelectItem>
+                                <SelectItem
+                                  value='DeptHead'
+                                  className='text-base'
+                                >
+                                  Department Head
+                                </SelectItem>
+                                <SelectItem
+                                  value='MgmtApprover'
+                                  className='text-base'
+                                >
+                                  Management Approver
+                                </SelectItem>
+                                <SelectItem
+                                  value='GeneralHR'
+                                  className='text-base'
+                                >
+                                  General HR
+                                </SelectItem>
+                              </SelectContent>
+                            </Select>
+                          )}
 
                           <FormMessage />
                         </FormItem>
