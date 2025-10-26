@@ -270,7 +270,7 @@ export const AdminUpdateUserPage = () => {
       data?.user &&
       data?.departments?.length > 0 &&
       data?.positions?.length > 0
-    ) {
+    ) { 
       form.reset({
         name: data.user.name || '',
         email: data.user.email || '',

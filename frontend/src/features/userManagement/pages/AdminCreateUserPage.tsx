@@ -93,12 +93,15 @@ const createEmployeeInputSchema = z
       required_error: 'Please select a role',
     }),
     hr_role: z
-      .enum([
-        'BenefitsAssistant',
-        'BenefitsOfficer',
-        'DeptHead',
-        'MgmtApprover',
-        'GeneralHR',
+      .union([
+        z.enum([
+          'BenefitsAssistant',
+          'BenefitsOfficer',
+          'DeptHead',
+          'MgmtApprover',
+          'GeneralHR',
+        ]),
+        z.literal('N/A'),
       ])
       .optional(),
     department_id: z.string().min(1, 'Please select a department'),
@@ -145,9 +148,9 @@ const createEmployeeInputSchema = z
       }
     }
 
-    // Conditional validation: hr_role is required when role is HR
+    // HR role validation - must be selected when role is HR
     if (data.role === 'HR') {
-      if (!data.hr_role) {
+      if (!data.hr_role || data.hr_role === 'N/A') {
         ctx.addIssue({
           code: 'custom',
           message: 'HR role is required when role is set to HR',
@@ -162,7 +165,7 @@ const createEmployeeOutputSchema = createEmployeeInputSchema.transform(
   data => ({
     ...data,
     role: data.role,
-    hr_role: data.hr_role,
+    hr_role: data.hr_role === 'N/A' || data.role !== 'HR' ? null : data.hr_role,
     // Send null if employee_id is empty for HR/Admin roles
     employee_id:
       data.employee_id && data.employee_id.trim() !== ''
@@ -210,7 +213,7 @@ export const AdminCreateUserPage = () => {
       email: '',
       employee_id: '',
       role: undefined,
-      hr_role: undefined,
+      hr_role: 'N/A',
       department_id: '',
       position_id: '',
       salary: '',
@@ -415,7 +418,7 @@ export const AdminCreateUserPage = () => {
                           </FormLabel>
                           <Select
                             onValueChange={field.onChange}
-                            value={field.value || ''}
+                            value={field.value === 'N/A' ? '' : field.value}
                             disabled={selectedRole !== 'HR'}
                           >
                             <FormControl>
