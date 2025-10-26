@@ -57,7 +57,7 @@ export function NavUser({ user }: NavUserProps) {
                 <div className='grid flex-1 text-start text-sm leading-tight'>
                   <span className='truncate font-semibold'>{user.name}</span>
                   <span className='truncate text-xs'>
-                    {user.role} | {hrRoles[user?.hr_role]}
+                    {user.role} {user.hr_role && ` | ${hrRoles[user?.hr_role]}`}
                   </span>
                 </div>
                 <ChevronsUpDown className='ms-auto size-4' />
@@ -80,7 +80,8 @@ export function NavUser({ user }: NavUserProps) {
                   <div className='grid flex-1 text-start text-sm leading-tight'>
                     <span className='truncate font-semibold'>{user.name}</span>
                     <span className='truncate text-xs'>
-                      {user.role} | {hrRoles[user?.hr_role]}
+                      {user.role}{' '}
+                      {user.hr_role && `| ${hrRoles[user?.hr_role]}`}
                     </span>
                   </div>
                 </div>
