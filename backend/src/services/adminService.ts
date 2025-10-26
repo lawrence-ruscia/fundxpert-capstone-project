@@ -128,11 +128,11 @@ export async function createUser(payload: {
         payload.role, // $5
         payload.hr_role, // $6
         payload.department_id, // $7
-        payload.position_id, // $8
+        payload.position_id, // $8`
         payload.salary, // $9
         payload.date_hired, // $10
         payload.employment_status, // $11
-        payload.generatedTempPassword, // $12 (temp_password)
+        true, // $12 (temp_password)
         expiresAt, // $13 (temp_password_expires)
       ]
     );

@@ -101,10 +101,17 @@ export async function createUserHandler(req: Request, res: Response) {
       !employment_status ||
       !date_hired ||
       !role ||
-      !hr_role ||
       !generatedTempPassword
     ) {
       return res.status(400).json({ error: 'Missing required fields' });
+    }
+
+    if (role === 'HR') {
+      if (!hr_role || hr_role === 'N/A') {
+        return res
+          .status(400)
+          .json({ error: 'HR role is required when role is set to HR' });
+      }
     }
 
     const user = (await createUser({
