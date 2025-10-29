@@ -344,7 +344,7 @@ export function getEmailTemplate(
             : ''
       }
 
-      <a href="${FRONTEND_URL}/employee/loans/${data.loanId}/edit" class="button">Update Application</a>
+      <a href="${FRONTEND_URL}/employee/loans/${data.loanId}" class="button">Update Application</a>
       
       <p style="color: #6c757d; margin-top: 20px;">Please complete the requirements as soon as possible to avoid delays in processing your loan application.</p>
     `),
@@ -631,7 +631,7 @@ export function getEmailTemplate(
             : ''
       }
 
-      <a href="${FRONTEND_URL}/employee/withdrawals/${data.withdrawalId}/edit" class="button">Complete Request</a>
+      <a href="${FRONTEND_URL}/employee/withdrawals/${data.withdrawalId}" class="button">Complete Request</a>
       
       <p style="color: #6c757d; margin-top: 20px;">Please submit the required information promptly to avoid delays in processing your withdrawal.</p>
     `),
@@ -1028,7 +1028,7 @@ export function getEmailTemplate(
         `
             : ''
         }
-      </div>
+      </div> 
 
       <div class="alert alert-success">
         <strong>✅ Contribution Confirmed!</strong><br>
@@ -1221,7 +1221,7 @@ export function getEmailTemplate(
           : ''
       }
 
-      <a href="${FRONTEND_URL}/hr/loans/${data.loanId}/review" class="button">Review & Assign Approver</a>
+      <a href="${FRONTEND_URL}/hr/loans/${data.loanId}" class="button">Review & Assign Approver</a>
       
       <p style="color: #6c757d; margin-top: 20px;">Please review and assign the appropriate approver based on the loan amount and type.</p>
     `),
@@ -1288,7 +1288,7 @@ export function getEmailTemplate(
         This loan application requires your review and approval decision. Please review the application details, supporting documents, and employee eligibility before making your decision.
       </div>
 
-      <a href="${FRONTEND_URL}/hr/loans/${data.loanId}/review" class="button">Review & Approve/Reject</a>
+      <a href="${FRONTEND_URL}/hr/loans/${data.loanId}" class="button">Review & Approve/Reject</a>
       
       <p style="color: #6c757d; margin-top: 20px;">Expected SLA: Please review within 2 business days. Contact the HR Officer if you need additional information.</p>
     `),
@@ -1409,7 +1409,7 @@ export function getEmailTemplate(
         Please proceed to release this loan to Trust Bank for processing and disbursement to the employee.
       </div>
 
-      <a href="${FRONTEND_URL}/hr/loans/${data.loanId}/release" class="button">Release to Trust Bank</a>
+      <a href="${FRONTEND_URL}/hr/loans/${data.loanId}" class="button">Release to Trust Bank</a>
       
       <p style="color: #6c757d; margin-top: 20px;">The employee has been notified of the approval. Please process the release within 1 business day.</p>
     `),
@@ -1731,7 +1731,7 @@ export function getEmailTemplate(
         Please proceed to release this withdrawal to Trust Bank for processing and disbursement to the employee.
       </div>
 
-      <a href="${FRONTEND_URL}/hr/withdrawals/${data.withdrawalId}/release" class="button">Release to Trust Bank</a>
+      <a href="${FRONTEND_URL}/hr/withdrawals/${data.withdrawalId}" class="button">Release to Trust Bank</a>
      
       <p style="color: #6c757d; margin-top: 20px;">The employee has been notified of the approval. Please process the release within 1 business day.</p>
     `),
