@@ -9,7 +9,8 @@
     "build": "vite build",
     "lint": "eslint .",
     "type-check": "tsc --noEmit",
-    "clean": "rm -rf dist node_modules/.vite"
+    "clean": "rm -rf dist node_modules/.vite",
+    "test": "vitest"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
