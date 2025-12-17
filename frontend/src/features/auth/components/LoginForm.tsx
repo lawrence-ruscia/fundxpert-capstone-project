@@ -56,13 +56,17 @@ export const LoginForm = ({ onSubmit }: LoginFormProps) => {
           name='email'
           render={({ field }) => (
             <FormItem>
-              <FormLabel className='text-base font-medium'>
+              <FormLabel
+                htmlFor='company-email'
+                className='text-base font-medium'
+              >
                 Company Email <span className='text-destructive'>*</span>
               </FormLabel>
               <FormControl>
                 <div className='relative'>
                   <Mail className='text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2' />
                   <Input
+                    id='company-email'
                     type='email'
                     placeholder='your.email@company.com'
                     className='h-12 pl-10 text-base'
@@ -82,7 +86,7 @@ export const LoginForm = ({ onSubmit }: LoginFormProps) => {
           render={({ field }) => (
             <FormItem>
               <div className='flex items-center justify-between'>
-                <FormLabel className='text-base font-medium'>
+                <FormLabel htmlFor='password' className='text-base font-medium'>
                   Password <span className='text-destructive'>*</span>
                 </FormLabel>
                 {/* <Link
@@ -96,6 +100,7 @@ export const LoginForm = ({ onSubmit }: LoginFormProps) => {
                 <div className='relative'>
                   <Lock className='text-muted-foreground absolute top-1/2 left-3 z-10 h-4 w-4 -translate-y-1/2' />
                   <PasswordInput
+                    id='password'
                     placeholder='Enter your password'
                     className='h-12 pl-10 text-base'
                     {...field}
