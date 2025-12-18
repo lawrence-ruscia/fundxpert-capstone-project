@@ -111,7 +111,7 @@ describe('LoginPage', () => {
   });
 
   it('redirects to twofa verification when twofa verification is required', async () => {
-    vi.spyOn(authService, 'login').mockResolvedValue({
+    vi.spyOn(authService, 'login').mockResolvedValueOnce({
       twofaRequired: true,
       userId: 42,
     });
@@ -138,7 +138,7 @@ describe('LoginPage', () => {
       tokenExpiry: 900_000,
     } as UserResponse;
 
-    vi.spyOn(authService, 'login').mockResolvedValue({
+    vi.spyOn(authService, 'login').mockResolvedValueOnce({
       user: mockResponse.user,
       tokenExpiry: mockResponse.tokenExpiry,
     });
