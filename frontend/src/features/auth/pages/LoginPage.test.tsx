@@ -18,6 +18,18 @@ vi.mock('react-router-dom', async () => {
   };
 });
 
+// Mock login() from useAuth()
+const mockLogin = vi.fn();
+
+vi.mock('../context/AuthContext.tsx', async () => {
+  const actual = await vi.importActual('../context/AuthContext.tsx');
+
+  return {
+    ...actual,
+    login: () => mockLogin,
+  };
+});
+
 describe('LoginPage', () => {
   it('redirects to reset password when password change is required', async () => {
     // Mock useAuth()
@@ -52,5 +64,40 @@ describe('LoginPage', () => {
 
     expect(sessionStorage.getItem('forceChangeUserId')).toBe('42');
     expect(mockNavigate).toHaveBeenCalledWith('/auth/reset-password');
+  });
+
+  it('redirects to twofa setup when twofa setup is required', async () => {
+    vi.spyOn(authService, 'login').mockResolvedValueOnce({
+      twofaSetupRequired: true,
+      userId: 42,
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/auth/login']}>
+        <Routes>
+          <Route
+            path='/auth/login'
+            element={
+              <AuthProvider>
+                <LoginPage />
+              </AuthProvider>
+            }
+          />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    const user = userEvent.setup();
+
+    await user.type(
+      screen.getByLabelText(/company email/i),
+      'test@metrobank.com.ph'
+    );
+    await user.type(screen.getByLabelText(/password/i), 'password');
+    await user.click(screen.getByRole('button', { name: /login/i }));
+
+    expect(sessionStorage.getItem('twofa_userId')).toBe('42');
+    expect(sessionStorage.getItem('twofa_mode')).toBe('setup');
+    expect(mockNavigate).toHaveBeenCalledWith('/auth/setup-2fa');
   });
 });
