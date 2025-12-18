@@ -160,4 +160,26 @@ describe('LoginPage', () => {
     );
     expect(mockNavigate).toHaveBeenCalledWith('/', { replace: true });
   });
+
+  it('shows an error message when login fails', async () => {
+    vi.spyOn(authService, 'login').mockRejectedValueOnce(
+      new Error('Invalid credentials')
+    );
+
+    renderLoginPage();
+
+    const user = userEvent.setup();
+
+    await user.type(
+      screen.getByLabelText(/company email/i),
+      'test@metrobank.com.ph'
+    );
+    await user.type(screen.getByLabelText(/password/i), 'password');
+    await user.click(screen.getByRole('button', { name: /login/i }));
+
+    const error = await screen.findByText(/invalid credentials/i);
+    expect(error).toBeInTheDocument();
+
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
 });
