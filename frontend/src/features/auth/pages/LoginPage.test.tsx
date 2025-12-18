@@ -47,6 +47,24 @@ const TestAuthProvider = ({ children }: { children: React.ReactNode }) => {
   );
 };
 
+// Helper for rendering LoginPage
+const renderLoginPage = () => {
+  render(
+    <MemoryRouter initialEntries={['/auth/login']}>
+      <Routes>
+        <Route
+          path='/auth/login'
+          element={
+            <TestAuthProvider>
+              <LoginPage />
+            </TestAuthProvider>
+          }
+        />
+      </Routes>
+    </MemoryRouter>
+  );
+};
+
 describe('LoginPage', () => {
   it('redirects to reset password when password change is required', async () => {
     // Mock useAuth()
@@ -55,20 +73,7 @@ describe('LoginPage', () => {
       userId: 42,
     });
 
-    render(
-      <MemoryRouter initialEntries={['/auth/login']}>
-        <Routes>
-          <Route
-            path='/auth/login'
-            element={
-              <TestAuthProvider>
-                <LoginPage />
-              </TestAuthProvider>
-            }
-          />
-        </Routes>
-      </MemoryRouter>
-    );
+    renderLoginPage();
 
     const user = userEvent.setup();
 
@@ -89,20 +94,7 @@ describe('LoginPage', () => {
       userId: 42,
     });
 
-    render(
-      <MemoryRouter initialEntries={['/auth/login']}>
-        <Routes>
-          <Route
-            path='/auth/login'
-            element={
-              <TestAuthProvider>
-                <LoginPage />
-              </TestAuthProvider>
-            }
-          />
-        </Routes>
-      </MemoryRouter>
-    );
+    renderLoginPage();
 
     const user = userEvent.setup();
 
@@ -124,20 +116,7 @@ describe('LoginPage', () => {
       userId: 42,
     });
 
-    render(
-      <MemoryRouter initialEntries={['/auth/login']}>
-        <Routes>
-          <Route
-            path='/auth/login'
-            element={
-              <TestAuthProvider>
-                <LoginPage />
-              </TestAuthProvider>
-            }
-          />
-        </Routes>
-      </MemoryRouter>
-    );
+    renderLoginPage();
 
     const user = userEvent.setup();
 
@@ -164,20 +143,7 @@ describe('LoginPage', () => {
       tokenExpiry: mockResponse.tokenExpiry,
     });
 
-    render(
-      <MemoryRouter initialEntries={['/auth/login']}>
-        <Routes>
-          <Route
-            path='/auth/login'
-            element={
-              <TestAuthProvider>
-                <LoginPage />
-              </TestAuthProvider>
-            }
-          />
-        </Routes>
-      </MemoryRouter>
-    );
+    renderLoginPage();
 
     const user = userEvent.setup();
 
