@@ -106,4 +106,28 @@ describe('OTPPage', () => {
       mockResponse.tokenExpiry
     );
   });
+
+  it('uses login2FA when mode is login', async () => {
+    const mockUser = { id: 42, name: 'John Doe', role: 'Employee' } as UserType;
+    const mockResponse = { user: mockUser, tokenExpiry: 900_000 };
+    const mockVerify2fa = vi
+      .spyOn(authService, 'login2FA')
+      .mockResolvedValueOnce(mockResponse);
+
+    sessionStorage.setItem('twofa_userId', String(mockUser.id));
+    sessionStorage.setItem('twofa_mode', 'login');
+
+    renderOTPPage();
+
+    const user = userEvent.setup();
+
+    await user.type(screen.getByLabelText(/one-time password/i), '123456');
+    await user.click(screen.getByRole('button', { name: /verify/i }));
+
+    expect(mockVerify2fa).toHaveBeenCalled();
+    expect(mockLogin).toHaveBeenCalledWith(
+      mockResponse.user,
+      mockResponse.tokenExpiry
+    );
+  });
 });
