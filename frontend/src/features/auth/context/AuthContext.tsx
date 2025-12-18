@@ -14,9 +14,11 @@ type AuthContextType = {
   refreshUser: () => Promise<void>;
   tokenExpiry: number | null;
   setTokenExpiry: (expiry: number | null) => void;
-};
+};  
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(
+  undefined
+);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserType | null>(null);
