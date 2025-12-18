@@ -14,7 +14,7 @@ type AuthContextType = {
   refreshUser: () => Promise<void>;
   tokenExpiry: number | null;
   setTokenExpiry: (expiry: number | null) => void;
-};  
+};
 
 export const AuthContext = createContext<AuthContextType | undefined>(
   undefined
