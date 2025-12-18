@@ -41,10 +41,13 @@ export const OTPForm = ({ onVerify }: OTPFormProps) => {
           name='otp'
           render={({ field }) => (
             <FormItem>
-              <FormLabel className='sr-only'>One-Time Password</FormLabel>
+              <FormLabel htmlFor='otp' className='sr-only'>
+                One-Time Password
+              </FormLabel>
               <FormControl>
                 <InputOTP
-                  autoFocus   
+                  id='otp'
+                  autoFocus
                   maxLength={6}
                   {...field}
                   containerClassName='justify-between sm:[&>[data-slot="input-otp-group"]>div]:w-12'

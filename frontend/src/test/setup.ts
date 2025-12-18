@@ -7,3 +7,16 @@ expect.extend(matchers);
 afterEach(() => {
   cleanup();
 });
+
+// Polyfills
+class ResizeObserver {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+}
+
+window.ResizeObserver = ResizeObserver;
+
+if (!document.elementFromPoint) {
+  document.elementFromPoint = () => null;
+}

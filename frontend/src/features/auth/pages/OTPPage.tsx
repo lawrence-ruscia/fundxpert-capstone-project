@@ -26,7 +26,7 @@ export const OTPPage = () => {
     //  No userId means user skipped login
     return <Navigate to='/auth/login' replace />;
   }
- 
+
   const mode = sessionStorage.getItem('twofa_mode');
   const handle2FALogin = async (
     data: OTPSchema,

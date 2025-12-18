@@ -1,10 +1,11 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { AuthContext } from '../context/AuthContext';
 import { authService } from '../services/authService';
 import { OTPPage } from './OTPPage';
+import type { UserType } from '../types/loginResponse';
 
 /**
  * Responsibilities:
@@ -14,6 +15,7 @@ import { OTPPage } from './OTPPage';
 
 beforeEach(() => {
   vi.clearAllMocks();
+  sessionStorage.clear();
 });
 
 // Mock useNavigate()
@@ -79,5 +81,29 @@ describe('OTPPage', () => {
 
     expect(screen.getByText(/login page/i)).toBeInTheDocument();
     expect(mockLogin).not.toHaveBeenCalled();
+  });
+
+  it('uses verify2fa when mode is setup', async () => {
+    const mockUser = { id: 42, name: 'John Doe', role: 'Employee' } as UserType;
+    const mockResponse = { user: mockUser, tokenExpiry: 900_000 };
+    const mockVerify2fa = vi
+      .spyOn(authService, 'verify2FA')
+      .mockResolvedValueOnce(mockResponse);
+
+    sessionStorage.setItem('twofa_userId', String(mockUser.id));
+    sessionStorage.setItem('twofa_mode', 'setup');
+
+    renderOTPPage();
+
+    const user = userEvent.setup();
+
+    await user.type(screen.getByLabelText(/one-time password/i), '123456');
+    await user.click(screen.getByRole('button', { name: /verify/i }));
+
+    expect(mockVerify2fa).toHaveBeenCalled();
+    expect(mockLogin).toHaveBeenCalledWith(
+      mockResponse.user,
+      mockResponse.tokenExpiry
+    );
   });
 });
