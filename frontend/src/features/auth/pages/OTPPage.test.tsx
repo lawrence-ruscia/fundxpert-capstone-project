@@ -216,4 +216,24 @@ describe('OTPPage', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/admin', { replace: true });
     expect(mockToast).toHaveBeenCalled();
   });
+
+  it('shows an error and does not redirect on invalid OTP', async () => {
+    const mockUser = { id: 42, name: 'Jane Doe', role: 'Employee' } as UserType;
+    vi.spyOn(authService, 'login2FA').mockRejectedValueOnce(
+      new Error('Invalid OTP')
+    );
+    const mockToast = vi.spyOn(toast, 'error');
+    sessionStorage.setItem('twofa_userId', String(mockUser.id));
+    sessionStorage.setItem('twofa_mode', 'login');
+    renderOTPPage();
+
+    const user = userEvent.setup();
+    await user.type(screen.getByLabelText(/one-time password/i), '123456');
+    await user.click(screen.getByRole('button', { name: /verify/i }));
+
+    const error = await screen.findByText(/invalid otp/i);
+    expect(error).toBeInTheDocument();
+    expect(mockToast).toHaveBeenCalled();
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
 });
