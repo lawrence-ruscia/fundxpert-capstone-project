@@ -160,4 +160,32 @@ describe('OTPPage', () => {
     expect(mockNavigate).toHaveBeenCalledWith('/hr', { replace: true });
     expect(mockToast).toHaveBeenCalled();
   });
+
+  it('logs in and redirects Employee to /employee', async () => {
+    const mockUser = { id: 42, name: 'John Doe', role: 'Employee' } as UserType;
+    const mockResponse = { user: mockUser, tokenExpiry: 900_000 };
+
+    // Mock login2fa
+    vi.spyOn(authService, 'login2FA').mockResolvedValueOnce(mockResponse);
+
+    const mockToast = vi.spyOn(toast, 'success');
+
+    sessionStorage.setItem('twofa_userId', String(mockUser.id));
+    sessionStorage.setItem('twofa_mode', 'login');
+
+    renderOTPPage();
+
+    const user = userEvent.setup();
+
+    await user.type(screen.getByLabelText(/one-time password/i), '123456');
+    await user.click(screen.getByRole('button', { name: /verify/i }));
+
+    expect(mockLogin).toHaveBeenCalledWith(
+      mockResponse.user,
+      mockResponse.tokenExpiry
+    );
+
+    expect(mockNavigate).toHaveBeenCalledWith('/employee', { replace: true });
+    expect(mockToast).toHaveBeenCalled();
+  });
 });
