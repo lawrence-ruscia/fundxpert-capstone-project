@@ -44,8 +44,6 @@ export const OTPPage = () => {
 
         login(response.user, response.tokenExpiry);
 
-        await new Promise(resolve => setTimeout(resolve, 50));
-
         // Navigate directly to role-based dashboard
         const dashboardRoute =
           response.user.role === 'Employee'

@@ -6,6 +6,7 @@ import { AuthContext } from '../context/AuthContext';
 import { authService } from '../services/authService';
 import { OTPPage } from './OTPPage';
 import type { UserType } from '../types/loginResponse';
+import { toast } from 'sonner';
 
 /**
  * Responsibilities:
@@ -14,6 +15,7 @@ import type { UserType } from '../types/loginResponse';
  */
 
 beforeEach(() => {
+  vi.restoreAllMocks();
   vi.clearAllMocks();
   sessionStorage.clear();
 });
@@ -110,7 +112,7 @@ describe('OTPPage', () => {
   it('uses login2FA when mode is login', async () => {
     const mockUser = { id: 42, name: 'John Doe', role: 'Employee' } as UserType;
     const mockResponse = { user: mockUser, tokenExpiry: 900_000 };
-    const mockVerify2fa = vi
+    const mocklogin2fa = vi
       .spyOn(authService, 'login2FA')
       .mockResolvedValueOnce(mockResponse);
 
@@ -124,10 +126,38 @@ describe('OTPPage', () => {
     await user.type(screen.getByLabelText(/one-time password/i), '123456');
     await user.click(screen.getByRole('button', { name: /verify/i }));
 
-    expect(mockVerify2fa).toHaveBeenCalled();
+    expect(mocklogin2fa).toHaveBeenCalled();
     expect(mockLogin).toHaveBeenCalledWith(
       mockResponse.user,
       mockResponse.tokenExpiry
     );
+  });
+
+  it('logs in and redirects HR to /hr', async () => {
+    const mockUser = { id: 42, name: 'John Doe', role: 'HR' } as UserType;
+    const mockResponse = { user: mockUser, tokenExpiry: 900_000 };
+
+    // Mock login2fa
+    vi.spyOn(authService, 'login2FA').mockResolvedValueOnce(mockResponse);
+
+    const mockToast = vi.spyOn(toast, 'success');
+
+    sessionStorage.setItem('twofa_userId', String(mockUser.id));
+    sessionStorage.setItem('twofa_mode', 'login');
+
+    renderOTPPage();
+
+    const user = userEvent.setup();
+
+    await user.type(screen.getByLabelText(/one-time password/i), '123456');
+    await user.click(screen.getByRole('button', { name: /verify/i }));
+
+    expect(mockLogin).toHaveBeenCalledWith(
+      mockResponse.user,
+      mockResponse.tokenExpiry
+    );
+
+    expect(mockNavigate).toHaveBeenCalledWith('/hr', { replace: true });
+    expect(mockToast).toHaveBeenCalled();
   });
 });
